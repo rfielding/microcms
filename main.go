@@ -177,6 +177,9 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	// This is a signal that this is a tar archive
 	// that we unpack to install all files at the given url
 	needsInstall := q.Get("install") == "true"
+	if needsInstall {
+		log.Printf("install tarball to %s", r.URL.Path)
+	}
 
 	if len(pathTokens) < 2 {
 		msg := fmt.Sprintf("path needs /[command]/[url] for post to %s: %v", r.URL.Path, err)
@@ -204,8 +207,9 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 			// Ignore directories for a moment XXX
 			if header.Typeflag == tar.TypeReg {
 				// I assume that header names are unqualified dir names
-				tardir := fmt.Sprintf("%s/%s", parentDir, path.Dir(header.Name))
+				tardir := path.Dir(fmt.Sprintf("%s/%s/%s", parentDir, name, path.Dir(header.Name)))
 				tarname := path.Base(header.Name)
+				log.Printf("writing: %s into %s", tarname, tardir)
 				err = postFileHandler(w, r, t, command, tardir, tarname)
 				if err != nil {
 					log.Printf("ERR %v", err)
@@ -275,6 +279,15 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 	if len(pathTokens) > 1 && pathTokens[1] == "files" {
+		if strings.HasSuffix(r.URL.Path, ".css") {
+			w.Header().Set("Content-Type", "text/css")
+		}
+		if strings.HasSuffix(r.URL.Path, ".js") {
+			w.Header().Set("Content-Type", "text/javascript")
+		}
+		if strings.HasSuffix(r.URL.Path, ".md") {
+			w.Header().Set("Content-Type", "text/markdown")
+		}
 		theFS.ServeHTTP(w, r)
 		return
 	}

@@ -3,6 +3,13 @@
 (
   cd `dirname $0`
   ( cd app && tar cvf ../app.tar . ) 
-  curl -X POST --data-binary @app.tar http://localhost:9321/files/app/v1
-  rm app.tar
+  curl -X POST --data-binary @app.tar http://localhost:9321/files/app/v1?install=true
+  #rm app.tar
+)
+
+(
+  cd `dirname $0`
+  ( cd react-test/build && tar cvf ../../react-test.tar . ) 
+  curl -X POST --data-binary @react-test.tar http://localhost:9321/files/app/react-test?install=true
+  #rm react-test.tar
 )

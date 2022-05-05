@@ -1,0 +1,4 @@
+schema.db
+media/*.tar
+./gosqlite
+./files

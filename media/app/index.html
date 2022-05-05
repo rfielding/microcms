@@ -1,4 +1,18 @@
 <html>
   <head><title>A trivial html app</title></head>
-  <body>Hello, world!<br><img src="gigaminx.jpg"></body
+  <body>
+    Hello, world!
+    <br>
+    <img src="gigaminx.jpg">
+    This API is simplified.  It dispenses with multipart mime, which is used to make multiple
+    changes in one http transaction.  The first part of the url is the action.
+    <ul>
+      <li>POST /permission/robf/resume.pdf - Post rego permissions here first to spell out security restriction on file
+      <li>POST /files/robf/resume.pdf - Just post the file
+      <li>POST /append/robf/resume.pdf - Append to the file, for things like syslog, video streaming
+      <li>POST /eof/robf/resume.pdf - No more file appends will happen
+      <li>POST /meta/robf/resume.pdf - Just post metadata regarding the file (separately!)
+      <li>POST /files/robf/myApp - Post app.tar under myApp installed.  This is critical for CMS functionality.
+    </ul>
+  </body>
 </html>
