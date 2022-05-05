@@ -1,0 +1,8 @@
+#!/bin/bash
+
+(
+  cd `dirname $0`
+  ( cd app && tar cvf ../app.tar . ) 
+  curl -X POST --data-binary @app.tar http://localhost:9321/files/app/v1
+  rm app.tar
+)

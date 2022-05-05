@@ -68,6 +68,7 @@ CREATE VIRTUAL TABLE `filesearch` USING FTS5(
 	`content`
 );
 
+/*
 INSERT INTO `filesearch` (
   `cmd`,`path`,`name`,`part`,`content`
 ) VALUES 
@@ -75,6 +76,7 @@ INSERT INTO `filesearch` (
 ('files','/robf/','resume.pdf',0,'Rob Fielding\ngreymatter.io\n'),
 ('files','/robf/','resume.pdf',1,'7445 Larne Ct\nLorton VA\n22079')
 ;
+*/
 
 /*
 select distinct(`path` || `name`),`content` from `filemeta` order by `path`,`name`,`part`;
