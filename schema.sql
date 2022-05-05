@@ -76,5 +76,6 @@ INSERT INTO `filesearch` (
 ('files','/robf/','resume.pdf',1,'7445 Larne Ct\nLorton VA\n22079')
 ;
 
-select `cmd`,distinct(`path` || `name`),`content` from `filemeta` order by `path`,`name`,`part`;
-
+/*
+select distinct(`path` || `name`),`content` from `filemeta` order by `path`,`name`,`part`;
+*/

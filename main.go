@@ -34,6 +34,38 @@ func Getenv(k string, defaultValue string) string {
 	return v
 }
 
+// XXX
+// will take a filestream and use better heuristics later.
+// the point is to quickly get something indexed upon upload.
+func isTextFile(name string) bool {
+	if strings.HasSuffix(name, ".txt") {
+		return true
+	}
+	if strings.HasSuffix(name, ".json") {
+		return true
+	}
+	if strings.HasSuffix(name, ".html") {
+		return true
+	}
+	return false
+}
+
+func indexTextFile(command string, path string, name string, part int, content []byte) error {
+	// index the file
+	_, err := theDB.Exec(
+		`INSERT INTO filesearch (cmd, path, name, part, content) VALUES (?, ?, ?, ?)`,
+		command,
+		path,
+		name,
+		part,
+		content,
+	)
+	if err != nil {
+		return fmt.Errorf("ERR while indexing %s %s%s: %v", command, path, name, err)
+	}
+	return nil
+}
+
 func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	var err error
 	defer r.Body.Close()
@@ -60,8 +92,10 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 
 	// TODO: check permissions before allowing writes
 
-	// Make sure that the path exists
+	// Make sure that the path exists, and get the file name
 	parentDir := strings.Join(pathTokens[:len(pathTokens)-1], "/")
+	name := pathTokens[len(pathTokens)-1]
+
 	log.Printf("Ensure existence of parentDir: %s", parentDir)
 	err = os.MkdirAll("."+parentDir, 0777)
 	if err != nil {
@@ -82,12 +116,39 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	}
 
 	sz, err := io.Copy(f, r.Body)
+	f.Close() // strange positioning, but we must close before defer can get to it.
 	if err != nil {
 		msg := fmt.Sprintf("Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path, err)
 		log.Printf("ERR %s", msg)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(msg))
 		return
+	}
+
+	if isTextFile(r.URL.Path) {
+		// open the file that we saved, and index it in the database.
+		f, err := os.Open("." + r.URL.Path)
+		if err != nil {
+			msg := fmt.Sprintf("Could not open file for indexing %s: %v", r.URL.Path, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return
+		}
+		defer f.Close()
+		buffer := make([]byte, 1024*1024)
+		part := 0
+		for {
+			sz, err := f.Read(buffer)
+			if err == io.EOF {
+				break
+			}
+			err = indexTextFile(command, parentDir+"/", name, part, buffer[:sz])
+			if err != nil {
+				log.Printf("failed indexing: %v", err)
+			}
+			part++
+		}
 	}
 }
 
