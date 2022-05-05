@@ -207,7 +207,9 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 			// Ignore directories for a moment XXX
 			if header.Typeflag == tar.TypeReg {
 				// I assume that header names are unqualified dir names
-				tardir := path.Dir(fmt.Sprintf("%s/%s/%s", parentDir, name, path.Dir(header.Name)))
+				tname := strings.Split(header.Name, "/") // expect . in front
+				tname = tname[1:]
+				tardir := path.Dir(fmt.Sprintf("%s/%s/%s", parentDir, name, strings.Join(tname, "/")))
 				tarname := path.Base(header.Name)
 				log.Printf("writing: %s into %s", tarname, tardir)
 				err = postFileHandler(w, r, t, command, tardir, tarname)
