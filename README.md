@@ -60,6 +60,12 @@ Upload a normal file, one by one
   curl -X POST --data-binary @resume.pdf http://localhost:9321/files/doc/rob/resume.pdf
 ```
 
+Search by keyword king:
+
+```
+http://localhost:9321/search?match=king
+```
+
 ![images/search.png](images/search.png)
 
 Adding reverseproxy endpoints to make full-blown apps work will be easy. Permission system for safe updates a little less so, but not hard.
