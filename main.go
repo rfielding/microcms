@@ -41,20 +41,20 @@ func Getenv(k string, defaultValue string) string {
 // XXX
 // will take a filestream and use better heuristics later.
 // the point is to quickly get something indexed upon upload.
-func IsTextFile(name string) bool {
-	if strings.HasSuffix(name, ".txt") {
+func IsTextFile(fName string) bool {
+	if strings.HasSuffix(fName, ".txt") {
 		return true
 	}
-	if strings.HasSuffix(name, ".json") {
+	if strings.HasSuffix(fName, ".json") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".html") {
 		return true
 	}
 	return false
 }
 
 func IsDoc(fName string) bool {
-	if strings.HasSuffix(fName, ".html") {
-		return true
-	}
 	if strings.HasSuffix(fName, ".doc") {
 		return true
 	}
@@ -93,10 +93,10 @@ func DocExtract(fName string, rdr io.Reader) (io.ReadCloser, error) {
 	req.Header.Add("accept", "text/plain")
 	res, err := cl.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Unalbe to do request to upload file %s: %v", fName, err)
+		return nil, fmt.Errorf("Unable to do request to upload file %s: %v", fName, err)
 	}
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Unalbe to upload %s: %d", fName, res.StatusCode)
+		return nil, fmt.Errorf("Unable to upload %s: %d", fName, res.StatusCode)
 	}
 	return res.Body, nil
 }
@@ -127,7 +127,7 @@ func postFileHandler(
 	name string,
 ) error {
 	fullName := fmt.Sprintf("%s/%s", parentDir, name)
-	log.Printf("create %s %s", command, fullName)
+	//log.Printf("create %s %s", command, fullName)
 
 	// Write the file out
 	flags := os.O_WRONLY | os.O_CREATE
@@ -141,7 +141,7 @@ func postFileHandler(
 
 	// TODO: check permissions before allowing writes
 
-	log.Printf("Ensure existence of parentDir: %s", parentDir)
+	//log.Printf("Ensure existence of parentDir: %s", parentDir)
 	err := os.MkdirAll("."+parentDir, 0777)
 	if err != nil {
 		msg := fmt.Sprintf("Could not create path for %s: %v", r.URL.Path, err)
