@@ -3,7 +3,10 @@
 (
   cd `dirname $0`
   ./build
+  # our binary is killed!
   killall gosqlite
+  # This kills tika processes on your machine!
+  kill $(ps -ef | grep "tika" | awk '{print $3;}')
   rm -rf files; mkdir files ; ./setup.sh ; cat schema.sql | sqlite3 ; ./build 
   ./gosqlite &  java -jar ./bin/tika-server-standard.jar
 )
