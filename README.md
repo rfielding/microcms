@@ -1,15 +1,32 @@
 # GoSQLite
 
-This is an experiment in quickly creatding a CMS, which I mean
+Requirements:
+
+- Go 1.18+
+- a Java runtime that can run tika-server (to test external text-extracts)
+
+
+This is an experiment in quickly creatding a Content Management System (CMS), by which I mean
 
 - upload and download files
 - large media files, such as multi-GB mp4s work well and efficiently
 - install tarballs of entire static apps (ie: React apps, html pages)
-- combine embedded sql database state and file volume mount
-- simple GET/POST without multipart-mime
-- all directories are created IMPLICITLY.
-- metadata about an object can be uploaded before or after the content
+- simple GET/POST to urls to alter content
 
+Note:
+
+- Actual files are just stored on filesystem, while derived items are stored in sqlite3
+- all directories are created IMPLICITLY.
+- metadata about a directory or file can be uploaded before or after the content
+- This allows you to use, or ignore permissions as you see fit
+- If you come in authenticated, specific CRUD permissions will be evaluated
+- The permission system will allow quite arbitrary rules, as the CRUD permissions
+  will be calcualted by code provided by the client; to evaluate a JWT claim for CRUD access.
+  (TODO, but I have done this a few times from scratch in a few days) 
+- The point of this is to not only allow for anonymous or strongly controlled
+  read, but pseudononymous writes as well. ie: GDPR cases, such as directory
+  open to adults living in certain countries.
+  
 Todo:
 
 - reverse proxy endpoints (A few hundred lines of code at most, as I write reverse proxies often)
@@ -17,8 +34,9 @@ Todo:
 - OpenPolicyAgent for security enforcement, I did this in a separate project, and it took a few hours.
 
 ```
-# Must be on Linux
-./cleanbuild && ./gosqlite
+# Must be on Linux - which builds and launches this process,
+# with a tika process that extracts texts from office docs
+./cleanbuild
 ```
 
 When it launches, it looks like this:
@@ -44,6 +62,10 @@ Currently, there are just GET and POST, where certain prefixes are special.
 Install a react app in a tarball, or a simple html app.  Install means to expect a tarball, and unpack it into the named directory.
 
 > in package.json, `homepage="."` so that the react app can be mounted anywhere in the tree.
+
+## Examples
+
+> All directories are created as a side-effect.  But before or after uploading file, it's a TODO to be able to upload metadata such as permissions.  In that case, upload permissions before files.
 
 ```
 (

@@ -2,5 +2,8 @@
 
 (
   cd `dirname $0`
-  rm -rf files; mkdir files ; ./setup.sh ; cat schema.sql | sqlite3 ; ./build && ./gosqlite
+  ./build
+  killall gosqlite
+  rm -rf files; mkdir files ; ./setup.sh ; cat schema.sql | sqlite3 ; ./build 
+  ./gosqlite &  java -jar ./bin/tika-server-standard.jar
 )

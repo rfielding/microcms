@@ -14,6 +14,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var docExtractor string
+
 // Make sure to only serve up out of known subdirectories
 var theFS = http.FileServer(http.Dir("."))
 var theDB *sql.DB
@@ -39,17 +41,64 @@ func Getenv(k string, defaultValue string) string {
 // XXX
 // will take a filestream and use better heuristics later.
 // the point is to quickly get something indexed upon upload.
-func isTextFile(name string) bool {
+func IsTextFile(name string) bool {
 	if strings.HasSuffix(name, ".txt") {
 		return true
 	}
 	if strings.HasSuffix(name, ".json") {
 		return true
 	}
-	if strings.HasSuffix(name, ".html") {
+	return false
+}
+
+func IsDoc(fName string) bool {
+	if strings.HasSuffix(fName, ".html") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".doc") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".ppt") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".xls") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".docx") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".pptx") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".xlsx") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".pdf") {
+		return true
+	}
+	// ?? a guess
+	if strings.HasSuffix(fName, ".one") {
 		return true
 	}
 	return false
+}
+
+// Make a request to tika in this case
+func DocExtract(fName string, rdr io.Reader) (io.ReadCloser, error) {
+	cl := http.Client{}
+	req, err := http.NewRequest("PUT", docExtractor, rdr)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to make request to upload file: %v", err)
+	}
+	req.Header.Add("accept", "text/plain")
+	res, err := cl.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Unalbe to do request to upload file %s: %v", fName, err)
+	}
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("Unalbe to upload %s: %d", fName, res.StatusCode)
+	}
+	return res.Body, nil
 }
 
 func indexTextFile(command string, path string, name string, part int, content []byte) error {
@@ -130,7 +179,7 @@ func postFileHandler(
 		return fmt.Errorf("%v", msg)
 	}
 
-	if isTextFile(fullName) {
+	if IsTextFile(fullName) || IsDoc(fullName) {
 		// open the file that we saved, and index it in the database.
 		f, err := os.Open("." + fullName)
 		if err != nil {
@@ -145,6 +194,17 @@ func postFileHandler(
 			// we are appending, so we need to start at the end of the file
 			f.Seek(existingSize, 0)
 		}
+		var rdr io.Reader = f
+		if IsDoc(fullName) {
+			rdr, err = DocExtract(fullName, f)
+			if err != nil {
+				msg := fmt.Sprintf("Could not extract file for indexing %s: %v", fullName, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return fmt.Errorf("%v", msg)
+			}
+		}
 		if command == "files" {
 			// this implies a truncate
 			_, err := theDB.Exec(`DELETE from filesearch where path = ? and name = ? and cmd = ?`, parentDir+"/", name, command)
@@ -155,7 +215,7 @@ func postFileHandler(
 		buffer := make([]byte, 4*1024)
 		part := 0
 		for {
-			sz, err := f.Read(buffer)
+			sz, err := rdr.Read(buffer)
 			if err == io.EOF {
 				break
 			}
@@ -337,6 +397,8 @@ func httpSetup() {
 }
 
 func main() {
+	docExtractor = Getenv("DOC_EXTRACTOR", "http://localhost:9998/tika")
+
 	// Set up the database
 	dbCleanup := dbSetup()
 	defer dbCleanup()
