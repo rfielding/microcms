@@ -2,6 +2,8 @@
 
 Requirements:
 
+- Docker
+- Docker Compose
 - Go 1.18+
 - a Java runtime that can run tika-server (to test external text-extracts)
 
@@ -34,21 +36,10 @@ Todo:
 - OpenPolicyAgent for security enforcement, I did this in a separate project, and it took a few hours.
 
 ```
-# Must be on Linux - which builds and launches this process,
-# with a tika process that extracts texts from office docs
+# runs on http://localhost:9321
 ./cleanbuild
 ```
 
-When it launches, it looks like this:
-
-```
-> ./cleanbuild 
-2022/05/06 09:58:50 ENV SCHEMA: schema.db
-2022/05/06 09:58:50 opening database schema.db
-2022/05/06 09:58:50 opened database schema.db
-2022/05/06 09:58:50 ENV BIND: 0.0.0.0:9321
-2022/05/06 09:58:50 start http at 0.0.0.0:9321
-```
 
 ## API
 

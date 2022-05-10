@@ -1,0 +1,18 @@
+version: '3.2'
+
+services:
+  gosqlite:
+    networks:
+      mesh:
+        aliases:
+          - gosqlite
+    image: gosqlite:latest
+    ports:
+      - '9321:9321'
+    build: .
+    volumes:
+      - ./schema.db:/root/schema.db
+      - ./files:/root/files
+networks:
+  mesh: {}
+    
