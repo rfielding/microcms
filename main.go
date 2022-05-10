@@ -101,14 +101,24 @@ func DocExtract(fName string, rdr io.Reader) (io.ReadCloser, error) {
 	return res.Body, nil
 }
 
-func indexTextFile(command string, path string, name string, part int, content []byte) error {
+func indexTextFile(
+	command string,
+	path string,
+	name string,
+	part int,
+	originalPath string,
+	originalName string,
+	content []byte,
+) error {
 	// index the file -- if we are appending, we should only incrementally index
 	_, err := theDB.Exec(
-		`INSERT INTO filesearch (cmd, path, name, part, content) VALUES (?, ?, ?, ?, ?)`,
+		`INSERT INTO filesearch (cmd, path, name, part, original_path, original_name, content) VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		command,
 		path,
 		name,
 		part,
+		originalPath,
+		originalName,
 		content,
 	)
 	if err != nil {
@@ -125,6 +135,8 @@ func postFileHandler(
 	command string,
 	parentDir string,
 	name string,
+	originalParentDir string,
+	originalName string,
 ) error {
 	fullName := fmt.Sprintf("%s/%s", parentDir, name)
 	//log.Printf("create %s %s", command, fullName)
@@ -219,7 +231,7 @@ func postFileHandler(
 			if err == io.EOF {
 				break
 			}
-			err = indexTextFile(command, parentDir+"/", name, part, buffer[:sz])
+			err = indexTextFile(command, parentDir+"/", name, part, originalParentDir+"/", originalName, buffer[:sz])
 			if err != nil {
 				log.Printf("failed indexing: %v", err)
 			}
@@ -272,7 +284,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 				tardir := path.Dir(fmt.Sprintf("%s/%s/%s", parentDir, name, strings.Join(tname, "/")))
 				tarname := path.Base(header.Name)
 				log.Printf("writing: %s into %s", tarname, tardir)
-				err = postFileHandler(w, r, t, command, tardir, tarname)
+				err = postFileHandler(w, r, t, command, tardir, tarname, tardir, tarname)
 				if err != nil {
 					log.Printf("ERR %v", err)
 					return
@@ -281,7 +293,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		}
 	} else {
 		// Just a normal single-file upload
-		err = postFileHandler(w, r, r.Body, command, parentDir, name)
+		err = postFileHandler(w, r, r.Body, command, parentDir, name, parentDir, name)
 		if err != nil {
 			log.Printf("ERR %v", err)
 			return
@@ -308,7 +320,7 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	match := r.URL.Query().Get("match")
 	rows, err := theDB.Query(`
-		SELECT path,name,part,highlight(filesearch,5,'<b style="background-color:yellow">','</b>') highlighted 
+		SELECT original_path,original_name,part,highlight(filesearch,7,'<b style="background-color:yellow">','</b>') highlighted 
 		from filesearch
 		where filesearch match ?
 	`, match)

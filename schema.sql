@@ -65,19 +65,7 @@ CREATE VIRTUAL TABLE `filesearch` USING FTS5(
 	`path`,
 	`name`,
 	`part`,
+      `original_path`,
+      `original_name`,
 	`content`
 );
-
-/*
-INSERT INTO `filesearch` (
-  `cmd`,`path`,`name`,`part`,`content`
-) VALUES 
-('meta','/robf/','',0,'{"description":"this is the home dir"}'),
-('files','/robf/','resume.pdf',0,'Rob Fielding\ngreymatter.io\n'),
-('files','/robf/','resume.pdf',1,'7445 Larne Ct\nLorton VA\n22079')
-;
-*/
-
-/*
-select distinct(`path` || `name`),`content` from `filemeta` order by `path`,`name`,`part`;
-*/
