@@ -2,4 +2,5 @@ schema.db
 media/*.tar
 ./gosqlite
 ./files
+visionbot-secret-key.json
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"path"
 	"strings"
 
+	vision "cloud.google.com/go/vision/apiv1"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -19,6 +21,7 @@ var docExtractor string
 // Make sure to only serve up out of known subdirectories
 var theFS = http.FileServer(http.Dir("."))
 var theDB *sql.DB
+var useVisionAPI bool
 
 // Use this for startup panics only
 func CheckErr(err error, msg string) {
@@ -38,9 +41,7 @@ func Getenv(k string, defaultValue string) string {
 	return v
 }
 
-// XXX
-// will take a filestream and use better heuristics later.
-// the point is to quickly get something indexed upon upload.
+// ie: things that FTS5 can handle directly
 func IsTextFile(fName string) bool {
 	if strings.HasSuffix(fName, ".txt") {
 		return true
@@ -54,6 +55,7 @@ func IsTextFile(fName string) bool {
 	return false
 }
 
+// ie: things that Tika can handle to produce IsTextFile
 func IsDoc(fName string) bool {
 	if strings.HasSuffix(fName, ".doc") {
 		return true
@@ -81,6 +83,56 @@ func IsDoc(fName string) bool {
 		return true
 	}
 	return false
+}
+
+func IsImage(fName string) bool {
+	if strings.HasSuffix(fName, ".jpg") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".jpeg") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".png") {
+		return true
+	}
+	if strings.HasSuffix(fName, ".gif") {
+		return true
+	}
+	return false
+}
+
+// detectLabels gets labels from the Vision API for an image at the given file path.
+func detectLabels(file string) (io.Reader, error) {
+	ctx := context.Background()
+
+	client, err := vision.NewImageAnnotatorClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	image, err := vision.NewImageFromReader(f)
+	if err != nil {
+		return nil, err
+	}
+	annotations, err := client.DetectLabels(ctx, image, nil, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		for _, annotation := range annotations {
+			pipeWriter.Write([]byte(fmt.Sprintf("%s\n", annotation.Description)))
+		}
+		pipeWriter.Close()
+	}()
+	return pipeReader, nil
 }
 
 // Make a request to tika in this case
@@ -223,6 +275,27 @@ func postFileHandler(
 			return fmt.Errorf("%v", msg)
 		}
 		// open the file that we saved, and index it in the database.
+		return nil
+	}
+
+	if IsImage(fullName) && useVisionAPI {
+		rdr, err := detectLabels(`./` + fullName)
+		if err != nil {
+			msg := fmt.Sprintf("Could not extract labels for %s: %v", fullName, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return fmt.Errorf("%v", msg)
+		}
+		labelName := fmt.Sprintf("%s--labels.txt", name)
+		err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName)
+		if err != nil {
+			msg := fmt.Sprintf("Could not write extract file for indexing %s: %v", fullName, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return fmt.Errorf("%v", msg)
+		}
 		return nil
 	}
 
@@ -435,6 +508,13 @@ func httpSetup() {
 }
 
 func main() {
+	useVisionAPI = false
+	if s, err := os.Stat("./visionbot-secret-key.json"); err == nil && s.IsDir() == false && s.Size() > 0 {
+		useVisionAPI = true
+	} else {
+		log.Printf("copy over ./visionbot-secret-key.json Google Vision API key to use automatic image labels")
+	}
+	log.Printf("Using the Google Vision API, because credentials are mounted")
 	docExtractor = Getenv("DOC_EXTRACTOR", "http://localhost:9998/tika")
 
 	// Set up the database
