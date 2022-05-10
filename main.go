@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -101,6 +102,15 @@ func IsImage(fName string) bool {
 	return false
 }
 
+func AsJson(v interface{}) string {
+	b, err := json.Marshal(v)
+	if err != nil {
+		log.Printf("ERR %v", err)
+		return ""
+	}
+	return string(b)
+}
+
 // detectLabels gets labels from the Vision API for an image at the given file path.
 func detectLabels(file string) (io.Reader, error) {
 	ctx := context.Background()
@@ -127,9 +137,7 @@ func detectLabels(file string) (io.Reader, error) {
 
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		for _, annotation := range annotations {
-			pipeWriter.Write([]byte(fmt.Sprintf("%s\n", annotation.Description)))
-		}
+		pipeWriter.Write([]byte(AsJson(annotations)))
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
@@ -287,7 +295,7 @@ func postFileHandler(
 			w.Write([]byte(msg))
 			return fmt.Errorf("%v", msg)
 		}
-		labelName := fmt.Sprintf("%s--labels.txt", name)
+		labelName := fmt.Sprintf("%s--labels.json", name)
 		err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName)
 		if err != nil {
 			msg := fmt.Sprintf("Could not write extract file for indexing %s: %v", fullName, err)

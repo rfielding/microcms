@@ -8,7 +8,7 @@ Requirements:
 - a Java runtime that can run tika-server (to test external text-extracts)
 
 
-This is an experiment in quickly creatding a Content Management System (CMS), by which I mean
+This is an experiment in quickly creating a Content Management System (CMS), by which I mean
 
 - upload and download files
 - large media files, such as multi-GB mp4s work well and efficiently
