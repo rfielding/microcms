@@ -169,29 +169,64 @@ func postFileHandler(
 		existingSize = s.Size()
 	}
 
-	// XXX forget about append for a moment... just get it right on regular uploads
+	// Ensure that the file in question exists on disk.
+	if true {
+		f, err := os.Create("." + fullName) //, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			msg := fmt.Sprintf("Could not create file %s: %v", r.URL.Path, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return fmt.Errorf("%v", msg)
+		}
 
-	f, err := os.Create("." + fullName) //, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		msg := fmt.Sprintf("Could not create file %s: %v", r.URL.Path, err)
-		log.Printf("ERR %s", msg)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(msg))
-		return fmt.Errorf("%v", msg)
+		// Save the stream to a file
+		sz, err := io.Copy(f, stream)
+		f.Close() // strange positioning, but we must close before defer can get to it.
+		if err != nil {
+			msg := fmt.Sprintf("Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return fmt.Errorf("%v", msg)
+		}
 	}
 
-	// Save the stream to a file
-	sz, err := io.Copy(f, stream)
-	f.Close() // strange positioning, but we must close before defer can get to it.
-	if err != nil {
-		msg := fmt.Sprintf("Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path, err)
-		log.Printf("ERR %s", msg)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(msg))
-		return fmt.Errorf("%v", msg)
+	if IsDoc(fullName) {
+		// Open the file we wrote
+		f, err := os.Open("." + fullName)
+		if err != nil {
+			msg := fmt.Sprintf("Could not open file for indexing %s: %v", fullName, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return fmt.Errorf("%v", msg)
+		}
+		// Get a doc extract stream
+		rdr, err := DocExtract(fullName, f)
+		f.Close()
+		if err != nil {
+			msg := fmt.Sprintf("Could not extract file for indexing %s: %v", fullName, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return fmt.Errorf("%v", msg)
+		}
+		// Write the doc extract stream like an upload
+		extractName := fmt.Sprintf("%s--extract.txt", name)
+		err = postFileHandler(w, r, rdr, command, parentDir, extractName, originalParentDir, originalName)
+		if err != nil {
+			msg := fmt.Sprintf("Could not write extract file for indexing %s: %v", fullName, err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
+			return fmt.Errorf("%v", msg)
+		}
+		// open the file that we saved, and index it in the database.
+		return nil
 	}
 
-	if IsTextFile(fullName) || IsDoc(fullName) {
+	if IsTextFile(fullName) {
 		// open the file that we saved, and index it in the database.
 		f, err := os.Open("." + fullName)
 		if err != nil {
@@ -207,16 +242,6 @@ func postFileHandler(
 			f.Seek(existingSize, 0)
 		}
 		var rdr io.Reader = f
-		if IsDoc(fullName) {
-			rdr, err = DocExtract(fullName, f)
-			if err != nil {
-				msg := fmt.Sprintf("Could not extract file for indexing %s: %v", fullName, err)
-				log.Printf("ERR %s", msg)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(msg))
-				return fmt.Errorf("%v", msg)
-			}
-		}
 		if command == "files" {
 			// this implies a truncate
 			_, err := theDB.Exec(`DELETE from filesearch where path = ? and name = ? and cmd = ?`, parentDir+"/", name, command)
@@ -237,6 +262,7 @@ func postFileHandler(
 			}
 			part++
 		}
+		return nil
 	}
 	return nil
 }
