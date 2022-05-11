@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -138,6 +139,54 @@ func detectLabels(file string) (io.Reader, error) {
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
 		pipeWriter.Write([]byte(AsJson(annotations)))
+		pipeWriter.Close()
+	}()
+	return pipeReader, nil
+}
+
+func makeThumbnail(file string) (io.Reader, error) {
+	format := path.Ext(file)
+	command := []string{
+		"convert",
+		"-thumbnail", "x100",
+		"-background", "white",
+		"-alpha", "remove",
+		"-format", format,
+		file,
+		"-",
+	}
+	cmd := exec.Command(command[0], command[1:]...)
+	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
+	stdout, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v", err)
+	}
+	// Give back a pipe that closes itself when it's read.
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		pipeWriter.Write(stdout)
+		pipeWriter.Close()
+	}()
+	return pipeReader, nil
+}
+
+func pdfThumbnail(file string) (io.Reader, error) {
+	command := []string{
+		"convert",
+		"-resize", "x100",
+		file + "[0]",
+		"png:-",
+	}
+	cmd := exec.Command(command[0], command[1:]...)
+	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
+	stdout, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v", err)
+	}
+	// Give back a pipe that closes itself when it's read.
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		pipeWriter.Write(stdout)
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
@@ -282,27 +331,73 @@ func postFileHandler(
 			w.Write([]byte(msg))
 			return fmt.Errorf("%v", msg)
 		}
+
+		ext := strings.ToLower(path.Ext(fullName))
+		if ext == ".pdf" {
+			rdr, err := pdfThumbnail(`./` + fullName)
+			if err != nil {
+				msg := fmt.Sprintf("Could not make thumbnail for %s: %v", fullName, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return fmt.Errorf("%v", msg)
+			}
+			// Only png works.  bug.
+			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
+			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName)
+			if err != nil {
+				msg := fmt.Sprintf("Could not write make thumbnail for indexing %s: %v", fullName, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return fmt.Errorf("%v", msg)
+			}
+		}
+
 		// open the file that we saved, and index it in the database.
 		return nil
 	}
 
-	if IsImage(fullName) && useVisionAPI {
-		rdr, err := detectLabels(`./` + fullName)
-		if err != nil {
-			msg := fmt.Sprintf("Could not extract labels for %s: %v", fullName, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+	if IsImage(fullName) {
+		if useVisionAPI && false {
+			rdr, err := detectLabels(`./` + fullName)
+			if err != nil {
+				msg := fmt.Sprintf("Could not extract labels for %s: %v", fullName, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return fmt.Errorf("%v", msg)
+			}
+			labelName := fmt.Sprintf("%s--labels.json", name)
+			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName)
+			if err != nil {
+				msg := fmt.Sprintf("Could not write extract file for indexing %s: %v", fullName, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return fmt.Errorf("%v", msg)
+			}
 		}
-		labelName := fmt.Sprintf("%s--labels.json", name)
-		err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName)
-		if err != nil {
-			msg := fmt.Sprintf("Could not write extract file for indexing %s: %v", fullName, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+
+		if strings.Contains(fullName, "--thumbnail.") == false {
+			rdr, err := makeThumbnail(`./` + fullName)
+			if err != nil {
+				msg := fmt.Sprintf("Could not make thumbnail for %s: %v", fullName, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return fmt.Errorf("%v", msg)
+			}
+			ext := path.Ext(fullName)
+			thumbnailName := fmt.Sprintf("%s--thumbnail%s", name, ext)
+			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName)
+			if err != nil {
+				msg := fmt.Sprintf("Could not write make thumbnail for indexing %s: %v", fullName, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return fmt.Errorf("%v", msg)
+			}
 		}
 		return nil
 	}
