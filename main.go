@@ -265,11 +265,7 @@ func postFileHandler(
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
 	err := os.MkdirAll("."+parentDir, 0777)
 	if err != nil {
-		msg := fmt.Sprintf("Could not create path for %s: %v", r.URL.Path, err)
-		log.Printf("ERR %s", msg)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(msg))
-		return fmt.Errorf("%v", msg)
+		return HandleReturnedError(w, err, "Could not create path for %s: %v", r.URL.Path)
 	}
 
 	existingSize := int64(0)
@@ -282,22 +278,14 @@ func postFileHandler(
 	if true {
 		f, err := os.Create("." + fullName) //, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
-			msg := fmt.Sprintf("Could not create file %s: %v", r.URL.Path, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+			return HandleReturnedError(w, err, "Could not create file %s: %v", r.URL.Path)
 		}
 
 		// Save the stream to a file
 		sz, err := io.Copy(f, stream)
 		f.Close() // strange positioning, but we must close before defer can get to it.
 		if err != nil {
-			msg := fmt.Sprintf("Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+			return HandleReturnedError(w, err, "Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path)
 		}
 	}
 
@@ -305,52 +293,32 @@ func postFileHandler(
 		// Open the file we wrote
 		f, err := os.Open("." + fullName)
 		if err != nil {
-			msg := fmt.Sprintf("Could not open file for indexing %s: %v", fullName, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}
 		// Get a doc extract stream
 		rdr, err := DocExtract(fullName, f)
 		f.Close()
 		if err != nil {
-			msg := fmt.Sprintf("Could not extract file for indexing %s: %v", fullName, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+			return HandleReturnedError(w, err, "Could not extract file for indexing %s: %v", fullName)
 		}
 		// Write the doc extract stream like an upload
 		extractName := fmt.Sprintf("%s--extract.txt", name)
 		err = postFileHandler(w, r, rdr, command, parentDir, extractName, originalParentDir, originalName)
 		if err != nil {
-			msg := fmt.Sprintf("Could not write extract file for indexing %s: %v", fullName, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+			return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 		}
 
 		ext := strings.ToLower(path.Ext(fullName))
 		if ext == ".pdf" {
 			rdr, err := pdfThumbnail(`./` + fullName)
 			if err != nil {
-				msg := fmt.Sprintf("Could not make thumbnail for %s: %v", fullName, err)
-				log.Printf("ERR %s", msg)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(msg))
-				return fmt.Errorf("%v", msg)
+				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
 			// Only png works.  bug.
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
 			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName)
 			if err != nil {
-				msg := fmt.Sprintf("Could not write make thumbnail for indexing %s: %v", fullName, err)
-				log.Printf("ERR %s", msg)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(msg))
-				return fmt.Errorf("%v", msg)
+				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
 		}
 
@@ -359,44 +327,28 @@ func postFileHandler(
 	}
 
 	if IsImage(fullName) {
-		if useVisionAPI && false {
+		if useVisionAPI {
 			rdr, err := detectLabels(`./` + fullName)
 			if err != nil {
-				msg := fmt.Sprintf("Could not extract labels for %s: %v", fullName, err)
-				log.Printf("ERR %s", msg)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(msg))
-				return fmt.Errorf("%v", msg)
+				return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 			}
 			labelName := fmt.Sprintf("%s--labels.json", name)
 			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName)
 			if err != nil {
-				msg := fmt.Sprintf("Could not write extract file for indexing %s: %v", fullName, err)
-				log.Printf("ERR %s", msg)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(msg))
-				return fmt.Errorf("%v", msg)
+				return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 			}
 		}
 
 		if strings.Contains(fullName, "--thumbnail.") == false {
 			rdr, err := makeThumbnail(`./` + fullName)
 			if err != nil {
-				msg := fmt.Sprintf("Could not make thumbnail for %s: %v", fullName, err)
-				log.Printf("ERR %s", msg)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(msg))
-				return fmt.Errorf("%v", msg)
+				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
 			ext := path.Ext(fullName)
 			thumbnailName := fmt.Sprintf("%s--thumbnail%s", name, ext)
 			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName)
 			if err != nil {
-				msg := fmt.Sprintf("Could not write make thumbnail for indexing %s: %v", fullName, err)
-				log.Printf("ERR %s", msg)
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(msg))
-				return fmt.Errorf("%v", msg)
+				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
 		}
 		return nil
@@ -406,11 +358,7 @@ func postFileHandler(
 		// open the file that we saved, and index it in the database.
 		f, err := os.Open("." + fullName)
 		if err != nil {
-			msg := fmt.Sprintf("Could not open file for indexing %s: %v", fullName, err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
-			return fmt.Errorf("%v", msg)
+			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}
 		defer f.Close()
 		if existingSize > 0 {
@@ -456,10 +404,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	}
 
 	if len(pathTokens) < 2 {
-		msg := fmt.Sprintf("path needs /[command]/[url] for post to %s: %v", r.URL.Path, err)
-		log.Printf("ERR %s", msg)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(msg))
+		HandleError(w, err, "path needs /[command]/[url] for post to %s: %v", r.URL.Path)
 		return
 	}
 	command := pathTokens[1]
@@ -527,10 +472,7 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		where filesearch match ?
 	`, match)
 	if err != nil {
-		msg := fmt.Sprintf("query %s: %v", match, err)
-		log.Printf("ERR %s", msg)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(msg))
+		HandleError(w, err, "query %s: %v", match)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html")
@@ -572,6 +514,21 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
+}
+
+func HandleError(w http.ResponseWriter, err error, mask string, args ...interface{}) {
+	msg := fmt.Sprintf(mask, append(args, err.Error())...)
+	log.Printf("ERR %s", msg)
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte(msg))
+}
+
+func HandleReturnedError(w http.ResponseWriter, err error, mask string, args ...interface{}) error {
+	msg := fmt.Sprintf(mask, append(args, err.Error())...)
+	log.Printf("ERR %s", msg)
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte(msg))
+	return fmt.Errorf("%v", msg)
 }
 
 // We route on method and first segment of the path
