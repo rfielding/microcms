@@ -507,9 +507,12 @@ func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 // Use the same format as the http.FileServer when given a directory
 func getRootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(`<form method="GET" action="/search">`))
 	w.Write([]byte(`<ul>` + "\n"))
+	w.Write([]byte(`  <li><label for="match"><input id="match" name="match" type="text"><input type="button" value="search" name="search">` + "\n"))
 	w.Write([]byte(`  <li><a href="/files/">files</a>` + "\n"))
 	w.Write([]byte(`</ul>`))
+	w.Write([]byte(`</form>`))
 }
 
 func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
