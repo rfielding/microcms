@@ -89,6 +89,13 @@ func IsDoc(fName string) bool {
 	return false
 }
 
+func IsVideo(fName string) bool {
+	if strings.HasSuffix(fName, ".mp4") {
+		return true
+	}
+	return false
+}
+
 func IsImage(fName string) bool {
 	if strings.HasSuffix(fName, ".jpg") {
 		return true
@@ -160,7 +167,7 @@ func makeThumbnail(file string) (io.Reader, error) {
 	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
 	stdout, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v", err)
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, AsJson(command))
 	}
 	// Give back a pipe that closes itself when it's read.
 	pipeReader, pipeWriter := io.Pipe()
@@ -182,7 +189,29 @@ func pdfThumbnail(file string) (io.Reader, error) {
 	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
 	stdout, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v", err)
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, AsJson(command))
+	}
+	// Give back a pipe that closes itself when it's read.
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		pipeWriter.Write(stdout)
+		pipeWriter.Close()
+	}()
+	return pipeReader, nil
+}
+
+func videoThumbnail(file string) (io.Reader, error) {
+	command := []string{
+		"convert",
+		"-resize", "x100",
+		file + "[100]",
+		"png:-",
+	}
+	cmd := exec.Command(command[0], command[1:]...)
+	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
+	stdout, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, AsJson(command))
 	}
 	// Give back a pipe that closes itself when it's read.
 	pipeReader, pipeWriter := io.Pipe()
@@ -325,6 +354,19 @@ func postFileHandler(
 		}
 
 		// open the file that we saved, and index it in the database.
+		return nil
+	}
+
+	if IsVideo(fullName) && cascade {
+		rdr, err := videoThumbnail(`./` + fullName)
+		if err != nil {
+			return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
+		}
+		thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
+		err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
+		if err != nil {
+			return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
+		}
 		return nil
 	}
 
@@ -635,12 +677,15 @@ func httpSetup() {
 
 func main() {
 	useVisionAPI = false
+	/*  GoogleVision API isn't worth the trouble right now.  AWS Rekognition is definitely worth the trouble.  TODO.
 	if s, err := os.Stat("./visionbot-secret-key.json"); err == nil && s.IsDir() == false && s.Size() > 0 {
 		useVisionAPI = true
 	} else {
 		log.Printf("copy over ./visionbot-secret-key.json Google Vision API key to use automatic image labels")
 	}
 	log.Printf("Using the Google Vision API, because credentials are mounted")
+	*/
+
 	docExtractor = Getenv("DOC_EXTRACTOR", "http://localhost:9998/tika")
 
 	// Set up the database
