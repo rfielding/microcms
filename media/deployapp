@@ -8,6 +8,15 @@
   #rm app.tar
 )
 
+(
+  cd `dirname $0`
+  curl -X POST --data-binary @gilgamesh.tar http://localhost:9321/files/gilgamesh?install=true
+)
+(
+  cd `dirname $0`
+  curl -X POST --data-binary @kjv-bible.tar http://localhost:9321/files/kjv-bible?install=true
+)
+
 # Put in an html app
 (
   cd `dirname $0`

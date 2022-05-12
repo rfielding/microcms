@@ -412,13 +412,15 @@ func postFileHandler(
 			f.Seek(existingSize, 0)
 		}
 		var rdr io.Reader = f
-		if command == "files" {
-			// this implies a truncate
-			_, err := theDB.Exec(`DELETE from filesearch where path = ? and name = ? and cmd = ?`, parentDir+"/", name, command)
-			if err != nil {
-				log.Printf("cleaning out fulltextsearch for: %s%s %s failed: %v", parentDir+"/", name, command, err)
+		/*
+			if command == "files" {
+				// this implies a truncate
+				_, err := theDB.Exec(`DELETE from filesearch where path = ? and name = ? and cmd = ?`, parentDir+"/", name, command)
+				if err != nil {
+					log.Printf("cleaning out fulltextsearch for: %s%s %s failed: %v", parentDir+"/", name, command, err)
+				}
 			}
-		}
+		*/
 		buffer := make([]byte, 4*1024)
 		part := 0
 		for {
