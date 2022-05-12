@@ -646,10 +646,28 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 					sz = fmt.Sprintf(" (%d B)", name.Size())
 				}
 			}
+			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a>`+"\n", fName, fName, sz)))
+			attrFileName := fsPath + "/" + fName + "--attributes.json"
+			if _, err := os.Stat(attrFileName); err == nil {
+				jf, err := ioutil.ReadFile(attrFileName)
+				if err != nil {
+					log.Printf("Failed to open %s!: %v", attrFileName, err)
+				} else {
+					var attrs map[string]interface{}
+					err := json.Unmarshal(jf, &attrs)
+					if err != nil {
+						log.Printf("Failed to parse %s!: %v", attrFileName, err)
+					}
+					label, labelOk := attrs["label"].(string)
+					bg, bgOk := attrs["bg"].(string)
+					fg, fgOk := attrs["fg"].(string)
+					if labelOk && bgOk && fgOk {
+						w.Write([]byte(fmt.Sprintf(`<br><span style="background-color: %s;color: %s">%s</span>`+"\n", bg, fg, label)))
+					}
+				}
+			}
 			if _, err := os.Stat(fsPath + "/" + fName + "--thumbnail.png"); err == nil {
-				w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a><br><img src="%s--thumbnail.png">`+"\n", fName, fName, sz, fName)))
-			} else {
-				w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a>`+"\n", fName, fName, sz)))
+				w.Write([]byte(fmt.Sprintf(`<br><img src="%s--thumbnail.png">`+"\n", fName)))
 			}
 			prevName = fName
 		}
@@ -661,20 +679,26 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 // is really really complicated; and you do not want to serve it manually
 // if you can help it.
 func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+	// preserve redirect parameters
+	q := r.URL.Query().Encode()
+	if q != "" {
+		q = "?" + q
+	}
+
 	if r.URL.Path == "/" {
 		getRootHandler(w, r)
 		return
 	}
 	// Don't deal with directories missing slashes
 	if r.URL.Path == "/files" {
-		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+		http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/files/") {
 		s, _ := os.Stat("." + r.URL.Path)
 		if s != nil && s.IsDir() {
 			if r.URL.Path[len(r.URL.Path)-1] != '/' {
-				http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+				http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
 				return
 			}
 			sIdx, _ := os.Stat("." + r.URL.Path + "index.html")

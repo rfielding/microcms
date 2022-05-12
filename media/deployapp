@@ -17,18 +17,25 @@
   curl -X POST --data-binary @kjv-bible.tar http://localhost:9321/files/kjv-bible?install=true
 )
 
-# Put in an html app
+# Put in a react app
 (
   cd `dirname $0`
-  #( cd react-test/build && tar cvf ../../react-test.tar . ) 
-  #curl -X POST --data-binary @react-test.tar http://localhost:9321/files/app/react-test?install=true
-  #rm react-test.tar
+  if [ -d react-test/build ]
+  then
+    ( cd react-test/build && tar cvf ../../react-test.tar . ) 
+    curl -X POST --data-binary @react-test.tar http://localhost:9321/files/app/react-test?install=true
+    rm react-test.tar
+  fi
 )
 
 # Put in random files
 (
   cd `dirname $0`
   for f in *.pdf
+  do
+    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+  done
+  for f in *.json
   do
     curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
   done
