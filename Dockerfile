@@ -1,4 +1,6 @@
-FROM ubuntu:latest
+FROM ubuntu:21.10
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=America/New_York
 RUN apt-get update
 RUN apt-get install -y curl
 RUN apt-get install -y wget
@@ -18,6 +20,6 @@ RUN go version
 COPY . /root
 RUN cd /root && go build -tags fts5 -o ./gosqlite main.go
 RUN cd /root && rm schema.db ; sqlite3 schema.db < schema.sql
-RUN cd /root && mkdir files
+RUN cd /root ; mkdir files || true
 WORKDIR /root
 CMD ./gosqlite & java -jar ./bin/tika-server-standard.jar

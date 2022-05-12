@@ -11,8 +11,8 @@
 # Put in an html app
 (
   cd `dirname $0`
-  ( cd react-test/build && tar cvf ../../react-test.tar . ) 
-  curl -X POST --data-binary @react-test.tar http://localhost:9321/files/app/react-test?install=true
+  #( cd react-test/build && tar cvf ../../react-test.tar . ) 
+  #curl -X POST --data-binary @react-test.tar http://localhost:9321/files/app/react-test?install=true
   #rm react-test.tar
 )
 
