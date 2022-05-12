@@ -655,7 +655,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 			if strings.HasPrefix(fName, prevName) && strings.Contains(fName, prevName+"--") {
 				w.Write([]byte((`  <br>&nbsp;&nbsp;` + "\n")))
 			} else {
-				w.Write([]byte(`  <br><li>` + "\n"))
+				w.Write([]byte(`  <br>&nbsp;<li>` + "\n"))
 			}
 
 			// Use an image in the link if we have a thumbnail
