@@ -22,5 +22,10 @@ COPY . /root
 RUN cd /root && go build -tags fts5 -o ./gosqlite main.go
 RUN cd /root && rm schema.db ; sqlite3 schema.db < schema.sql
 RUN cd /root ; mkdir files || true
+# writable volume mount... make sure we have permissions to write it and for host to delete contents
+RUN chown -R 1000:1000 /root
+RUN chmod -R 755 /root/files
+RUN chmod 755 /root/bin/tika-server-standard.jar
 WORKDIR /root
+USER 1000:1000
 CMD ./gosqlite & java -jar ./bin/tika-server-standard.jar

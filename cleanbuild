@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export UID=$(id -u)
-export GID=$(id -G | cut -d" " -f1)
+export GSUID=1000
+export GSGID=1000
 (
   cd `dirname $0`
   go mod vendor
