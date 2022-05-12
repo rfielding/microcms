@@ -13,8 +13,8 @@ services:
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/root/visionbot-secret-key.json
     volumes:
-      - ./schema.db:/root/schema.db
-      - ./files:/root/files
+      #- ./schema.db:/root/schema.db
+      #- ./files:/root/files
       - ./visionbot-secret-key.json:/root/visionbot-secret-key.json
 networks:
   mesh: {}

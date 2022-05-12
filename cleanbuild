@@ -4,8 +4,6 @@ export UID=$(id -u)
 export GID=$(id -G | cut -d" " -f1)
 (
   cd `dirname $0`
-  sudo rm -rf files
-  mkdir files
-  ./setup.sh ; cat schema.sql | sqlite3 
+  go mod vendor
   docker-compose build && docker-compose up
 )

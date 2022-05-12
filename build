@@ -5,4 +5,3 @@ export GOSUMDB=off
 
 go mod tidy
 go build -tags fts5 -o ./gosqlite main.go
-chmod 777 ./gosqlite

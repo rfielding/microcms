@@ -498,7 +498,6 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 	// Get directory names
 	names, err := ioutil.ReadDir(fsPath)
 	if err != nil {
-		log.Printf("ERR %v", err)
 		HandleError(w, err, "readdir %s: %v", fsPath)
 		return
 	}
