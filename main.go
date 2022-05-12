@@ -504,15 +504,41 @@ func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+type Node struct {
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	Path       string                 `json:"path,omitempty"`
+	Name       string                 `json:"name"`
+	IsDir      bool                   `json:"isDir"`
+	Context    string                 `json:"context,omitempty"`
+	Size       int64                  `json:"size,omitempty"`
+}
+
+type Listing struct {
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+	Children   []Node                 `json:"children"`
+}
+
 // Use the same format as the http.FileServer when given a directory
 func getRootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`<form method="GET" action="/search">`))
-	w.Write([]byte(`<ul>` + "\n"))
-	w.Write([]byte(`  <li><label for="match"><input id="match" name="match" type="text"><input type="button" value="search" name="search">` + "\n"))
-	w.Write([]byte(`  <li><a href="/files/">files</a>` + "\n"))
-	w.Write([]byte(`</ul>`))
-	w.Write([]byte(`</form>`))
+	q := r.URL.Query()
+	inJson := q.Get("json") == "true"
+	if inJson {
+		w.Header().Set("Content-Type", "application/json")
+		listing := Listing{
+			Children: []Node{
+				{Name: "files", IsDir: true},
+			},
+		}
+		w.Write([]byte(AsJson(listing)))
+	} else {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<form method="GET" action="/search">` + "\n"))
+		w.Write([]byte(`<ul>` + "\n"))
+		w.Write([]byte(`  <li><label for="match"><input id="match" name="match" type="text"><input type="button" value="search" name="search">` + "\n"))
+		w.Write([]byte(`  <li><a href="/files/">files</a>` + "\n"))
+		w.Write([]byte(`</ul>` + "\n"))
+		w.Write([]byte(`</form>` + "\n"))
+	}
 }
 
 func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
@@ -526,17 +552,41 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		HandleError(w, err, "query %s: %v", match)
 		return
 	}
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`<ul>` + "\n"))
-	for rows.Next() {
-		var path, name, highlighted string
-		var part int
-		rows.Scan(&path, &name, &part, &highlighted)
-		w.Write([]byte(
-			fmt.Sprintf(`<li><a href="%s%s">%s%s [part %d]</a><br>%s`+"<br></li>", path, name, path, name, part, highlighted),
-		))
+
+	q := r.URL.Query()
+	inJson := q.Get("json") == "true"
+	if inJson {
+		w.Header().Set("Content-Type", "application/json")
+		listing := Listing{
+			Children: []Node{
+				{Name: "files", IsDir: true},
+			},
+		}
+		for rows.Next() {
+			var path, name, highlighted string
+			var part int
+			rows.Scan(&path, &name, &part, &highlighted)
+			listing.Children = append(listing.Children, Node{
+				Path:    path,
+				Name:    name,
+				IsDir:   false,
+				Context: highlighted,
+			})
+		}
+		w.Write([]byte(AsJson(listing)))
+	} else {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<ul>` + "\n"))
+		for rows.Next() {
+			var path, name, highlighted string
+			var part int
+			rows.Scan(&path, &name, &part, &highlighted)
+			w.Write([]byte(
+				fmt.Sprintf(`<li><a href="%s%s">%s%s [part %d]</a><br>%s`+"<br></li>", path, name, path, name, part, highlighted),
+			))
+		}
+		w.Write([]byte(`</ul>`))
 	}
-	w.Write([]byte(`</ul>`))
 }
 
 func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
@@ -550,31 +600,61 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 		return names[i].Name() < names[j].Name()
 	})
 
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`<ul>` + "\n"))
-	var prevName string
-	for _, name := range names {
-		fName := name.Name()
-		if strings.Contains(fName, "--thumbnail.") {
-			continue
+	q := r.URL.Query()
+	inJson := q.Get("json") == "true"
+	if inJson {
+		w.Header().Set("Content-Type", "application/json")
+		listing := Listing{
+			Children: []Node{},
 		}
+		for _, name := range names {
+			fName := name.Name()
+			listing.Children = append(listing.Children, Node{
+				Name:  fName,
+				IsDir: name.IsDir(),
+				Size:  name.Size(),
+			})
+		}
+		w.Write([]byte(AsJson(listing)))
+	} else {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<ul>` + "\n"))
+		var prevName string
+		for _, name := range names {
+			fName := name.Name()
+			if strings.Contains(fName, "--thumbnail.") {
+				continue
+			}
 
-		// If it's a derived file, then attach it to previous listing
-		if strings.HasPrefix(fName, prevName) && strings.Contains(fName, prevName+"--") {
-			w.Write([]byte((`  <br>`)))
-		} else {
-			w.Write([]byte(`  <li>`))
-		}
+			// If it's a derived file, then attach it to previous listing
+			if strings.HasPrefix(fName, prevName) && strings.Contains(fName, prevName+"--") {
+				w.Write([]byte((`  <br>`)))
+			} else {
+				w.Write([]byte(`  <li>`))
+			}
 
-		// Use an image in the link if we have a thumbnail
-		if _, err := os.Stat(fsPath + "/" + fName + "--thumbnail.png"); err == nil {
-			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s</a><br><img src="%s--thumbnail.png">`+"\n", fName, fName, fName)))
-		} else {
-			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s</a>`+"\n", fName, fName)))
+			// Use an image in the link if we have a thumbnail
+			sz := ""
+			if name.IsDir() == false {
+				if name.Size() > 1024*1024*1024 {
+					sz = fmt.Sprintf(" (%d GB)", name.Size()/(1024*1024*1024))
+				} else if name.Size() > 1024*1024 {
+					sz = fmt.Sprintf(" (%d MB)", name.Size()/(1024*1024))
+				} else if name.Size() > 1024 {
+					sz = fmt.Sprintf(" (%d kB)", name.Size()/(1024))
+				} else {
+					sz = fmt.Sprintf(" (%d B)", name.Size())
+				}
+			}
+			if _, err := os.Stat(fsPath + "/" + fName + "--thumbnail.png"); err == nil {
+				w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a><br><img src="%s--thumbnail.png">`+"\n", fName, fName, sz, fName)))
+			} else {
+				w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a>`+"\n", fName, fName, sz)))
+			}
+			prevName = fName
 		}
-		prevName = fName
+		w.Write([]byte(`</ul>` + "\n"))
 	}
-	w.Write([]byte(`</ul>` + "\n"))
 }
 
 // Use the standard file serving of Go, because media behavior
