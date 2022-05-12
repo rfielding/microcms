@@ -147,13 +147,12 @@ func detectLabels(file string) (io.Reader, error) {
 }
 
 func makeThumbnail(file string) (io.Reader, error) {
-	format := path.Ext(file)
 	command := []string{
 		"convert",
 		"-thumbnail", "x100",
 		"-background", "white",
 		"-alpha", "remove",
-		"-format", format,
+		"-format", "png",
 		file,
 		"-",
 	}
@@ -335,8 +334,7 @@ func postFileHandler(
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
-			ext := path.Ext(fullName)
-			thumbnailName := fmt.Sprintf("%s--thumbnail%s", name, ext)
+			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
 			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
