@@ -28,4 +28,4 @@ RUN chmod -R 755 /root/files
 RUN chmod 755 /root/bin/tika-server-standard.jar
 WORKDIR /root
 USER 1000:1000
-CMD ./gosqlite & java -jar ./bin/tika-server-standard.jar
+CMD mkdir /root/files/images && cp /root/media/*100.png /root/files/images && ./gosqlite & java -jar ./bin/tika-server-standard.jar

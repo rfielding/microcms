@@ -531,6 +531,7 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write([]byte(AsJson(listing)))
 	} else {
+		// TODO: proper relative path calculation
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`<form method="GET" action="/search">` + "\n"))
 		w.Write([]byte(`<ul>` + "\n"))
@@ -589,6 +590,27 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	}
 }
 
+func getAttrs(fsPath string, fName string) map[string]interface{} {
+	// Get the attributes for the file if they exist
+	var attrs map[string]interface{}
+	attrFileName := fsPath + "/" + fName + "--attributes.json"
+	if _, err := os.Stat(attrFileName); err == nil {
+		jf, err := ioutil.ReadFile(attrFileName)
+		if err != nil {
+			log.Printf("Failed to open %s!: %v", attrFileName, err)
+		} else {
+			err := json.Unmarshal(jf, &attrs)
+			if err != nil {
+				log.Printf("Failed to parse %s!: %v", attrFileName, err)
+			}
+		}
+	}
+	if len(attrs) == 0 {
+		return nil
+	}
+	return attrs
+}
+
 func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 	// Get directory names
 	names, err := ioutil.ReadDir(fsPath)
@@ -609,10 +631,12 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 		}
 		for _, name := range names {
 			fName := name.Name()
+			attrs := getAttrs(fsPath, fName)
 			listing.Children = append(listing.Children, Node{
-				Name:  fName,
-				IsDir: name.IsDir(),
-				Size:  name.Size(),
+				Name:       fName,
+				IsDir:      name.IsDir(),
+				Size:       name.Size(),
+				Attributes: attrs,
 			})
 		}
 		w.Write([]byte(AsJson(listing)))
@@ -622,15 +646,16 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 		var prevName string
 		for _, name := range names {
 			fName := name.Name()
-			if strings.Contains(fName, "--thumbnail.") {
+
+			if strings.HasSuffix(fName, "--thumbnail.png") {
 				continue
 			}
 
 			// If it's a derived file, then attach it to previous listing
 			if strings.HasPrefix(fName, prevName) && strings.Contains(fName, prevName+"--") {
-				w.Write([]byte((`  <br>`)))
+				w.Write([]byte((`  <br>&nbsp;&nbsp;` + "\n")))
 			} else {
-				w.Write([]byte(`  <li>`))
+				w.Write([]byte(`  <br><li>` + "\n"))
 			}
 
 			// Use an image in the link if we have a thumbnail
@@ -646,29 +671,26 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 					sz = fmt.Sprintf(" (%d B)", name.Size())
 				}
 			}
-			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a>`+"\n", fName, fName, sz)))
-			attrFileName := fsPath + "/" + fName + "--attributes.json"
-			if _, err := os.Stat(attrFileName); err == nil {
-				jf, err := ioutil.ReadFile(attrFileName)
-				if err != nil {
-					log.Printf("Failed to open %s!: %v", attrFileName, err)
-				} else {
-					var attrs map[string]interface{}
-					err := json.Unmarshal(jf, &attrs)
-					if err != nil {
-						log.Printf("Failed to parse %s!: %v", attrFileName, err)
-					}
-					label, labelOk := attrs["label"].(string)
-					bg, bgOk := attrs["bg"].(string)
-					fg, fgOk := attrs["fg"].(string)
-					if labelOk && bgOk && fgOk {
-						w.Write([]byte(fmt.Sprintf(`<br><span style="background-color: %s;color: %s">%s</span>`+"\n", bg, fg, label)))
-					}
+
+			// Render security attributes
+			attrs := getAttrs(fsPath, fName)
+			if len(attrs) > 0 {
+				label, labelOk := attrs["label"].(string)
+				bg, bgOk := attrs["bg"].(string)
+				fg, fgOk := attrs["fg"].(string)
+				if labelOk && bgOk && fgOk {
+					w.Write([]byte(fmt.Sprintf(`<span style="background-color: %s;color: %s">%s</span><br>`+"\n", bg, fg, label)))
 				}
 			}
+
+			// Render the regular link
+			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a>`+"\n", fName, fName, sz)))
+
+			// Render the thumbnail if we have one
 			if _, err := os.Stat(fsPath + "/" + fName + "--thumbnail.png"); err == nil {
-				w.Write([]byte(fmt.Sprintf(`<br><img src="%s--thumbnail.png">`+"\n", fName)))
+				w.Write([]byte(fmt.Sprintf(`<br><a href="%s--thumbnail.png"><img valign=bottom src="%s--thumbnail.png"></a>`+"\n", fName, fName)))
 			}
+
 			prevName = fName
 		}
 		w.Write([]byte(`</ul>` + "\n"))
