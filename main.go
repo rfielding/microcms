@@ -7,11 +7,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"sort"
 	"strings"
 
 	vision "cloud.google.com/go/vision/apiv1"
@@ -328,18 +330,6 @@ func postFileHandler(
 	}
 
 	if IsImage(fullName) && cascade {
-		if useVisionAPI {
-			rdr, err := detectLabels(`./` + fullName)
-			if err != nil {
-				return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
-			}
-			labelName := fmt.Sprintf("%s--labels.json", name)
-			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName, cascade)
-			if err != nil {
-				return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
-			}
-		}
-
 		if true {
 			rdr, err := makeThumbnail(`./` + fullName)
 			if err != nil {
@@ -352,6 +342,21 @@ func postFileHandler(
 				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
 		}
+
+		if useVisionAPI {
+			rdr, err := detectLabels(`./` + fullName)
+			if err != nil {
+				return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
+			}
+			labelName := fmt.Sprintf("%s--labels.json", name)
+			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName, cascade)
+			if err != nil {
+				//return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
+				log.Printf("Could not write extract file for indexing %s: %v\n", fullName, err)
+				return nil
+			}
+		}
+
 		return nil
 	}
 
@@ -460,9 +465,9 @@ func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 // Use the same format as the http.FileServer when given a directory
 func getRootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(`<pre>` + "\n"))
-	w.Write([]byte(`<a href="files">files</a>` + "\n"))
-	w.Write([]byte(`</pre>`))
+	w.Write([]byte(`<ul>` + "\n"))
+	w.Write([]byte(`  <li><a href="files">files</a>` + "\n"))
+	w.Write([]byte(`</ul>`))
 }
 
 func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
@@ -489,6 +494,45 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	w.Write([]byte(`</ul>`))
 }
 
+// os.Sys(fPath).IsDir() == true is a precondition
+func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
+	// Get directory names
+	names, err := ioutil.ReadDir(fsPath)
+	if err != nil {
+		log.Printf("ERR %v", err)
+		theFS.ServeHTTP(w, r)
+	}
+	sort.Slice(names, func(i, j int) bool {
+		return names[i].Name() < names[j].Name()
+	})
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(`<ul>` + "\n"))
+	var prevName string
+	for _, name := range names {
+		fName := name.Name()
+		if strings.Contains(fName, "--thumbnail.") {
+			continue
+		}
+
+		// If it's a derived file, then attach it to previous listing
+		if strings.HasPrefix(fName, prevName) && strings.Contains(fName, prevName+"--") {
+			w.Write([]byte((`  <br>`)))
+		} else {
+			w.Write([]byte(`  <li>`))
+		}
+
+		// Use an image in the link if we have a thumbnail
+		if _, err := os.Stat(fsPath + "/" + fName + "--thumbnail.png"); err == nil {
+			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s</a><br><img src="%s--thumbnail.png">`+"\n", fName, fName, fName)))
+		} else {
+			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s</a>`+"\n", fName, fName)))
+		}
+		prevName = fName
+	}
+	w.Write([]byte(`</ul>` + "\n"))
+}
+
 // Use the standard file serving of Go, because media behavior
 // is really really complicated; and you do not want to serve it manually
 // if you can help it.
@@ -498,6 +542,14 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 	if len(pathTokens) > 1 && pathTokens[1] == "files" {
+
+		fsPath := "." + path.Clean(strings.Join(pathTokens, "/"))
+		s, _ := os.Stat(fsPath)
+		if s != nil && s.IsDir() {
+			dirHandler(w, r, fsPath)
+			return
+		}
+
 		if strings.HasSuffix(r.URL.Path, ".css") {
 			w.Header().Set("Content-Type", "text/css")
 		}
