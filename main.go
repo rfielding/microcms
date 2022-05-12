@@ -246,6 +246,7 @@ func postFileHandler(
 	name string,
 	originalParentDir string,
 	originalName string,
+	cascade bool,
 ) error {
 	fullName := fmt.Sprintf("%s/%s", parentDir, name)
 	//log.Printf("create %s %s", command, fullName)
@@ -289,7 +290,7 @@ func postFileHandler(
 		}
 	}
 
-	if IsDoc(fullName) {
+	if IsDoc(fullName) && cascade {
 		// Open the file we wrote
 		f, err := os.Open("." + fullName)
 		if err != nil {
@@ -303,7 +304,7 @@ func postFileHandler(
 		}
 		// Write the doc extract stream like an upload
 		extractName := fmt.Sprintf("%s--extract.txt", name)
-		err = postFileHandler(w, r, rdr, command, parentDir, extractName, originalParentDir, originalName)
+		err = postFileHandler(w, r, rdr, command, parentDir, extractName, originalParentDir, originalName, cascade)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 		}
@@ -314,9 +315,9 @@ func postFileHandler(
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
-			// Only png works.  bug.
+			// Only png works.  bug in imageMagick.  don't cascade on thumbnails
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName)
+			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
@@ -326,27 +327,27 @@ func postFileHandler(
 		return nil
 	}
 
-	if IsImage(fullName) {
+	if IsImage(fullName) && cascade {
 		if useVisionAPI {
 			rdr, err := detectLabels(`./` + fullName)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 			}
 			labelName := fmt.Sprintf("%s--labels.json", name)
-			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName)
+			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName, cascade)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 			}
 		}
 
-		if strings.Contains(fullName, "--thumbnail.") == false {
+		if true {
 			rdr, err := makeThumbnail(`./` + fullName)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
 			ext := path.Ext(fullName)
 			thumbnailName := fmt.Sprintf("%s--thumbnail%s", name, ext)
-			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName)
+			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
@@ -354,7 +355,7 @@ func postFileHandler(
 		return nil
 	}
 
-	if IsTextFile(fullName) {
+	if IsTextFile(fullName) && cascade {
 		// open the file that we saved, and index it in the database.
 		f, err := os.Open("." + fullName)
 		if err != nil {
@@ -431,7 +432,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 				tardir := path.Dir(fmt.Sprintf("%s/%s/%s", parentDir, name, strings.Join(tname, "/")))
 				tarname := path.Base(header.Name)
 				log.Printf("writing: %s into %s", tarname, tardir)
-				err = postFileHandler(w, r, t, command, tardir, tarname, tardir, tarname)
+				err = postFileHandler(w, r, t, command, tardir, tarname, tardir, tarname, true)
 				if err != nil {
 					log.Printf("ERR %v", err)
 					return
@@ -440,7 +441,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		}
 	} else {
 		// Just a normal single-file upload
-		err = postFileHandler(w, r, r.Body, command, parentDir, name, parentDir, name)
+		err = postFileHandler(w, r, r.Body, command, parentDir, name, parentDir, name, true)
 		if err != nil {
 			log.Printf("ERR %v", err)
 			return
