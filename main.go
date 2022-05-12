@@ -466,7 +466,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 func getRootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(`<ul>` + "\n"))
-	w.Write([]byte(`  <li><a href="files">files</a>` + "\n"))
+	w.Write([]byte(`  <li><a href="/files/">files</a>` + "\n"))
 	w.Write([]byte(`</ul>`))
 }
 
@@ -494,13 +494,13 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	w.Write([]byte(`</ul>`))
 }
 
-// os.Sys(fPath).IsDir() == true is a precondition
 func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 	// Get directory names
 	names, err := ioutil.ReadDir(fsPath)
 	if err != nil {
 		log.Printf("ERR %v", err)
-		theFS.ServeHTTP(w, r)
+		HandleError(w, err, "readdir %s: %v", fsPath)
+		return
 	}
 	sort.Slice(names, func(i, j int) bool {
 		return names[i].Name() < names[j].Name()
@@ -537,19 +537,33 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 // is really really complicated; and you do not want to serve it manually
 // if you can help it.
 func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
-	if len(pathTokens) > 1 && pathTokens[1] == "" {
+	if r.URL.Path == "/" {
 		getRootHandler(w, r)
 		return
 	}
-	if len(pathTokens) > 1 && pathTokens[1] == "files" {
-
-		fsPath := "." + path.Clean(strings.Join(pathTokens, "/"))
-		s, _ := os.Stat(fsPath)
+	// Don't deal with directories missing slashes
+	if r.URL.Path == "/files" {
+		http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/files/") {
+		s, _ := os.Stat("." + r.URL.Path)
 		if s != nil && s.IsDir() {
-			dirHandler(w, r, fsPath)
-			return
+			if r.URL.Path[len(r.URL.Path)-1] != '/' {
+				http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
+				return
+			}
+			sIdx, _ := os.Stat("." + r.URL.Path + "index.html")
+			if sIdx != nil && !sIdx.IsDir() {
+				// Rather than redirect?
+				http.ServeFile(w, r, "."+r.URL.Path+"index.html")
+				return
+			} else {
+				dirHandler(w, r, "."+r.URL.Path)
+				return
+			}
 		}
-
+		// otherwise, just serve a file
 		if strings.HasSuffix(r.URL.Path, ".css") {
 			w.Header().Set("Content-Type", "text/css")
 		}
@@ -562,10 +576,12 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		theFS.ServeHTTP(w, r)
 		return
 	}
-	if len(pathTokens) > 1 && pathTokens[1] == "search" {
+	// try search handler
+	if r.URL.Path == "/search" || strings.HasPrefix(r.URL.Path, "/search/") {
 		getSearchHandler(w, r, pathTokens)
 		return
 	}
+	// give up
 	w.WriteHeader(http.StatusNotFound)
 }
 
