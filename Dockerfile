@@ -19,7 +19,7 @@ RUN cd / ; tar zxf /go1.18.1.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
 RUN go version
 COPY . /root
-RUN cd /root && go build -tags fts5 -o ./gosqlite main.go
+RUN /root/cmd/gosqlite/build
 RUN cd /root && rm schema.db ; sqlite3 schema.db < schema.sql
 RUN cd /root ; mkdir files || true
 # writable volume mount... make sure we have permissions to write it and for host to delete contents
@@ -28,4 +28,4 @@ RUN chmod -R 755 /root/files
 RUN chmod 755 /root/bin/tika-server-standard.jar
 WORKDIR /root
 USER 1000:1000
-CMD mkdir /root/files/images && cp /root/media/*100.png /root/files/images && ./gosqlite & java -jar ./bin/tika-server-standard.jar
+CMD ./cmd/gosqlite/gosqlite & java -jar ./bin/tika-server-standard.jar

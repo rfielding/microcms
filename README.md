@@ -4,9 +4,6 @@ Requirements:
 
 - Docker
 - Docker Compose
-- Go 1.18+
-- a Java runtime that can run tika-server (to test external text-extracts)
-
 
 This is an experiment in quickly creating a Content Management System (CMS), by which I mean
 
@@ -65,6 +62,14 @@ Install a react app in a tarball, or a simple html app.  Install means to expect
   curl -X POST --data-binary @app.tar http://localhost:9321/files/app/v1?install=true
 )
 
+```
+
+The API is designed to be easily explored from a web browser.  A few things are not completely obvious though.
+If you want a json rendition to a directory listing, or a search, then add `json=true` http parameter:
+
+```
+GET http://localhost:9321/files/documents/?json=true
+GET http://localhost:9321/search?json=true&match=king
 ```
 
 Upload a normal file, one by one

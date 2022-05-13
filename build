@@ -1,7 +1,0 @@
-#!/bin/bash
-
-export GOPROXY=direct
-export GOSUMDB=off
-
-go mod tidy
-go build -tags fts5 -o ./gosqlite main.go
