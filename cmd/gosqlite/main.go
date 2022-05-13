@@ -82,6 +82,20 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		getRootHandler(w, r)
 		return
 	}
+
+	// User hits us with an email link, and we set a cookie
+	if r.URL.Path == "/registration/" {
+		RegistrationHandler(w, r)
+		return
+	}
+
+	user := GetUser(r)
+	if len(user["email"]) > 0 {
+		log.Printf("Welcome user: %s", user["email"][0])
+	} else {
+		log.Printf("Welcome anonymous user")
+	}
+
 	// Don't deal with directories missing slashes
 	if r.URL.Path == "/files" {
 		http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
@@ -178,6 +192,9 @@ func httpSetup() {
 }
 
 func main() {
+	// In particular, load up the users and config
+	LoadConfig()
+
 	useVisionAPI = false
 	/*  GoogleVision API isn't worth the trouble right now.  AWS Rekognition is definitely worth the trouble.  TODO.
 	if s, err := os.Stat("./visionbot-secret-key.json"); err == nil && s.IsDir() == false && s.Size() > 0 {

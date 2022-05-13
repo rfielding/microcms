@@ -1,20 +1,23 @@
 #!/bin/bash
 
+auth=5ee5de77d0c566d2b8c170a03894ff2d
+url=http://localhost:9321
+
 # Put in a React app
 (
   cd `dirname $0`
   ( cd app && tar cvf ../app.tar . ) 
-  curl -X POST --data-binary @app.tar http://localhost:9321/files/app/v1?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @app.tar ${url}/files/app/v1?install=true
   #rm app.tar
 )
 
 (
   cd `dirname $0`
-  curl -X POST --data-binary @gilgamesh.tar http://localhost:9321/files/gilgamesh?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @gilgamesh.tar ${url}/files/gilgamesh?install=true
 )
 (
   cd `dirname $0`
-  curl -X POST --data-binary @kjv-bible.tar http://localhost:9321/files/kjv-bible?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @kjv-bible.tar ${url}/files/kjv-bible?install=true
 )
 
 # Put in a react app
@@ -23,7 +26,7 @@
   if [ -d react-test/build ]
   then
     ( cd react-test/build && tar cvf ../../react-test.tar . ) 
-    curl -X POST --data-binary @react-test.tar http://localhost:9321/files/app/react-test?install=true
+    curl -X POST --cookie "account=${auth}" --data-binary @react-test.tar ${url}/files/app/react-test?install=true
     rm react-test.tar
   fi
 )
@@ -33,26 +36,26 @@
   cd `dirname $0`
   for f in *.pdf
   do
-    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
   for f in *.json
   do
-    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
   for f in *.txt
   do
-    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
   for f in *.jpg
   do
-    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
   for f in *.mp4
   do
-    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
   for f in *.png
   do
-    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
 )

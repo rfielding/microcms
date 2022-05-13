@@ -17,6 +17,7 @@ services:
       #- ./schema.db:/root/schema.db
       #- ./files:/root/files
       - ./visionbot-secret-key.json:/root/visionbot-secret-key.json
+      - ./config.json:/root/config.json
 networks:
   mesh: {}
     
