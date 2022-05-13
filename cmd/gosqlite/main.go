@@ -91,7 +91,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 
 	user := GetUser(r)
 	if len(user["email"]) > 0 {
-		log.Printf("Welcome user: %s", user["email"][0])
+		log.Printf("Welcome user: %s", AsJson(user))
 	} else {
 		log.Printf("Welcome anonymous user")
 	}
