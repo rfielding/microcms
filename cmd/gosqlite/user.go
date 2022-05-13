@@ -47,4 +47,5 @@ func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 		Value: string(UserSecret(account)),
 		Path:  "/",
 	})
+	http.Redirect(w, r, "..", http.StatusTemporaryRedirect)
 }
