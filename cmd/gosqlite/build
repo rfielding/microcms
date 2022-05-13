@@ -6,5 +6,5 @@ cd `dirname $0`
 #export GOSUMDB=off
 #
 #go mod tidy
-go build -tags fts5 -o ./gosqlite main.go
+go build -tags fts5 -o ./gosqlite *.go
 )

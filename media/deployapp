@@ -51,4 +51,8 @@
   do
     curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
   done
+  for f in *.png
+  do
+    curl -X POST --data-binary @${f} http://localhost:9321/files/documents/${f}
+  done
 )
