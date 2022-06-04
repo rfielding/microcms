@@ -1,5 +1,5 @@
 schema.db
-media/*.tar
+media/app.tar
 ./gosqlite
 ./files
 visionbot-secret-key.json
