@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/open-policy-agent/opa/rego"
 )
 
 var theConfig Config
@@ -16,6 +19,26 @@ type User map[UserAttribute][]string
 // The users are mapped to a secret cookie value
 type Config struct {
 	Users map[UserSecret]User `json:"users"`
+}
+
+// Evaluate an opa string against some parsed json claims
+func CalculateRego(claims interface{}, s string) (map[string]interface{}, error) {
+	ctx := context.TODO()
+	compiler := rego.New(
+		rego.Query("data.gosqlite"),
+		rego.Module("gosqlite.rego", s),
+	)
+	query, err := compiler.PrepareForEval(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := query.Eval(ctx, rego.EvalInput(claims))
+	if err != nil {
+		return nil, err
+	}
+	calculation := results[0].Expressions[0].Value.(map[string]interface{})
+	return calculation, err
 }
 
 func LoadConfig() {

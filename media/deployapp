@@ -3,6 +3,8 @@
 auth=5ee5de77d0c566d2b8c170a03894ff2d
 url=http://localhost:9321
 
+curl -X POST --cookie "account=${auth}" --data-binary @permission.rego ${url}/files/permission.rego
+
 # Put in a React app
 (
   cd `dirname $0`
@@ -55,6 +57,10 @@ url=http://localhost:9321
     curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
   for f in *.png
+  do
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+  done
+  for f in *.rego
   do
     curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done

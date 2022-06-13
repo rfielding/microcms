@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"sort"
 	"strings"
 )
@@ -49,10 +50,54 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getAttrs(fsPath string, fName string) map[string]interface{} {
+// Permission attributes are dynamic, and can come from parent directories.
+// The first one found is used to set them all.
+// fsPath does NOT begin with a slash, and ends with a slash
+func getAttrsPermission(claims interface{}, fsPath string, fName string, initial map[string]interface{}) map[string]interface{} {
+	if strings.HasPrefix(fsPath, "./files/") == false {
+		panic(fmt.Sprintf("path %s should be rooted under ./files/ and end in slash", fsPath))
+	}
+	// Try exact file if fName is not blank
+	attrFileName := ""
+	if fName != "" {
+		attrFileName = fsPath + fName + "--permission.rego"
+	} else {
+		attrFileName = fsPath + "permission.rego"
+	}
+	log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
+	if _, err := os.Stat(attrFileName); err == nil {
+		jf, err := ioutil.ReadFile(attrFileName)
+		if err != nil {
+			log.Printf("Failed to open %s!: %v", attrFileName, err)
+		} else {
+			calculation, err := CalculateRego(claims, string(jf))
+			if err != nil {
+				log.Printf("Failed to parse %s!: %v", attrFileName, err)
+			}
+			for k, v := range calculation {
+				initial[k] = v
+			}
+		}
+		return initial
+	} else {
+		if fName != "" {
+			return getAttrsPermission(claims, fsPath, "", initial)
+		} else {
+			if fsPath == "./files/" {
+				return initial
+			} else {
+				// careful! if it ends in slash, then parent is same file, fsName is blank!
+				parent := "./" + path.Dir(path.Clean(fsPath)) + "/"
+				return getAttrsPermission(claims, parent, "", initial)
+			}
+		}
+	}
+}
+
+func getAttrs(claims interface{}, fsPath string, fName string) map[string]interface{} {
 	// Get the attributes for the file if they exist
-	var attrs map[string]interface{}
-	attrFileName := fsPath + "/" + fName + "--attributes.json"
+	attrs := make(map[string]interface{})
+	attrFileName := fsPath + fName + "--attributes.json"
 	if _, err := os.Stat(attrFileName); err == nil {
 		jf, err := ioutil.ReadFile(attrFileName)
 		if err != nil {
@@ -64,10 +109,7 @@ func getAttrs(fsPath string, fName string) map[string]interface{} {
 			}
 		}
 	}
-	if len(attrs) == 0 {
-		return nil
-	}
-	return attrs
+	return getAttrsPermission(claims, fsPath, fName, attrs)
 }
 
 func getSizeUnits(size int64, isDir bool) string {
@@ -87,6 +129,7 @@ func getSizeUnits(size int64, isDir bool) string {
 }
 
 func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
+	user := GetUser(r)
 	// Get directory names
 	names, err := ioutil.ReadDir(fsPath)
 	if err != nil {
@@ -106,7 +149,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 		}
 		for _, name := range names {
 			fName := name.Name()
-			attrs := getAttrs(fsPath, fName)
+			attrs := getAttrs(user, fsPath, fName)
 			listing.Children = append(listing.Children, Node{
 				Name:       fName,
 				IsDir:      name.IsDir(),
@@ -137,11 +180,11 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 			sz := getSizeUnits(name.Size(), name.IsDir())
 
 			// Render security attributes
-			attrs := getAttrs(fsPath, fName)
+			attrs := getAttrs(user, fsPath, fName)
 			if len(attrs) > 0 {
-				label, labelOk := attrs["label"].(string)
-				bg, bgOk := attrs["bg"].(string)
-				fg, fgOk := attrs["fg"].(string)
+				label, labelOk := attrs["Label"].(string)
+				bg, bgOk := attrs["LabelBg"].(string)
+				fg, fgOk := attrs["LabelFg"].(string)
 				if labelOk && bgOk && fgOk {
 					w.Write([]byte(fmt.Sprintf(`<span style="background-color: %s;color: %s">%s</span><br>`+"\n", bg, fg, label)))
 				}
