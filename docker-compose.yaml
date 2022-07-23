@@ -11,8 +11,8 @@ services:
     ports:
       - '9321:9321'
     build: .
-    #environment:
-      #- GOOGLE_APPLICATION_CREDENTIALS=/root/visionbot-secret-key.json
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/root/visionbot-secret-key.json
     volumes:
       #- ./schema.db:/root/schema.db
       #- ./files:/root/files
