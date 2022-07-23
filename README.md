@@ -86,4 +86,8 @@ http://localhost:9321/search?match=king
 
 ![images/search.png](images/search.png)
 
+Note that if you setup Google Vision, when you upload images, they can be labeled and found in the search; indirectly, through the labelling.  Here is a hit on a dog, for a file with an uninformative name.
+
+![images/search2.png](images/search2.png)
+
 Adding reverseproxy endpoints to make full-blown apps work will be easy. Permission system for safe updates a little less so, but not hard.
