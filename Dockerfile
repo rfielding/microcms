@@ -1,4 +1,4 @@
-FROM ubuntu:21.10
+FROM --platform=linux/amd64 ubuntu:22.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 RUN apt-get update
@@ -14,12 +14,11 @@ RUN apt-get install -y imagemagick
 RUN mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.bak
 RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/policy.xml
 RUN pwd
-RUN cd / && wget https://go.dev/dl/go1.18.1.linux-amd64.tar.gz
-RUN cd / ; tar zxf /go1.18.1.linux-amd64.tar.gz
+RUN cd / && wget https://go.dev/dl/go1.20.6.linux-amd64.tar.gz
+RUN cd / ; tar zxf /go1.20.6.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
-RUN go version
 COPY . /root
-RUN /root/cmd/gosqlite/build
+RUN cd /root/cmd/gosqlite && GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./gosqlite *.go
 RUN cd /root && rm schema.db ; sqlite3 schema.db < schema.sql
 RUN cd /root ; mkdir files || true
 # writable volume mount... make sure we have permissions to write it and for host to delete contents

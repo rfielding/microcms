@@ -4,10 +4,9 @@ export GSUID=1000
 export GSGID=1000
 (
   cd `dirname $0`
-  go mod vendor
+  go mod tidy
   docker-compose build && (
     echo as login via: http://localhost:9321/registration/?account=5ee5de77d0c566d2b8c170a03894ff2d
     echo or login via: http://localhost:9321/registration/?account=33b98226f52c0e39e8f94cb565becd7d
-    docker-compose up
   ) 
 )

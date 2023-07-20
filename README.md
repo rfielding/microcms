@@ -35,6 +35,7 @@ Todo:
 ```
 # runs on http://localhost:9321
 ./cleanbuild
+docker-compose up
 ```
 
 
@@ -56,12 +57,8 @@ Install a react app in a tarball, or a simple html app.  Install means to expect
 > All directories are created as a side-effect.  But before or after uploading file, it's a TODO to be able to upload metadata such as permissions.  In that case, upload permissions before files.
 
 ```
-(
-  cd `dirname $0`
-  ( cd app && tar cvf ../app.tar . ) 
-  curl -X POST --data-binary @app.tar http://localhost:9321/files/app/v1?install=true
-)
-
+cd media
+./deployapp # read it to see how it uploads files
 ```
 
 The API is designed to be easily explored from a web browser.  A few things are not completely obvious though.
