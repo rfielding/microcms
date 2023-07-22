@@ -5,7 +5,7 @@ url=http://localhost:9321
 
 curl -X POST --cookie "account=${auth}" --data-binary @permission.rego ${url}/files/permission.rego
 
-# Put in a React app
+# Put in a html app
 (
   cd `dirname $0`
   ( cd app && tar cvf ../app.tar . ) 
@@ -25,6 +25,9 @@ curl -X POST --cookie "account=${auth}" --data-binary @permission.rego ${url}/fi
 # Put in a react app
 (
   cd `dirname $0`
+  export PUBLIC_URL="."
+  npx create-react-app react-test
+  (cd react-test && npm run build)
   if [ -d react-test/build ]
   then
     ( cd react-test/build && tar cvf ../../react-test.tar . ) 

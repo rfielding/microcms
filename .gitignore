@@ -1,6 +1,6 @@
 schema.db
 media/app.tar
+media/react-test
 ./gosqlite
 ./files
 visionbot-secret-key.json
-
