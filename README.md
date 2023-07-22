@@ -4,6 +4,10 @@ Requirements:
 
 - Docker
 - Docker Compose
+- curl
+- jq
+- npx
+- npm
 
 This is an experiment in quickly creating a Content Management System (CMS), by which I mean
 
@@ -34,7 +38,7 @@ Todo:
 
 ```
 # runs on http://localhost:9321
-./cleanbuild
+./cleanbuild # make the container
 docker-compose up
 ```
 
@@ -57,8 +61,7 @@ Install a react app in a tarball, or a simple html app.  Install means to expect
 > All directories are created as a side-effect.  But before or after uploading file, it's a TODO to be able to upload metadata such as permissions.  In that case, upload permissions before files.
 
 ```
-cd media
-./deployapp # read it to see how it uploads files
+./media/deployapp # read it to see how it uploads files
 ```
 
 The API is designed to be easily explored from a web browser.  A few things are not completely obvious though.
