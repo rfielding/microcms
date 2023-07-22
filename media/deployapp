@@ -68,3 +68,5 @@ curl -X POST --cookie "account=${auth}" --data-binary @permission.rego ${url}/fi
     curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
   done
 )
+
+curl 'http://localhost:9321/search?json=true&match=king' | jq
