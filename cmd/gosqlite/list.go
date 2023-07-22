@@ -43,7 +43,7 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`<form method="GET" action="/search">` + "\n"))
 		w.Write([]byte(`<ul>` + "\n"))
-		w.Write([]byte(`  <li><label for="match"><input id="match" name="match" type="text"><input type="button" value="search" name="search">` + "\n"))
+		w.Write([]byte(`  <li><label for="match">Search:<input id="match" name="match" type="text">` + "\n"))
 		w.Write([]byte(`  <li><a href="/files/">files</a>` + "\n"))
 		w.Write([]byte(`</ul>` + "\n"))
 		w.Write([]byte(`</form>` + "\n"))
