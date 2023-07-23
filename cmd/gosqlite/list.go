@@ -41,12 +41,11 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// TODO: proper relative path calculation
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<form method="GET" action="/search">` + "\n"))
-		w.Write([]byte(`<ul>` + "\n"))
-		w.Write([]byte(`  <li><label for="match">Search:<input id="match" name="match" type="text">` + "\n"))
-		w.Write([]byte(`  <li><a href="/files/">files</a>` + "\n"))
-		w.Write([]byte(`</ul>` + "\n"))
-		w.Write([]byte(`</form>` + "\n"))
+		err := compiledSearchTemplate.Execute(w, nil)
+		if err != nil {
+			HandleError(w, err, "Unable to execute searchTemplate: %v", err)
+			return
+		}
 	}
 }
 

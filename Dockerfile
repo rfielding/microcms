@@ -10,6 +10,7 @@ RUN apt-get install -y gcc
 RUN apt-get install -y default-jre
 RUN apt-get install -y ffmpeg
 RUN apt-get install -y imagemagick
+RUN apt-get install -y time
 # UGH! dealing with imagemagick bug
 RUN mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.bak
 RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/policy.xml
@@ -18,9 +19,10 @@ RUN cd / && wget https://go.dev/dl/go1.20.6.linux-amd64.tar.gz
 RUN cd / ; tar zxf /go1.20.6.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
 COPY . /root
-RUN cd /root/cmd/gosqlite && GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./gosqlite *.go
 RUN cd /root && rm schema.db ; sqlite3 schema.db < schema.sql
 RUN cd /root ; mkdir files || true
+# You are here after each code change
+RUN cd /root/cmd/gosqlite && GOOS=linux GOARCH=amd64 time go build -tags fts5 -o ./gosqlite *.go
 # writable volume mount... make sure we have permissions to write it and for host to delete contents
 RUN chown -R 1000:1000 /root
 RUN chmod -R 755 /root/files
