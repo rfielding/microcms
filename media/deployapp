@@ -17,7 +17,7 @@ url=http://localhost:9321
   # Put in a html app
   ( cd app && tar cvf ../app.tar . ) 
   curl -X POST --cookie "account=${auth}" --data-binary @app.tar ${url}/files/app/v1?install=true
-  #rm app.tar
+  rm app.tar
 
   curl -X POST --cookie "account=${auth}" --data-binary @gilgamesh.tar ${url}/files/gilgamesh?install=true
 
