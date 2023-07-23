@@ -19,6 +19,8 @@ type Node struct {
 	IsDir      bool                   `json:"isDir"`
 	Context    string                 `json:"context,omitempty"`
 	Size       int64                  `json:"size,omitempty"`
+	// Used for listings of results
+	Part int `json:"part,omitempty"`
 }
 
 type Listing struct {
@@ -39,12 +41,15 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write([]byte(AsJson(listing)))
 	} else {
-		// TODO: proper relative path calculation
 		w.Header().Set("Content-Type", "text/html")
-		err := compiledSearchTemplate.Execute(w, nil)
-		if err != nil {
-			HandleError(w, err, "Unable to execute searchTemplate: %v", err)
-			return
+		if compiledRootTemplate != nil {
+			err := compiledRootTemplate.Execute(w, nil)
+			if err != nil {
+				HandleError(w, err, "Unable to execute rootTemplate: %v", err)
+				return
+			}
+		} else {
+			w.Write([]byte("Please upload /files/rootTemplate.html.templ"))
 		}
 	}
 }
@@ -139,66 +144,33 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 		return names[i].Name() < names[j].Name()
 	})
 
+	listing := Listing{
+		Children: []Node{},
+	}
+	for _, name := range names {
+		fName := name.Name()
+		attrs := getAttrs(user, fsPath, fName)
+		listing.Children = append(listing.Children, Node{
+			Name:       fName,
+			IsDir:      name.IsDir(),
+			Size:       name.Size(),
+			Attributes: attrs,
+		})
+	}
+
 	q := r.URL.Query()
 	inJson := q.Get("json") == "true"
 	if inJson {
 		w.Header().Set("Content-Type", "application/json")
-		listing := Listing{
-			Children: []Node{},
-		}
-		for _, name := range names {
-			fName := name.Name()
-			attrs := getAttrs(user, fsPath, fName)
-			listing.Children = append(listing.Children, Node{
-				Name:       fName,
-				IsDir:      name.IsDir(),
-				Size:       name.Size(),
-				Attributes: attrs,
-			})
-		}
 		w.Write([]byte(AsJson(listing)))
+		return
 	} else {
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<ul>` + "\n"))
-		var prevName string
-		for _, name := range names {
-			fName := name.Name()
-
-			if strings.HasSuffix(fName, "--thumbnail.png") {
-				continue
-			}
-
-			// If it's a derived file, then attach it to previous listing
-			if strings.HasPrefix(fName, prevName) && strings.Contains(fName, prevName+"--") {
-				w.Write([]byte((`  <br>&nbsp;&nbsp;` + "\n")))
-			} else {
-				w.Write([]byte(`  <br>&nbsp;<li>` + "\n"))
-			}
-
-			// Use an image in the link if we have a thumbnail
-			sz := getSizeUnits(name.Size(), name.IsDir())
-
-			// Render security attributes
-			attrs := getAttrs(user, fsPath, fName)
-			if len(attrs) > 0 {
-				label, labelOk := attrs["Label"].(string)
-				bg, bgOk := attrs["LabelBg"].(string)
-				fg, fgOk := attrs["LabelFg"].(string)
-				if labelOk && bgOk && fgOk {
-					w.Write([]byte(fmt.Sprintf(`<span style="background-color: %s;color: %s">%s</span><br>`+"\n", bg, fg, label)))
-				}
-			}
-
-			// Render the regular link
-			w.Write([]byte(fmt.Sprintf(`<a href="%s">%s %s</a>`+"\n", fName, fName, sz)))
-
-			// Render the thumbnail if we have one
-			if _, err := os.Stat(fsPath + "/" + fName + "--thumbnail.png"); err == nil {
-				w.Write([]byte(fmt.Sprintf(`<br><a href="%s--thumbnail.png"><img valign=bottom src="%s--thumbnail.png"></a>`+"\n", fName, fName)))
-			}
-
-			prevName = fName
+		if compiledListingTemplate != nil {
+			compiledListingTemplate.Execute(w, listing)
+		} else {
+			w.Write([]byte("please upload /files/listingTemplate.html.templ"))
 		}
-		w.Write([]byte(`</ul>` + "\n"))
+		return
 	}
 }

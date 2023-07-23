@@ -2,24 +2,23 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"text/template"
 )
 
-var searchTemplate = `
-<form method="GET" action="/search">
-  <ul>
-    <li><label for="match">Search:<input id="match" name="match" type="text">
-    <li><a href="/files/">files</a>
-  </ul>
-</form>
-`
-
-func compileSearchTemplate() *template.Template {
-	t, err := template.New("searchTemplate").Parse(searchTemplate)
+func compileTemplate(name string) *template.Template {
+	templateText, err := ioutil.ReadFile(name)
 	if err != nil {
-		panic(fmt.Sprintf("Cannot parse template: %v", err))
+		panic(fmt.Sprintf("Cannot find template: %s", name))
+	}
+	t, err := template.New(name).Parse(string(templateText))
+	if err != nil {
+		panic(fmt.Sprintf("Cannot parse template %s: %v", name, err))
 	}
 	return t
 }
 
-var compiledSearchTemplate = compileSearchTemplate()
+// You should upload these templates as part of initialization of the CMS
+var compiledRootTemplate *template.Template
+var compiledSearchTemplate *template.Template
+var compiledListingTemplate *template.Template

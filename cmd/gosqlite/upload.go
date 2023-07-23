@@ -52,7 +52,8 @@ func postFileHandler(
 
 	// Ensure that the file in question exists on disk.
 	if true {
-		f, err := os.Create("." + fullName) //, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		df := "." + fullName
+		f, err := os.Create(df) //, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not create file %s: %v", r.URL.Path)
 		}
@@ -62,6 +63,20 @@ func postFileHandler(
 		f.Close() // strange positioning, but we must close before defer can get to it.
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path)
+		}
+
+		// Make sure that these are re-compiled on upload
+		if fullName == "/files/searchTemplate.html.templ" {
+			log.Printf("Recompiling %s", fullName)
+			compiledSearchTemplate = compileTemplate(df)
+		}
+		if fullName == "/files/listingTemplate.html.templ" {
+			log.Printf("Recompiling %s", fullName)
+			compiledListingTemplate = compileTemplate(df)
+		}
+		if fullName == "/files/rootTemplate.html.templ" {
+			log.Printf("Recompiling %s", fullName)
+			compiledRootTemplate = compileTemplate(df)
 		}
 	}
 

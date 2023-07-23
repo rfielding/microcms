@@ -1,0 +1,9 @@
+<!-- Use parameter json=true and make a React UI -->
+<html>
+  <link rel="stylesheet" href="files/styles.css">
+  <ul>
+    {{range .Children}}
+	    <li><a href="{{.Path}}{{.Name}}">{{.Path}}{{.Name}} [part {{.Part}}]</a><hr>{{.Context}}</li>
+    {{end}}
+  </ul>
+</html>

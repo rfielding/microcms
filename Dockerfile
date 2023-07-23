@@ -21,8 +21,8 @@ RUN ln -s /go/bin/go /usr/local/bin/go
 COPY . /root
 RUN cd /root && rm schema.db ; sqlite3 schema.db < schema.sql
 RUN cd /root ; mkdir files || true
-# You are here after each code change
-RUN cd /root/cmd/gosqlite && GOOS=linux GOARCH=amd64 time go build -tags fts5 -o ./gosqlite *.go
+# You are here after each code change - it is so very slow because of cgo, because of sqlite
+RUN cd /root/cmd/gosqlite && GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./gosqlite *.go
 # writable volume mount... make sure we have permissions to write it and for host to delete contents
 RUN chown -R 1000:1000 /root
 RUN chmod -R 755 /root/files
