@@ -3,7 +3,10 @@
   <link rel="stylesheet" href="/files/styles.css">
   <ul>
     {{range .Children}}
-      <li><a href="{{.Name}}">{{.Name}}</a></li>
+      <li>
+        <span style="color:{{.Attributes.LabelFg}}; background-color:{{.Attributes.LabelBg}}">{{.Attributes.Label}}</span>
+        <a href="{{.Name}}">{{.Name}}</a>
+      </li>
     {{end}}
   </ul>
 </html>
