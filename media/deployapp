@@ -12,7 +12,7 @@ url=http://localhost:9321
 
   # default permissions
   auth=5ee5de77d0c566d2b8c170a03894ff2d
-  curl -X POST --cookie "account=${auth}" --data-binary @permission.rego ${url}/files/permission.rego
+  curl -X POST --cookie "account=${auth}" --data-binary @permissions.rego ${url}/files/permissions.rego
 
   # Put in a html app
   ( cd app && tar cvf ../app.tar . ) 

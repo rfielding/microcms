@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -101,6 +102,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
 		return
 	}
+	// If it's a file in our tree...do redirects if we must, or handle a dir reference
 	if strings.HasPrefix(r.URL.Path, "/files/") {
 		s, _ := os.Stat("." + r.URL.Path)
 		if s != nil && s.IsDir() {
@@ -118,7 +120,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 				return
 			}
 		}
-		// otherwise, just serve a file
+		// set a mime type that the handler won't know about if we must
 		if strings.HasSuffix(r.URL.Path, ".css") {
 			w.Header().Set("Content-Type", "text/css")
 		}
@@ -128,6 +130,35 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		if strings.HasSuffix(r.URL.Path, ".md") {
 			w.Header().Set("Content-Type", "text/markdown")
 		}
+
+		// Recursively find our permissions and return it virtually.
+		// It won't show up directly in listings, but should come back
+		// with what it finds
+		if strings.HasSuffix(r.URL.Path, "--permissions.rego") {
+			if _, err := os.Stat("." + r.URL.Path); os.IsNotExist(err) {
+				r.URL.Path = path.Dir(r.URL.Path) + "/permissions.rego"
+			}
+		}
+
+		// Walk up the tree until we find what we want
+		if path.Base(r.URL.Path) == "permissions.rego" {
+			if _, err := os.Stat("." + r.URL.Path); os.IsNotExist(err) {
+				for true {
+					r.URL.Path = path.Dir(path.Dir(r.URL.Path)) + "/permissions.rego"
+					_, err = os.Stat("." + r.URL.Path)
+					if os.IsExist(err) {
+						break // found it!
+					}
+					if r.URL.Path == "/files/permissions.rego" {
+						break
+					}
+				}
+				w.Header().Set("usedfile", r.URL.Path)
+			}
+		}
+
+		// Serve the file we were looking for, possibly with modified URL,
+		// set mime types, etc. Special headers could have been set too
 		theFS.ServeHTTP(w, r)
 		return
 	}

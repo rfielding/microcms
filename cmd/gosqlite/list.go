@@ -64,9 +64,9 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 	// Try exact file if fName is not blank
 	attrFileName := ""
 	if fName != "" {
-		attrFileName = fsPath + fName + "--permission.rego"
+		attrFileName = fsPath + fName + "--permissions.rego"
 	} else {
-		attrFileName = fsPath + "permission.rego"
+		attrFileName = fsPath + "permissions.rego"
 	}
 	log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
 	if _, err := os.Stat(attrFileName); err == nil {
