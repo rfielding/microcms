@@ -68,7 +68,7 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 	} else {
 		attrFileName = fsPath + "permissions.rego"
 	}
-	log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
+	//log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
 	if _, err := os.Stat(attrFileName); err == nil {
 		jf, err := ioutil.ReadFile(attrFileName)
 		if err != nil {

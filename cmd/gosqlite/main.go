@@ -130,6 +130,9 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		if strings.HasSuffix(r.URL.Path, ".md") {
 			w.Header().Set("Content-Type", "text/markdown")
 		}
+		if strings.HasSuffix(r.URL.Path, ".templ") {
+			w.Header().Set("Content-Type", "text/plain")
+		}
 
 		// Recursively find our permissions and return it virtually.
 		// It won't show up directly in listings, but should come back
