@@ -42,7 +42,7 @@ And it currently isn't dealing with volume mount persistence at the moment.
 ```
 # runs on http://localhost:9321
 ./cleanbuild # make the container
-docker-compose up
+./startup # launch docker compose
 ```
 
 
