@@ -113,3 +113,14 @@ When a file is uploaded, it triggers a cascade of related simulated uploads.
 Because of this recursive breakdown of either unpacking tarballs, or turning files into extracted text, full-text search can now work well. The basic idea is to upload individual files, or tarballs of files. It is known what files will be automatically created (thubnails, text extracts). We can override all of the automatically created files.
 
 Permissions in rego files apply to all the directories inside, unless overrides are done.
+
+## Templates
+
+The html navigation is supported in order to have a reliable interface when things break, or before a proper application is uploaded into the server.
+
+- styles.css
+- rootTemplate.html.templ
+- searchTemplate.html.templ
+- listingTemplate.html.templ
+
+These files, along with permission.rego, are initialization config. They are files like everything else. But they are required to navigate with a browser. The idea is that at some point, a React app is the official interface. So all of the html and css is kept out of the server itself.
