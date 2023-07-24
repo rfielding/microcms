@@ -19,6 +19,11 @@ url=http://localhost:9321
   curl -X POST --cookie "account=${auth}" --data-binary @app.tar ${url}/files/app/v1?install=true
   rm app.tar
 
+  # Put in a js app
+  ( cd brl && tar cvf ../brl.tar . ) 
+  curl -X POST --cookie "account=${auth}" --data-binary @brl.tar ${url}/files/brl?install=true
+  rm brl.tar
+
   curl -X POST --cookie "account=${auth}" --data-binary @gilgamesh.tar ${url}/files/gilgamesh?install=true
 
   curl -X POST --cookie "account=${auth}" --data-binary @kjv-bible.tar ${url}/files/kjv-bible?install=true
