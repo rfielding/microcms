@@ -49,7 +49,7 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			w.Write([]byte("Please upload /files/rootTemplate.html.templ"))
+			w.Write([]byte("Please upload /files/init/rootTemplate.html.templ"))
 		}
 	}
 }
@@ -169,7 +169,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
 		if compiledListingTemplate != nil {
 			compiledListingTemplate.Execute(w, listing)
 		} else {
-			w.Write([]byte("please upload /files/listingTemplate.html.templ"))
+			w.Write([]byte("please upload /files/init/listingTemplate.html.templ"))
 		}
 		return
 	}

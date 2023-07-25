@@ -5,10 +5,10 @@ url=http://localhost:9321
 (
   cd `dirname $0`
   # these are necessary to use the browser to navigate
-  curl -X POST --data-binary @styles.css ${url}/files/styles.css
-  curl -X POST --data-binary @rootTemplate.html.templ ${url}/files/rootTemplate.html.templ
-  curl -X POST --data-binary @listingTemplate.html.templ ${url}/files/listingTemplate.html.templ
-  curl -X POST --data-binary @searchTemplate.html.templ ${url}/files/searchTemplate.html.templ
+  curl -X POST --data-binary @styles.css ${url}/files/init/styles.css
+  curl -X POST --data-binary @rootTemplate.html.templ ${url}/files/init/rootTemplate.html.templ
+  curl -X POST --data-binary @listingTemplate.html.templ ${url}/files/init/listingTemplate.html.templ
+  curl -X POST --data-binary @searchTemplate.html.templ ${url}/files/init/searchTemplate.html.templ
 
   # default permissions
   auth=5ee5de77d0c566d2b8c170a03894ff2d

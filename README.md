@@ -118,9 +118,9 @@ Permissions in rego files apply to all the directories inside, unless overrides 
 
 The html navigation is supported in order to have a reliable interface when things break, or before a proper application is uploaded into the server.
 
-- styles.css
-- rootTemplate.html.templ
-- searchTemplate.html.templ
-- listingTemplate.html.templ
+- init/styles.css
+- init/rootTemplate.html.templ
+- init/searchTemplate.html.templ
+- init/listingTemplate.html.templ
 
 These files, along with permission.rego, are initialization config. They are files like everything else. But they are required to navigate with a browser. The idea is that at some point, a React app is the official interface. So all of the html and css is kept out of the server itself.

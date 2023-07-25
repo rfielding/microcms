@@ -66,15 +66,15 @@ func postFileHandler(
 		}
 
 		// Make sure that these are re-compiled on upload
-		if fullName == "/files/searchTemplate.html.templ" {
+		if fullName == "/files/init/searchTemplate.html.templ" {
 			log.Printf("Recompiling %s", fullName)
 			compiledSearchTemplate = compileTemplate(df)
 		}
-		if fullName == "/files/listingTemplate.html.templ" {
+		if fullName == "/files/init/listingTemplate.html.templ" {
 			log.Printf("Recompiling %s", fullName)
 			compiledListingTemplate = compileTemplate(df)
 		}
-		if fullName == "/files/rootTemplate.html.templ" {
+		if fullName == "/files/init/rootTemplate.html.templ" {
 			log.Printf("Recompiling %s", fullName)
 			compiledRootTemplate = compileTemplate(df)
 		}

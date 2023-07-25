@@ -48,19 +48,7 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 				return
 			}
 		} else {
-			w.Write([]byte("Please upload /files/searchTemplate.html.templ"))
+			w.Write([]byte("Please upload /files/init/searchTemplate.html.templ"))
 		}
-		/*
-			w.Write([]byte(`<ul>` + "\n"))
-			for rows.Next() {
-				var path, name, highlighted string
-				var part int
-				rows.Scan(&path, &name, &part, &highlighted)
-				w.Write([]byte(
-					fmt.Sprintf(`<li><a href="%s%s">%s%s [part %d]</a><br>%s`+"<br></li>", path, name, path, name, part, highlighted),
-				))
-			}
-			w.Write([]byte(`</ul>`)
-		*/
 	}
 }
