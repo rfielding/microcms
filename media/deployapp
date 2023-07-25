@@ -24,6 +24,10 @@ url=http://localhost:9321
   curl -X POST --cookie "account=${auth}" --data-binary @brl.tar ${url}/files/brl?install=true
   rm brl.tar
 
+  ( cd dbg && tar cvf ../dbg.tar . )
+  curl -X POST --cookie "account=${auth}" --data-binary @dbg.tar ${url}/files/gateways?install=true
+  rm dbg.tar
+
   curl -X POST --cookie "account=${auth}" --data-binary @gilgamesh.tar ${url}/files/gilgamesh?install=true
 
   curl -X POST --cookie "account=${auth}" --data-binary @kjv-bible.tar ${url}/files/kjv-bible?install=true
