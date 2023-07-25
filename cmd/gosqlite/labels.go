@@ -1,40 +1,63 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"io"
-	"os"
+	"io/ioutil"
 
-	vision "cloud.google.com/go/vision/apiv1"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/rekognition"
 )
 
-// detectLabels gets labels from the Vision API for an image at the given file path.
+// detectLabels gets labels from the rekognition API for an image at the given file path.
 func detectLabels(file string) (io.Reader, error) {
-	ctx := context.Background()
+	svc := rekognition.New(session.New())
 
-	client, err := vision.NewImageAnnotatorClient(ctx)
+	imageBytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
 
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
+	input := &rekognition.DetectLabelsInput{
+		Image: &rekognition.Image{
+			Bytes: imageBytes,
+		},
+		MaxLabels:     aws.Int64(123),
+		MinConfidence: aws.Float64(70.000000),
 	}
-	defer f.Close()
 
-	image, err := vision.NewImageFromReader(f)
+	result, err := svc.DetectLabels(input)
 	if err != nil {
-		return nil, err
-	}
-	annotations, err := client.DetectLabels(ctx, image, nil, 10)
-	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case rekognition.ErrCodeInvalidS3ObjectException:
+				fmt.Println(rekognition.ErrCodeInvalidS3ObjectException, aerr.Error())
+			case rekognition.ErrCodeInvalidParameterException:
+				fmt.Println(rekognition.ErrCodeInvalidParameterException, aerr.Error())
+			case rekognition.ErrCodeImageTooLargeException:
+				fmt.Println(rekognition.ErrCodeImageTooLargeException, aerr.Error())
+			case rekognition.ErrCodeAccessDeniedException:
+				fmt.Println(rekognition.ErrCodeAccessDeniedException, aerr.Error())
+			case rekognition.ErrCodeInternalServerError:
+				fmt.Println(rekognition.ErrCodeInternalServerError, aerr.Error())
+			case rekognition.ErrCodeThrottlingException:
+				fmt.Println(rekognition.ErrCodeThrottlingException, aerr.Error())
+			case rekognition.ErrCodeProvisionedThroughputExceededException:
+				fmt.Println(rekognition.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+			case rekognition.ErrCodeInvalidImageFormatException:
+				fmt.Println(rekognition.ErrCodeInvalidImageFormatException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		}
 		return nil, err
 	}
 
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		pipeWriter.Write([]byte(AsJson(annotations)))
+		pipeWriter.Write([]byte(AsJson(result)))
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil

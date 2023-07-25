@@ -18,7 +18,6 @@ var docExtractor string
 // Make sure to only serve up out of known subdirectories
 var theFS = http.FileServer(http.Dir("."))
 var theDB *sql.DB
-var useVisionAPI bool
 
 // Use this for startup panics only
 func CheckErr(err error, msg string) {
@@ -231,14 +230,6 @@ func httpSetup() {
 func main() {
 	// In particular, load up the users and config
 	LoadConfig()
-
-	useVisionAPI = false
-	if s, err := os.Stat("./visionbot-secret-key.json"); err == nil && s.IsDir() == false && s.Size() > 0 {
-		useVisionAPI = true
-	} else {
-		log.Printf("copy over ./visionbot-secret-key.json Google Vision API key to use automatic image labels")
-	}
-	log.Printf("Using the Google Vision API, because credentials are mounted")
 
 	docExtractor = Getenv("DOC_EXTRACTOR", "http://localhost:9998/tika")
 

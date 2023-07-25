@@ -12,11 +12,12 @@ services:
       - '9321:9321'
     build: .
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/root/visionbot-secret-key.json
+      - AWS_ACCESS_KEY_ID
+      - AWS_REGION
+      - AWS_SECRET_ACCESS_KEY
     volumes:
       #- ./schema.db:/root/schema.db
       #- ./files:/root/files
-      #- ./visionbot-secret-key.json:/root/visionbot-secret-key.json
       - ./config.json:/root/config.json
 networks:
   mesh: {}
