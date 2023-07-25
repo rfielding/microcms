@@ -49,6 +49,9 @@ func IsTextFile(fName string) bool {
 	if strings.HasSuffix(fName, ".html") {
 		return true
 	}
+	if strings.HasSuffix(fName, ".vtt") {
+		return true
+	}
 	return false
 }
 
