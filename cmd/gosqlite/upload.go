@@ -143,7 +143,6 @@ func postFileHandler(
 			}
 		}
 
-		log.Printf("using AWS key: %s", os.Getenv("AWS_ACCESS_KEY_ID"))
 		if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
 			fmt.Printf("detect labels on %s", fullName)
 			rdr, err := detectLabels(`./` + fullName)

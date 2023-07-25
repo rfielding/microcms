@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/open-policy-agent/opa/rego"
 )
@@ -46,6 +48,12 @@ func LoadConfig() {
 	CheckErr(err, "Could not open config file")
 	err = json.Unmarshal(f, &theConfig)
 	CheckErr(err, "Could not parse config file")
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
+		log.Printf("using AWS key: %s", os.Getenv("AWS_ACCESS_KEY_ID"))
+	} else {
+		log.Printf("please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to creds that can use AWSRekognition")
+	}
+
 }
 
 func GetUser(r *http.Request) User {
