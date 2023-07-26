@@ -7,7 +7,7 @@ import (
 func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	match := r.URL.Query().Get("match")
 	rows, err := theDB.Query(`
-		SELECT original_path,original_name,part,highlight(filesearch,7,'<b style="background-color:yellow">','</b>') highlighted 
+		SELECT original_path,original_name,part,highlight(filesearch,7,'<b style="background-color:gray">','</b>') highlighted 
 		from filesearch
 		where filesearch match ?
 	`, match)
