@@ -2,14 +2,25 @@ package main
 
 import (
 	"archive/tar"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path"
 	"strings"
 )
+
+type LabelModel struct {
+	LabelModelVersion string        `json:"LabelModelVersion"`
+	Labels            []LabelObject `json:"Labels"`
+}
+
+type LabelObject struct {
+	Name string `json:Name`
+}
 
 // postFileHandler can be re-used as long as err != nil
 func postFileHandler(
@@ -144,8 +155,8 @@ func postFileHandler(
 		}
 
 		if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
-			fmt.Printf("detect labels on %s", fullName)
-			rdr, err := detectLabels(`./` + fullName)
+			log.Printf("detect labels on %s", fullName)
+			rdr, err := detectLabels("." + fullName)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 			}
@@ -153,8 +164,41 @@ func postFileHandler(
 			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName, cascade)
 			if err != nil {
 				//return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
-				log.Printf("Could not write extract file for indexing %s: %v\n", fullName, err)
+				log.Printf("Could not write label detect %s: %v\n", fullName, err)
 				return nil
+			}
+			// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it
+			labelFile := "." + fullName + "--labels.json"
+			jf, err := ioutil.ReadFile(labelFile)
+			if err != nil {
+				log.Printf("Could not find file: %s %v", labelFile, err)
+			}
+			if err == nil {
+				var j LabelModel
+				err = json.Unmarshal(jf, &j)
+				if err != nil {
+					log.Printf("Could not look for celeb detect on labels for %s", fullName)
+				} else {
+					for i := range j.Labels {
+						v := j.Labels[i].Name
+						if v == "Face" || v == "Person" || v == "People" {
+							log.Printf("detect faces on %s", fullName)
+							rdr, err = detectCeleb("." + fullName)
+							if err != nil {
+								return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
+							}
+							if rdr != nil {
+								faceName := fmt.Sprintf("%s--faces.json", name)
+								err = postFileHandler(w, r, rdr, command, parentDir, faceName, originalParentDir, originalName, cascade)
+								if err != nil {
+									//return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
+									log.Printf("Could not write face detect %s: %v\n", fullName, err)
+									break
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 

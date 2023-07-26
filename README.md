@@ -45,6 +45,7 @@ And it currently isn't dealing with volume mount persistence at the moment.
 ./startup # launch docker compose
 ```
 
+> note that you have to run `./media/deployapp` in a different window because of stylesheets and templates that must be uploaded for init.
 
 ## API
 

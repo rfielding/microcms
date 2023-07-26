@@ -62,3 +62,52 @@ func detectLabels(file string) (io.Reader, error) {
 	}()
 	return pipeReader, nil
 }
+
+func detectCeleb(file string) (io.Reader, error) {
+	svc := rekognition.New(session.New())
+
+	imageBytes, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &rekognition.RecognizeCelebritiesInput{
+		Image: &rekognition.Image{
+			Bytes: imageBytes,
+		},
+	}
+
+	result, err := svc.RecognizeCelebrities(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case rekognition.ErrCodeInvalidS3ObjectException:
+				fmt.Println(rekognition.ErrCodeInvalidS3ObjectException, aerr.Error())
+			case rekognition.ErrCodeInvalidParameterException:
+				fmt.Println(rekognition.ErrCodeInvalidParameterException, aerr.Error())
+			case rekognition.ErrCodeImageTooLargeException:
+				fmt.Println(rekognition.ErrCodeImageTooLargeException, aerr.Error())
+			case rekognition.ErrCodeAccessDeniedException:
+				fmt.Println(rekognition.ErrCodeAccessDeniedException, aerr.Error())
+			case rekognition.ErrCodeInternalServerError:
+				fmt.Println(rekognition.ErrCodeInternalServerError, aerr.Error())
+			case rekognition.ErrCodeThrottlingException:
+				fmt.Println(rekognition.ErrCodeThrottlingException, aerr.Error())
+			case rekognition.ErrCodeProvisionedThroughputExceededException:
+				fmt.Println(rekognition.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+			case rekognition.ErrCodeInvalidImageFormatException:
+				fmt.Println(rekognition.ErrCodeInvalidImageFormatException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		}
+		return nil, err
+	}
+
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		pipeWriter.Write([]byte(AsJson(result)))
+		pipeWriter.Close()
+	}()
+	return pipeReader, nil
+}
