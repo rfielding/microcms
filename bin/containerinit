@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#
+# This should only be invoked from inside docker container on startup
+#
+
+if [ -f ./cmd/gosqlite/gosqlite ]
+then
+  if [ ! -d persistent ]
+  then
+    mkdir persistent
+  fi
+  if [ ! -d persistent/files ]
+  then
+    mkdir persistent/files
+  fi
+  if [ ! -f persistent/schema.db ]
+  then
+    sqlite3 persistent/schema.db < schema.sql
+  fi
+  ./cmd/gosqlite/gosqlite & java -jar ./bin/tika-server-standard.jar
+fi

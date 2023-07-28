@@ -205,9 +205,8 @@ func rootRouter(w http.ResponseWriter, r *http.Request) {
 
 // Setup theDB, and return a cleanup function
 func dbSetup() func() {
-	os.MkdirAll("persistent/files", 0777)
-	var err error
 	dbName := "persistent/schema.db"
+	var err error
 	log.Printf("opening database %s", dbName)
 	theDB, err = sql.Open("sqlite3", dbName)
 	CheckErr(err, fmt.Sprintf("Could not open %s", dbName))
