@@ -3,12 +3,21 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os/exec"
 	"strings"
 
 	"github.com/rfielding/gosqlite/fs"
 )
+
+func quote(str string) string {
+	if strings.Contains(str, "\"") {
+		log.Printf("BEWARE!!! file name has quotes: %s", str)
+		return "xxx"
+	}
+	return "\"" + str + "\""
+}
 
 // ie: things that Tika can handle to produce IsTextFile
 func IsDoc(fName string) bool {
@@ -44,7 +53,7 @@ func pdfThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		fs.At + file + "[0]",
+		fs.At + quote(file) + "[0]",
 		"png:-",
 	}
 	cmd := exec.Command(command[0], command[1:]...)
