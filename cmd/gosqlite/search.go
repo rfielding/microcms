@@ -19,9 +19,7 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	q := r.URL.Query()
 	inJson := q.Get("json") == "true"
 	listing := Listing{
-		Children: []Node{
-			{Name: "files", IsDir: true},
-		},
+		Children: []Node{},
 	}
 	for rows.Next() {
 		var path, name, highlighted string

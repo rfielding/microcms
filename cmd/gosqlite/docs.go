@@ -53,7 +53,7 @@ func pdfThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		fs.At + quote(file) + "[0]",
+		quote(fs.At + file + "[0]"),
 		"png:-",
 	}
 	cmd := exec.Command(command[0], command[1:]...)

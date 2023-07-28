@@ -16,7 +16,7 @@ func makeThumbnail(file string) (io.Reader, error) {
 		"-background", "white",
 		"-alpha", "remove",
 		"-format", "png",
-		fs.At + quote(file),
+		quote(fs.At + file),
 		"-",
 	}
 	cmd := exec.Command(command[0], command[1:]...)
@@ -38,7 +38,7 @@ func videoThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		fs.At + quote(file) + "[100]",
+		quote(fs.At + file + "[100]"),
 		"png:-",
 	}
 	cmd := exec.Command(command[0], command[1:]...)
