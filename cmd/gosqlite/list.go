@@ -10,6 +10,8 @@ import (
 	"path"
 	"sort"
 	"strings"
+
+	"github.com/rfielding/gosqlite/fs"
 )
 
 type Node struct {
@@ -69,7 +71,7 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 		attrFileName = fsPath + "permissions.rego"
 	}
 	//log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
-	if _, err := os.Stat(attrFileName); err == nil {
+	if fs.IsExist(attrFileName) {
 		jf, err := ioutil.ReadFile(attrFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", attrFileName, err)

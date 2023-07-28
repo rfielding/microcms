@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rfielding/gosqlite/fs"
 )
 
 var docExtractor string
@@ -106,16 +107,14 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	}
 	// If it's a file in our tree...do redirects if we must, or handle a dir reference
 	if strings.HasPrefix(r.URL.Path, "/files/") {
-		s, _ := os.Stat("." + r.URL.Path)
-		if s != nil && s.IsDir() {
+		if fs.IsDir("." + r.URL.Path) {
 			if r.URL.Path[len(r.URL.Path)-1] != '/' {
 				http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
 				return
 			}
-			sIdx, _ := os.Stat("." + r.URL.Path + "index.html")
-			if sIdx != nil && !sIdx.IsDir() {
-				// Rather than redirect?
-				http.ServeFile(w, r, "."+r.URL.Path+"index.html")
+			fsIndex := "." + r.URL.Path + "index.html"
+			if fs.IsExist(fsIndex) && !fs.IsDir(fsIndex) {
+				fs.ServeFile(w, r, fsIndex)
 				return
 			} else {
 				dirHandler(w, r, "."+r.URL.Path)
@@ -140,7 +139,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		// It won't show up directly in listings, but should come back
 		// with what it finds
 		if strings.HasSuffix(r.URL.Path, "--permissions.rego") {
-			if _, err := os.Stat("." + r.URL.Path); os.IsNotExist(err) {
+			if fs.IsNotExist("." + r.URL.Path) {
 				r.URL.Path = path.Dir(r.URL.Path) + "/permissions.rego"
 			}
 		}

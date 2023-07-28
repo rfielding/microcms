@@ -2,6 +2,7 @@ package fs
 
 import (
 	"io/fs"
+	"net/http"
 	"os"
 )
 
@@ -50,3 +51,6 @@ func Size(name string) int64 {
 	return s.Size()
 }
 
+func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
+	http.ServeFile(w, r, name)
+}
