@@ -4,3 +4,4 @@ media/react-test
 ./gosqlite
 ./files
 persistent
+vendor
