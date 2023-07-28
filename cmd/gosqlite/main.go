@@ -17,7 +17,7 @@ import (
 var docExtractor string
 
 // Make sure to only serve up out of known subdirectories
-var theFS = http.FileServer(http.Dir("."))
+var theFS = http.FileServer(http.Dir(fs.At))
 var theDB *sql.DB
 
 // Use this for startup panics only
@@ -205,8 +205,9 @@ func rootRouter(w http.ResponseWriter, r *http.Request) {
 
 // Setup theDB, and return a cleanup function
 func dbSetup() func() {
+	os.MkdirAll("persistent/files", 0777)
 	var err error
-	dbName := Getenv("SCHEMA", "schema.db")
+	dbName := "persistent/schema.db"
 	log.Printf("opening database %s", dbName)
 	theDB, err = sql.Open("sqlite3", dbName)
 	CheckErr(err, fmt.Sprintf("Could not open %s", dbName))

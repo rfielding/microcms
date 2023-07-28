@@ -19,13 +19,14 @@ RUN cd / && wget https://go.dev/dl/go1.20.6.linux-amd64.tar.gz
 RUN cd / ; tar zxf /go1.20.6.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
 COPY . /root
-RUN cd /root && rm schema.db ; sqlite3 schema.db < schema.sql
-RUN cd /root ; mkdir files || true
+RUN cd /root ; mkdir -p persistent/files || true
+RUN cd /root && sqlite3 persistent/schema.db < schema.sql
 # You are here after each code change - it is so very slow because of cgo, because of sqlite
+RUN cd ;root/cmd/gosqlite ; go mod tidy
 RUN cd /root/cmd/gosqlite && GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./gosqlite *.go
 # writable volume mount... make sure we have permissions to write it and for host to delete contents
 RUN chown -R 1000:1000 /root
-RUN chmod -R 755 /root/files
+RUN chmod -R 755 /root/persistent
 RUN chmod 755 /root/bin/tika-server-standard.jar
 WORKDIR /root
 USER 1000:1000
