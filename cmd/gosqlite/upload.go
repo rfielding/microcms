@@ -11,6 +11,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/rfielding/gosqlite/fs"
 )
 
 type LabelModel struct {
@@ -50,21 +52,17 @@ func postFileHandler(
 	// TODO: check permissions before allowing writes
 
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
-	err := os.MkdirAll("."+parentDir, 0777)
+	err := fs.MkdirAll("."+parentDir, 0777)
 	if err != nil {
 		return HandleReturnedError(w, err, "Could not create path for %s: %v", r.URL.Path)
 	}
 
-	existingSize := int64(0)
-	s, err := os.Stat("." + fullName)
-	if err == nil {
-		existingSize = s.Size()
-	}
+	existingSize := fs.Size("." + fullName)
 
 	// Ensure that the file in question exists on disk.
 	if true {
 		df := "." + fullName
-		f, err := os.Create(df) //, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		f, err := fs.Create(df)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not create file %s: %v", r.URL.Path)
 		}
@@ -93,7 +91,7 @@ func postFileHandler(
 
 	if IsDoc(fullName) && cascade {
 		// Open the file we wrote
-		f, err := os.Open("." + fullName)
+		f, err := fs.Open("." + fullName)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}
@@ -207,7 +205,7 @@ func postFileHandler(
 
 	if IsTextFile(fullName) && cascade {
 		// open the file that we saved, and index it in the database.
-		f, err := os.Open("." + fullName)
+		f, err := fs.Open("." + fullName)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}

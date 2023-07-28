@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"path"
 	"sort"
 	"strings"
@@ -104,7 +103,7 @@ func getAttrs(claims interface{}, fsPath string, fName string) map[string]interf
 	// Get the attributes for the file if they exist
 	attrs := make(map[string]interface{})
 	attrFileName := fsPath + fName + "--attributes.json"
-	if _, err := os.Stat(attrFileName); err == nil {
+	if fs.IsExist(attrFileName) {
 		jf, err := ioutil.ReadFile(attrFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", attrFileName, err)

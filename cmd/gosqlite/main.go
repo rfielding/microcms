@@ -146,11 +146,10 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 
 		// Walk up the tree until we find what we want
 		if path.Base(r.URL.Path) == "permissions.rego" {
-			if _, err := os.Stat("." + r.URL.Path); os.IsNotExist(err) {
+			if fs.IsNotExist("." + r.URL.Path) {
 				for true {
 					r.URL.Path = path.Dir(path.Dir(r.URL.Path)) + "/permissions.rego"
-					_, err = os.Stat("." + r.URL.Path)
-					if os.IsExist(err) {
+					if fs.IsExist("." + r.URL.Path) {
 						break // found it!
 					}
 					if r.URL.Path == "/files/permissions.rego" {

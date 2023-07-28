@@ -6,6 +6,11 @@ import (
 	"os"
 )
 
+/*
+ Wrap up os, so that we dont have to make physical paths from logical paths,
+ and to remove all the raw stat calls.
+*/
+
 func Open(name string) (*os.File, error) {
 	f, err := os.Open(name)
 	return f, err
