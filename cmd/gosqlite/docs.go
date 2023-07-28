@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+
+	"github.com/rfielding/gosqlite/fs"
 )
 
 // ie: things that Tika can handle to produce IsTextFile
@@ -42,7 +44,7 @@ func pdfThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		file + "[0]",
+		fs.At + file + "[0]",
 		"png:-",
 	}
 	cmd := exec.Command(command[0], command[1:]...)

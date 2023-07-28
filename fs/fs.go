@@ -12,30 +12,30 @@ import (
  and to remove all the raw stat calls.
 */
 
-const at = "."
+const At = "."
 
 func Open(name string) (*os.File, error) {
-	f, err := os.Open(at + name)
+	f, err := os.Open(At + name)
 	return f, err
 }
 
 func ReadDir(name string) ([]fs.FileInfo, error) {
-	d, err := ioutil.ReadDir(at + name)
+	d, err := ioutil.ReadDir(At + name)
 	return d, err
 }
 
 func IsExist(name string) bool {
-	_, err := os.Stat(at + name)
+	_, err := os.Stat(At + name)
 	return err == nil
 }
 
 func IsNotExist(name string) bool {
-	_, err := os.Stat(at + name)
+	_, err := os.Stat(At + name)
 	return os.IsNotExist(err)
 }
 
 func IsDir(name string) bool {
-	s, err := os.Stat(at + name)
+	s, err := os.Stat(At + name)
 	if err != nil {
 		return false
 	}
@@ -43,16 +43,16 @@ func IsDir(name string) bool {
 }
 
 func Create(name string) (*os.File, error) {
-	f, err := os.Create(at + name)
+	f, err := os.Create(At + name)
 	return f, err
 }
 
 func MkdirAll(name string, perm fs.FileMode) error {
-	return os.MkdirAll(at+name, perm)
+	return os.MkdirAll(At+name, perm)
 }
 
 func Size(name string) int64 {
-	s, err := os.Stat(at + name)
+	s, err := os.Stat(At + name)
 	if err != nil {
 		return 0
 	}
@@ -60,9 +60,9 @@ func Size(name string) int64 {
 }
 
 func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
-	http.ServeFile(w, r, at+name)
+	http.ServeFile(w, r, At+name)
 }
 
 func ReadFile(name string) ([]byte, error) {
-	return ioutil.ReadFile(at + name)
+	return ioutil.ReadFile(At + name)
 }

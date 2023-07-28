@@ -5,6 +5,8 @@ import (
 	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/rfielding/gosqlite/fs"
 )
 
 func makeThumbnail(file string) (io.Reader, error) {
@@ -14,7 +16,7 @@ func makeThumbnail(file string) (io.Reader, error) {
 		"-background", "white",
 		"-alpha", "remove",
 		"-format", "png",
-		file,
+		fs.At + file,
 		"-",
 	}
 	cmd := exec.Command(command[0], command[1:]...)
@@ -36,7 +38,7 @@ func videoThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		file + "[100]",
+		fs.At + file + "[100]",
 		"png:-",
 	}
 	cmd := exec.Command(command[0], command[1:]...)

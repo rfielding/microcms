@@ -20,7 +20,7 @@ type LabelModel struct {
 }
 
 type LabelObject struct {
-	Name string `json:Name`
+	Name string `json:"Name"`
 }
 
 // postFileHandler can be re-used as long as err != nil
@@ -36,7 +36,6 @@ func postFileHandler(
 	cascade bool,
 ) error {
 	fullName := fmt.Sprintf("%s/%s", parentDir, name)
-	//log.Printf("create %s %s", command, fullName)
 
 	// Write the file out
 	flags := os.O_WRONLY | os.O_CREATE
@@ -109,7 +108,7 @@ func postFileHandler(
 
 		ext := strings.ToLower(path.Ext(fullName))
 		if ext == ".pdf" {
-			rdr, err := pdfThumbnail(`./` + fullName)
+			rdr, err := pdfThumbnail(fullName)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
@@ -126,7 +125,7 @@ func postFileHandler(
 	}
 
 	if IsVideo(fullName) && cascade {
-		rdr, err := videoThumbnail(`./` + fullName)
+		rdr, err := videoThumbnail(fullName)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 		}
@@ -140,7 +139,7 @@ func postFileHandler(
 
 	if IsImage(fullName) && cascade {
 		if true {
-			rdr, err := makeThumbnail(`./` + fullName)
+			rdr, err := makeThumbnail(fullName)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
@@ -214,15 +213,6 @@ func postFileHandler(
 			f.Seek(existingSize, 0)
 		}
 		var rdr io.Reader = f
-		/*
-			if command == "files" {
-				// this implies a truncate
-				_, err := theDB.Exec(`DELETE from filesearch where path = ? and name = ? and cmd = ?`, parentDir+"/", name, command)
-				if err != nil {
-					log.Printf("cleaning out fulltextsearch for: %s%s %s failed: %v", parentDir+"/", name, command, err)
-				}
-			}
-		*/
 		buffer := make([]byte, 4*1024)
 		part := 0
 		for {
