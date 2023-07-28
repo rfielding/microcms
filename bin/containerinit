@@ -18,5 +18,14 @@ then
   then
     sqlite3 persistent/schema.db < schema.sql
   fi
+  if [ ! -d persistent/files/init ]
+  then
+    # pre-upload defaults
+    mkdir persistent/files/init
+    cp media/styles.css persistent/files/init
+    cp media/rootTemplate.html.templ persistent/files/init
+    cp media/searchTemplate.html.templ persistent/files/init
+    cp media/listingTemplate.html.templ persistent/files/init
+  fi
   ./cmd/gosqlite/gosqlite & java -jar ./bin/tika-server-standard.jar
 fi

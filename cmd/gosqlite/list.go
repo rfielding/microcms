@@ -42,14 +42,10 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(AsJson(listing)))
 	} else {
 		w.Header().Set("Content-Type", "text/html")
-		if compiledRootTemplate != nil {
-			err := compiledRootTemplate.Execute(w, nil)
-			if err != nil {
-				HandleError(w, err, "Unable to execute rootTemplate: %v", err)
-				return
-			}
-		} else {
-			w.Write([]byte("Please upload /files/init/rootTemplate.html.templ"))
+		err := compiledRootTemplate.Execute(w, nil)
+		if err != nil {
+			HandleError(w, err, "Unable to execute rootTemplate: %v", err)
+			return
 		}
 	}
 }
@@ -167,11 +163,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		w.Header().Set("Content-Type", "text/html")
-		if compiledListingTemplate != nil {
-			compiledListingTemplate.Execute(w, listing)
-		} else {
-			w.Write([]byte("please upload /files/init/listingTemplate.html.templ"))
-		}
+		compiledListingTemplate.Execute(w, listing)
 		return
 	}
 }

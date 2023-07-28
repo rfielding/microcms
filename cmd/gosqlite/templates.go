@@ -19,7 +19,7 @@ func compileTemplate(name string) *template.Template {
 	return t
 }
 
-// You should upload these templates as part of initialization of the CMS
-var compiledRootTemplate *template.Template
-var compiledSearchTemplate *template.Template
-var compiledListingTemplate *template.Template
+// Defaults were uploaded into the container
+var compiledRootTemplate *template.Template = compileTemplate("/files/init/rootTemplate.html.templ")
+var compiledSearchTemplate *template.Template = compileTemplate("/files/init/searchTemplate.html.templ")
+var compiledListingTemplate *template.Template = compileTemplate("/files/init/listingTemplate.html.templ")

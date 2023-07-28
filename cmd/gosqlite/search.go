@@ -39,14 +39,10 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		w.Write([]byte(AsJson(listing)))
 	} else {
 		w.Header().Set("Content-Type", "text/html")
-		if compiledSearchTemplate != nil {
-			err := compiledSearchTemplate.Execute(w, listing)
-			if err != nil {
-				HandleError(w, err, "Unable to execute searchTemplate: %v", err)
-				return
-			}
-		} else {
-			w.Write([]byte("Please upload /files/init/searchTemplate.html.templ"))
+		err := compiledSearchTemplate.Execute(w, listing)
+		if err != nil {
+			HandleError(w, err, "Unable to execute searchTemplate: %v", err)
+			return
 		}
 	}
 }
