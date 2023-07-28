@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"path"
@@ -71,7 +70,7 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 	}
 	//log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
 	if fs.IsExist(attrFileName) {
-		jf, err := ioutil.ReadFile(attrFileName)
+		jf, err := fs.ReadFile(attrFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", attrFileName, err)
 		} else {
@@ -104,7 +103,7 @@ func getAttrs(claims interface{}, fsPath string, fName string) map[string]interf
 	attrs := make(map[string]interface{})
 	attrFileName := fsPath + fName + "--attributes.json"
 	if fs.IsExist(attrFileName) {
-		jf, err := ioutil.ReadFile(attrFileName)
+		jf, err := fs.ReadFile(attrFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", attrFileName, err)
 		} else {
@@ -133,10 +132,11 @@ func getSizeUnits(size int64, isDir bool) string {
 	return sz
 }
 
-func dirHandler(w http.ResponseWriter, r *http.Request, fsPath string) {
+func dirHandler(w http.ResponseWriter, r *http.Request) {
+	fsPath := "." + r.URL.Path
 	user := GetUser(r)
 	// Get directory names
-	names, err := ioutil.ReadDir(fsPath)
+	names, err := fs.ReadDir(fsPath)
 	if err != nil {
 		HandleError(w, err, "readdir %s: %v", fsPath)
 		return

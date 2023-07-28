@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -44,7 +43,7 @@ func CalculateRego(claims interface{}, s string) (map[string]interface{}, error)
 }
 
 func LoadConfig() {
-	f, err := ioutil.ReadFile("./config.json")
+	f, err := os.ReadFile("./config.json")
 	CheckErr(err, "Could not open config file")
 	err = json.Unmarshal(f, &theConfig)
 	CheckErr(err, "Could not parse config file")

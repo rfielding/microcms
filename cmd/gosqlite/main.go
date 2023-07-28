@@ -117,7 +117,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 				fs.ServeFile(w, r, fsIndex)
 				return
 			} else {
-				dirHandler(w, r, "."+r.URL.Path)
+				dirHandler(w, r)
 				return
 			}
 		}

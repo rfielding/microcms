@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -167,7 +166,7 @@ func postFileHandler(
 			}
 			// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it
 			labelFile := "." + fullName + "--labels.json"
-			jf, err := ioutil.ReadFile(labelFile)
+			jf, err := fs.ReadFile(labelFile)
 			if err != nil {
 				log.Printf("Could not find file: %s %v", labelFile, err)
 			}

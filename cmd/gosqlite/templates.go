@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"text/template"
+
+	"github.com/rfielding/gosqlite/fs"
 )
 
 func compileTemplate(name string) *template.Template {
-	templateText, err := ioutil.ReadFile(name)
+	templateText, err := fs.ReadFile(name)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot find template: %s", name))
 	}

@@ -3,19 +3,19 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
+	"github.com/rfielding/gosqlite/fs"
 )
 
 // detectLabels gets labels from the rekognition API for an image at the given file path.
 func detectLabels(file string) (io.Reader, error) {
 	svc := rekognition.New(session.New())
 
-	imageBytes, err := ioutil.ReadFile(file)
+	imageBytes, err := fs.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func detectLabels(file string) (io.Reader, error) {
 func detectCeleb(file string) (io.Reader, error) {
 	svc := rekognition.New(session.New())
 
-	imageBytes, err := ioutil.ReadFile(file)
+	imageBytes, err := fs.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
