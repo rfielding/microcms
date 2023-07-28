@@ -107,12 +107,12 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	}
 	// If it's a file in our tree...do redirects if we must, or handle a dir reference
 	if strings.HasPrefix(r.URL.Path, "/files/") {
-		if fs.IsDir("." + r.URL.Path) {
+		if fs.IsDir(r.URL.Path) {
 			if r.URL.Path[len(r.URL.Path)-1] != '/' {
 				http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
 				return
 			}
-			fsIndex := "." + r.URL.Path + "index.html"
+			fsIndex := r.URL.Path + "index.html"
 			if fs.IsExist(fsIndex) && !fs.IsDir(fsIndex) {
 				fs.ServeFile(w, r, fsIndex)
 				return
@@ -139,17 +139,17 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		// It won't show up directly in listings, but should come back
 		// with what it finds
 		if strings.HasSuffix(r.URL.Path, "--permissions.rego") {
-			if fs.IsNotExist("." + r.URL.Path) {
+			if fs.IsNotExist(r.URL.Path) {
 				r.URL.Path = path.Dir(r.URL.Path) + "/permissions.rego"
 			}
 		}
 
 		// Walk up the tree until we find what we want
 		if path.Base(r.URL.Path) == "permissions.rego" {
-			if fs.IsNotExist("." + r.URL.Path) {
+			if fs.IsNotExist(r.URL.Path) {
 				for true {
 					r.URL.Path = path.Dir(path.Dir(r.URL.Path)) + "/permissions.rego"
-					if fs.IsExist("." + r.URL.Path) {
+					if fs.IsExist(r.URL.Path) {
 						break // found it!
 					}
 					if r.URL.Path == "/files/permissions.rego" {

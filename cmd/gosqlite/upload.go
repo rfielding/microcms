@@ -51,16 +51,16 @@ func postFileHandler(
 	// TODO: check permissions before allowing writes
 
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
-	err := fs.MkdirAll("."+parentDir, 0777)
+	err := fs.MkdirAll(parentDir, 0777)
 	if err != nil {
 		return HandleReturnedError(w, err, "Could not create path for %s: %v", r.URL.Path)
 	}
 
-	existingSize := fs.Size("." + fullName)
+	existingSize := fs.Size(fullName)
 
 	// Ensure that the file in question exists on disk.
 	if true {
-		df := "." + fullName
+		df := fullName
 		f, err := fs.Create(df)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not create file %s: %v", r.URL.Path)
@@ -90,7 +90,7 @@ func postFileHandler(
 
 	if IsDoc(fullName) && cascade {
 		// Open the file we wrote
-		f, err := fs.Open("." + fullName)
+		f, err := fs.Open(fullName)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}
@@ -153,7 +153,7 @@ func postFileHandler(
 
 		if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
 			log.Printf("detect labels on %s", fullName)
-			rdr, err := detectLabels("." + fullName)
+			rdr, err := detectLabels(fullName)
 			if err != nil {
 				return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 			}
@@ -165,7 +165,7 @@ func postFileHandler(
 				return nil
 			}
 			// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it
-			labelFile := "." + fullName + "--labels.json"
+			labelFile := fullName + "--labels.json"
 			jf, err := fs.ReadFile(labelFile)
 			if err != nil {
 				log.Printf("Could not find file: %s %v", labelFile, err)
@@ -180,7 +180,7 @@ func postFileHandler(
 						v := j.Labels[i].Name
 						if v == "Face" || v == "Person" || v == "People" {
 							log.Printf("detect faces on %s", fullName)
-							rdr, err = detectCeleb("." + fullName)
+							rdr, err = detectCeleb(fullName)
 							if err != nil {
 								return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 							}
@@ -204,7 +204,7 @@ func postFileHandler(
 
 	if IsTextFile(fullName) && cascade {
 		// open the file that we saved, and index it in the database.
-		f, err := fs.Open("." + fullName)
+		f, err := fs.Open(fullName)
 		if err != nil {
 			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}

@@ -58,8 +58,8 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
 func getAttrsPermission(claims interface{}, fsPath string, fName string, initial map[string]interface{}) map[string]interface{} {
-	if strings.HasPrefix(fsPath, "./files/") == false {
-		panic(fmt.Sprintf("path %s should be rooted under ./files/ and end in slash", fsPath))
+	if strings.HasPrefix(fsPath, "/files/") == false {
+		panic(fmt.Sprintf("path %s should be rooted under /files/ and end in slash", fsPath))
 	}
 	// Try exact file if fName is not blank
 	attrFileName := ""
@@ -87,11 +87,11 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 		if fName != "" {
 			return getAttrsPermission(claims, fsPath, "", initial)
 		} else {
-			if fsPath == "./files/" {
+			if fsPath == "/files/" {
 				return initial
 			} else {
 				// careful! if it ends in slash, then parent is same file, fsName is blank!
-				parent := "./" + path.Dir(path.Clean(fsPath)) + "/"
+				parent := path.Dir(path.Clean(fsPath)) + "/"
 				return getAttrsPermission(claims, parent, "", initial)
 			}
 		}
@@ -133,7 +133,7 @@ func getSizeUnits(size int64, isDir bool) string {
 }
 
 func dirHandler(w http.ResponseWriter, r *http.Request) {
-	fsPath := "." + r.URL.Path
+	fsPath := r.URL.Path
 	user := GetUser(r)
 	// Get directory names
 	names, err := fs.ReadDir(fsPath)

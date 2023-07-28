@@ -12,7 +12,7 @@ import (
  and to remove all the raw stat calls.
 */
 
-const at = ""
+const at = "."
 
 func Open(name string) (*os.File, error) {
 	f, err := os.Open(at + name)
