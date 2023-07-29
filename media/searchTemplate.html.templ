@@ -3,7 +3,12 @@
   <link rel="stylesheet" href="files/init/styles.css">
   <ul>
     {{range .Children}}
-	    <li><a href="{{.Path}}{{.Name}}">{{.Path}}{{.Name}} [part {{.Part}}]</a><hr>{{.Context}}</li>
+	    <li>
+        <span style="color:{{.Attributes.LabelFg}}; background-color:{{.Attributes.LabelBg}}">{{.Attributes.Label}}</span>
+        <img src="{{.Path}}{{.Name}}--thumbnail.png" alt="">
+        <a href="{{.Path}}{{.Name}}">{{.Path}}{{.Name}} [part {{.Part}}]</a>
+        {{.Context}}
+      </li>
     {{end}}
   </ul>
 </html>

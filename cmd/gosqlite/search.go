@@ -21,16 +21,21 @@ func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	listing := Listing{
 		Children: []Node{},
 	}
+	user := GetUser(r)
 	for rows.Next() {
 		var path, name, highlighted string
 		var part int
 		rows.Scan(&path, &name, &part, &highlighted)
+		if IsImage(path+name) || IsVideo(path+name) {
+			highlighted = ""
+		}
 		listing.Children = append(listing.Children, Node{
-			Path:    path,
-			Name:    name,
-			Part:    part,
-			IsDir:   false,
-			Context: highlighted,
+			Path:       path,
+			Name:       name,
+			Part:       part,
+			IsDir:      false,
+			Context:    highlighted,
+			Attributes: getAttrs(user, path, name),
 		})
 	}
 
