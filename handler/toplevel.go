@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"path"
@@ -29,6 +31,28 @@ func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
+func detectNewUser(user string) (io.Reader, error) {
+	// By default, it's a public file owned by its user
+	result := fmt.Sprintf(
+		`package gosqlite
+default Label = "PUBLIC"
+default LabelBg = "green"
+default LabelFg = "white"	
+default Read = true
+default Write = false
+Write {
+	input["email"][_] == "%s"
+}
+`, user)
+
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		pipeWriter.Write([]byte(result))
+		pipeWriter.Close()
+	}()
+	return pipeReader, nil
+}
+
 // Use the standard file serving of Go, because media behavior
 // is really really complicated; and you do not want to serve it manually
 // if you can help it.
@@ -52,7 +76,30 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 
 	user := data.GetUser(r)
 	if len(user["email"]) > 0 {
-		log.Printf("Welcome user: %s", utils.AsJson(user))
+		// When a user comes in, for rob.fielding@gmail.com
+		// /files/rob.fielding@gmail.com/permissions.rego
+		// should be uploaded with default permissions if it
+		// does not exist. User can override it if permissions
+		// must be different.
+		// Your first email address is your email.
+		userName := user["email"][0]
+		parentDir := "/files/" + userName
+		fileName := "permissions.rego"
+		if !fs.IsExist(parentDir) {
+			log.Printf("Welcome to %s", parentDir)
+			rdr, err := detectNewUser(userName)
+			if err != nil {
+				utils.HandleReturnedError(w, err, "Could not create homedir for %s: %v", userName)
+				return
+			}
+			if rdr != nil {
+				err = postFileHandler(w, r, rdr, "files", parentDir, fileName, parentDir, fileName, false)
+				if err != nil {
+					utils.HandleReturnedError(w, err, "Could not create homedir permission for %s: %v", userName)
+					return
+				}
+			}
+		}
 	} else {
 		log.Printf("Welcome anonymous user")
 	}
