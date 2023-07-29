@@ -129,7 +129,7 @@ The html navigation is supported in order to have a reliable interface when thin
 - `init/searchTemplate.html.templ`
 - `init/listingTemplate.html.templ`
 
-These files, along with permission.rego, are initialization config. They are files like everything else. But they are required to navigate with a browser. The idea is that at some point, a React app is the official interface. So all of the html and css is kept out of the server itself.
+These files, along with permissions.rego, are initialization config. They are files like everything else. But they are required to navigate with a browser. The idea is that at some point, a React app is the official interface. So all of the html and css is kept out of the server itself.
 
 ## Permissions
 

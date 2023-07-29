@@ -4,36 +4,30 @@ url=http://localhost:9321
 
 (
   cd `dirname $0`
-  # these are necessary to use the browser to navigate
-  curl -X POST --data-binary @styles.css ${url}/files/init/styles.css
-  curl -X POST --data-binary @rootTemplate.html.templ ${url}/files/init/rootTemplate.html.templ
-  curl -X POST --data-binary @listingTemplate.html.templ ${url}/files/init/listingTemplate.html.templ
-  curl -X POST --data-binary @searchTemplate.html.templ ${url}/files/init/searchTemplate.html.templ
 
-  # default permissions
+  owner=rob.fielding@gmail.com
   auth=5ee5de77d0c566d2b8c170a03894ff2d
-  curl -X POST --cookie "account=${auth}" --data-binary @permissions.rego ${url}/files/permissions.rego
 
   # Put in a html app
   ( cd app && tar cvf ../app.tar . ) 
-  curl -X POST --cookie "account=${auth}" --data-binary @app.tar ${url}/files/app/v1?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @app.tar ${url}/files/${owner}/app/v1?install=true
   rm app.tar
 
   # Put in a js app
   ( cd brl && tar cvf ../brl.tar . ) 
-  curl -X POST --cookie "account=${auth}" --data-binary @brl.tar ${url}/files/brl?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @brl.tar ${url}/files/${owner}/brl?install=true
   rm brl.tar
 
   ( cd dbg && tar cvf ../dbg.tar . )
-  curl -X POST --cookie "account=${auth}" --data-binary @dbg.tar ${url}/files/gateways?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @dbg.tar ${url}/files/${owner}/gateways?install=true
   rm dbg.tar
 
   ( cd Gilgamesh && tar cvf ../gilgamesh.tar . )
-  curl -X POST --cookie "account=${auth}" --data-binary @gilgamesh.tar ${url}/files/gilgamesh?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @gilgamesh.tar ${url}/files/${owner}/gilgamesh?install=true
   rm gilgamesh.tar
 
   ( cd kjv-bible && tar cvf ../kjv-bible.tar . )
-  curl -X POST --cookie "account=${auth}" --data-binary @kjv-bible.tar ${url}/files/kjv-bible?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @kjv-bible.tar ${url}/files/${owner}/kjv-bible?install=true
   rm kjv-bible.tar
 
   if [ -d react-test/build ]
@@ -45,36 +39,36 @@ url=http://localhost:9321
     (cd react-test && npm run build)
   fi
   ( cd react-test/build && tar cvf ../../react-test.tar . ) 
-  curl -X POST --cookie "account=${auth}" --data-binary @react-test.tar ${url}/files/app/react-test?install=true
+  curl -X POST --cookie "account=${auth}" --data-binary @react-test.tar ${url}/files/${owner}/app/react-test?install=true
   rm react-test.tar
 
   for f in *.pdf
   do
-    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
   for f in *.json
   do
-    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
   for f in *.txt
   do
-    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
   for f in *.jpg
   do
-    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
   for f in *.mp4
   do
-    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
   for f in *.png
   do
-    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
   for f in *.rego
   do
-    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/documents/${f}
+    curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
 )
 

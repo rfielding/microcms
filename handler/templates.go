@@ -23,3 +23,4 @@ func compileTemplate(name string) *template.Template {
 var compiledRootTemplate *template.Template = compileTemplate("/files/init/rootTemplate.html.templ")
 var compiledSearchTemplate *template.Template = compileTemplate("/files/init/searchTemplate.html.templ")
 var compiledListingTemplate *template.Template = compileTemplate("/files/init/listingTemplate.html.templ")
+var compiledDefaultPermissionsTemplate *template.Template = compileTemplate("/files/init/defaultPermissions.rego.templ")

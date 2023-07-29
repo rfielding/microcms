@@ -87,6 +87,10 @@ func postFileHandler(
 			log.Printf("Recompiling %s", fullName)
 			compiledRootTemplate = compileTemplate(df)
 		}
+		if fullName == "/files/init/defaultPermissions.rego.templ" {
+			log.Printf("Recompiling %s", fullName)
+			compiledDefaultPermissionsTemplate = compileTemplate(df)
+		}
 	}
 
 	if IsDoc(fullName) && cascade {

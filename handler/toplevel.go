@@ -32,22 +32,15 @@ func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 }
 
 func detectNewUser(user string) (io.Reader, error) {
-	// By default, it's a public file owned by its user
-	result := fmt.Sprintf(
-		`package gosqlite
-default Label = "PUBLIC"
-default LabelBg = "green"
-default LabelFg = "white"	
-default Read = true
-default Write = false
-Write {
-	input["email"][_] == "%s"
-}
-`, user)
-
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		pipeWriter.Write([]byte(result))
+		userStruct := struct {
+			Name string `json:"User"`
+		}{Name: user}
+		err := compiledDefaultPermissionsTemplate.Execute(pipeWriter, userStruct)
+		if err != nil {
+			panic(fmt.Sprintf("Unable to compile default rego template: %v", err))
+		}
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
@@ -85,7 +78,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		userName := user["email"][0]
 		parentDir := "/files/" + userName
 		fileName := "permissions.rego"
-		if !fs.IsExist(parentDir) {
+		if !fs.IsExist(parentDir + fileName) {
 			log.Printf("Welcome to %s", parentDir)
 			rdr, err := detectNewUser(userName)
 			if err != nil {

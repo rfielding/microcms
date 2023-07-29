@@ -26,6 +26,7 @@ then
     cp media/rootTemplate.html.templ persistent/files/init
     cp media/searchTemplate.html.templ persistent/files/init
     cp media/listingTemplate.html.templ persistent/files/init
+    cp media/defaultPermissions.rego.templ persistent/files/init
   fi
   ./cmd/gosqlite/gosqlite & java -jar ./bin/tika-server-standard.jar
 fi
