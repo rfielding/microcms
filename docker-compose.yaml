@@ -16,7 +16,7 @@ services:
       - AWS_REGION
       - AWS_SECRET_ACCESS_KEY
     volumes:
-      - ./persistent:/root/persistent   # persistent data, which you can wipe before startup
+      #- ./persistent:/root/persistent   # persistent data, which you can wipe before startup
       - ./config.json:/root/config.json # the user database
 networks:
   mesh: {}
