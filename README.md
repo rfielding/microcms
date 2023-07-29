@@ -90,7 +90,7 @@ Upload a normal file, one by one
 Search by keyword king:
 
 ```
-http://localhost:9321/search?match=king
+http://localhost:9321/search?match=dog
 ```
 
 ![images/search.png](images/search.png)
