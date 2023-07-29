@@ -57,6 +57,12 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		log.Printf("Welcome anonymous user")
 	}
 
+	// User hits us with an email link, and we set a cookie
+	if r.URL.Path == "/me" {
+		w.Write([]byte(utils.AsJson(user)))
+		return
+	}
+
 	// Don't deal with directories missing slashes
 	if r.URL.Path == "/files" {
 		http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)

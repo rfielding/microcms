@@ -41,7 +41,12 @@ And it currently isn't dealing with volume mount persistence at the moment.
 
 ```
 # runs on http://localhost:9321
-./cleanbuild # make the container
+./cleanbuild # make the container #ugh! 4 minute build, because of cgo, etc.
+```
+
+Launch the contaihner
+
+```
 ./startup # launch docker compose
 ```
 
@@ -119,9 +124,51 @@ Permissions in rego files apply to all the directories inside, unless overrides 
 
 The html navigation is supported in order to have a reliable interface when things break, or before a proper application is uploaded into the server.
 
-- init/styles.css
-- init/rootTemplate.html.templ
-- init/searchTemplate.html.templ
-- init/listingTemplate.html.templ
+- `init/styles.css`
+- `init/rootTemplate.html.templ`
+- `init/searchTemplate.html.templ`
+- `init/listingTemplate.html.templ`
 
 These files, along with permission.rego, are initialization config. They are files like everything else. But they are required to navigate with a browser. The idea is that at some point, a React app is the official interface. So all of the html and css is kept out of the server itself.
+
+## Permissions
+
+> TODO: not implemented in here.
+
+A user gets a link with a secret link, that sets a cookie to set user attributes.
+
+`GET /registration/?account=41234121234243`
+
+You can see what your attributes are once you have hit this link and your cookie is set:
+
+`GET /me`
+
+And the attributes you get back are associated with your random token.
+
+```
+{
+  "age":["adult","driving"],
+  "email":["rob.fielding@gmail.com"],
+  "name":["robf"],
+  "role":["admin","user"]
+}
+```
+
+The reason for these attributes is that that the `*.rego` files ingests claims to make calculations.
+For example. Anyone can read it, but you must have email `rob.fielding@gmail.com`
+
+```
+package gosqlite
+
+default Label = "PUBLIC"
+default LabelBg = "green"
+default LabelFg = "white"
+
+default Read = true
+default Write = false
+Write {
+  input["email"][_] == "rob.fielding@gmail.com"
+}
+```
+
+So that when `rob.fielding@gmail.com` is used, the label is `PUBLIC RW`. And anyone else sees `PUBLIC R` to indicate that it is a read-only file.
