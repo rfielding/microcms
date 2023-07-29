@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"archive/tar"
@@ -10,6 +10,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/rfielding/gosqlite/utils"
 
 	"github.com/rfielding/gosqlite/fs"
 )
@@ -52,7 +54,7 @@ func postFileHandler(
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
 	err := fs.MkdirAll(parentDir, 0777)
 	if err != nil {
-		return HandleReturnedError(w, err, "Could not create path for %s: %v", r.URL.Path)
+		return utils.HandleReturnedError(w, err, "Could not create path for %s: %v", r.URL.Path)
 	}
 
 	existingSize := fs.Size(fullName)
@@ -62,14 +64,14 @@ func postFileHandler(
 		df := fullName
 		f, err := fs.Create(df)
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not create file %s: %v", r.URL.Path)
+			return utils.HandleReturnedError(w, err, "Could not create file %s: %v", r.URL.Path)
 		}
 
 		// Save the stream to a file
 		sz, err := io.Copy(f, stream)
 		f.Close() // strange positioning, but we must close before defer can get to it.
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path)
+			return utils.HandleReturnedError(w, err, "Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path)
 		}
 
 		// Make sure that these are re-compiled on upload
@@ -91,32 +93,32 @@ func postFileHandler(
 		// Open the file we wrote
 		f, err := fs.Open(fullName)
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
+			return utils.HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}
 		// Get a doc extract stream
 		rdr, err := DocExtract(fullName, f)
 		f.Close()
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not extract file for indexing %s: %v", fullName)
+			return utils.HandleReturnedError(w, err, "Could not extract file for indexing %s: %v", fullName)
 		}
 		// Write the doc extract stream like an upload
 		extractName := fmt.Sprintf("%s--extract.txt", name)
 		err = postFileHandler(w, r, rdr, command, parentDir, extractName, originalParentDir, originalName, cascade)
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
+			return utils.HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 		}
 
 		ext := strings.ToLower(path.Ext(fullName))
 		if ext == ".pdf" {
 			rdr, err := pdfThumbnail(fullName)
 			if err != nil {
-				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
+				return utils.HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
 			// Only png works.  bug in imageMagick.  don't cascade on thumbnails
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
 			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
 			if err != nil {
-				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
+				return utils.HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
 		}
 
@@ -127,26 +129,26 @@ func postFileHandler(
 	if IsVideo(fullName) && cascade {
 		rdr, err := videoThumbnail(fullName)
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
+			return utils.HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 		}
 		thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
 		err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
+			return utils.HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 		}
 		return nil
 	}
 
 	if IsImage(fullName) && cascade {
 		if true {
-			rdr, err := makeThumbnail(fullName)
+			rdr, err := MakeThumbnail(fullName)
 			if err != nil {
-				return HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
+				return utils.HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
 			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
 			if err != nil {
-				return HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
+				return utils.HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
 		}
 
@@ -154,7 +156,7 @@ func postFileHandler(
 			log.Printf("detect labels on %s", fullName)
 			rdr, err := detectLabels(fullName)
 			if err != nil {
-				return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
+				return utils.HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 			}
 			labelName := fmt.Sprintf("%s--labels.json", name)
 			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName, cascade)
@@ -181,7 +183,7 @@ func postFileHandler(
 							log.Printf("detect faces on %s", fullName)
 							rdr, err = detectCeleb(fullName)
 							if err != nil {
-								return HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
+								return utils.HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 							}
 							if rdr != nil {
 								faceName := fmt.Sprintf("%s--faces.json", name)
@@ -205,7 +207,7 @@ func postFileHandler(
 		// open the file that we saved, and index it in the database.
 		f, err := fs.Open(fullName)
 		if err != nil {
-			return HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
+			return utils.HandleReturnedError(w, err, "Could not open file for indexing %s: %v", fullName)
 		}
 		defer f.Close()
 		if existingSize > 0 {
@@ -244,7 +246,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	}
 
 	if len(pathTokens) < 2 {
-		HandleError(w, err, "path needs /[command]/[url] for post to %s: %v", r.URL.Path)
+		utils.HandleError(w, err, "path needs /[command]/[url] for post to %s: %v", r.URL.Path)
 		return
 	}
 	command := pathTokens[1]

@@ -1,53 +1,16 @@
-package main
+package handler
 
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os/exec"
-	"strings"
 
 	"github.com/rfielding/gosqlite/fs"
+	"github.com/rfielding/gosqlite/utils"
 )
 
-func quote(str string) string {
-	if strings.Contains(str, "\"") {
-		log.Printf("BEWARE!!! file name has quotes: %s", str)
-		return "xxx"
-	}
-	return "\"" + str + "\""
-}
-
-// ie: things that Tika can handle to produce IsTextFile
-func IsDoc(fName string) bool {
-	if strings.HasSuffix(fName, ".doc") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".ppt") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".xls") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".docx") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".pptx") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".xlsx") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".pdf") {
-		return true
-	}
-	// ?? a guess
-	if strings.HasSuffix(fName, ".one") {
-		return true
-	}
-	return false
-}
+var DocExtractor string
 
 func pdfThumbnail(file string) (io.Reader, error) {
 	command := []string{
@@ -60,7 +23,7 @@ func pdfThumbnail(file string) (io.Reader, error) {
 	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
 	stdout, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, AsJson(command))
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, utils.AsJson(command))
 	}
 	// Give back a pipe that closes itself when it's read.
 	pipeReader, pipeWriter := io.Pipe()
@@ -74,7 +37,7 @@ func pdfThumbnail(file string) (io.Reader, error) {
 // Make a request to tika in this case
 func DocExtract(fName string, rdr io.Reader) (io.ReadCloser, error) {
 	cl := http.Client{}
-	req, err := http.NewRequest("PUT", docExtractor, rdr)
+	req, err := http.NewRequest("PUT", DocExtractor, rdr)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to make request to upload file: %v", err)
 	}

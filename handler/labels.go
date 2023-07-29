@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/rfielding/gosqlite/fs"
+	"github.com/rfielding/gosqlite/utils"
 )
 
 // detectLabels gets labels from the rekognition API for an image at the given file path.
@@ -57,7 +58,7 @@ func detectLabels(file string) (io.Reader, error) {
 
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		pipeWriter.Write([]byte(AsJson(result)))
+		pipeWriter.Write([]byte(utils.AsJson(result)))
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
@@ -106,7 +107,7 @@ func detectCeleb(file string) (io.Reader, error) {
 
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		pipeWriter.Write([]byte(AsJson(result)))
+		pipeWriter.Write([]byte(utils.AsJson(result)))
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil

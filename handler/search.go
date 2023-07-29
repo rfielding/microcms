@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -6,49 +6,13 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"sort"
 	"strings"
 
+	"github.com/rfielding/gosqlite/data"
+	"github.com/rfielding/gosqlite/db"
 	"github.com/rfielding/gosqlite/fs"
+	"github.com/rfielding/gosqlite/utils"
 )
-
-type Node struct {
-	Attributes map[string]interface{} `json:"attributes,omitempty"`
-	Path       string                 `json:"path,omitempty"`
-	Name       string                 `json:"name"`
-	IsDir      bool                   `json:"isDir"`
-	Context    string                 `json:"context,omitempty"`
-	Size       int64                  `json:"size,omitempty"`
-	// Used for listings of results
-	Part int `json:"part,omitempty"`
-}
-
-type Listing struct {
-	Attributes map[string]interface{} `json:"attributes,omitempty"`
-	Children   []Node                 `json:"children"`
-}
-
-// Use the same format as the http.FileServer when given a directory
-func getRootHandler(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	inJson := q.Get("json") == "true"
-	if inJson {
-		w.Header().Set("Content-Type", "application/json")
-		listing := Listing{
-			Children: []Node{
-				{Name: "files", IsDir: true},
-			},
-		}
-		w.Write([]byte(AsJson(listing)))
-	} else {
-		w.Header().Set("Content-Type", "text/html")
-		err := compiledRootTemplate.Execute(w, nil)
-		if err != nil {
-			HandleError(w, err, "Unable to execute rootTemplate: %v", err)
-			return
-		}
-	}
-}
 
 // Permission attributes are dynamic, and can come from parent directories.
 // The first one found is used to set them all.
@@ -112,58 +76,76 @@ func getAttrs(claims interface{}, fsPath string, fName string) map[string]interf
 	return getAttrsPermission(claims, fsPath, fName, attrs)
 }
 
-func getSizeUnits(size int64, isDir bool) string {
-	sz := ""
-	if isDir == false {
-		if size > 1024*1024*1024 {
-			sz = fmt.Sprintf(" (%d GB)", size/(1024*1024*1024))
-		} else if size > 1024*1024 {
-			sz = fmt.Sprintf(" (%d MB)", size/(1024*1024))
-		} else if size > 1024 {
-			sz = fmt.Sprintf(" (%d kB)", size/(1024))
-		} else {
-			sz = fmt.Sprintf(" (%d B)", size)
-		}
-	}
-	return sz
-}
-
-func dirHandler(w http.ResponseWriter, r *http.Request) {
-	fsPath := r.URL.Path
-	user := GetUser(r)
-	// Get directory names
-	names, err := fs.ReadDir(fsPath)
+func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+	match := r.URL.Query().Get("match")
+	rows, err := db.TheDB.Query(`
+		SELECT original_path,original_name,part,highlight(filesearch,7,'<b style="background-color:gray">','</b>') highlighted 
+		from filesearch
+		where filesearch match ?
+	`, match)
 	if err != nil {
-		HandleError(w, err, "readdir %s: %v", fsPath)
+		utils.HandleError(w, err, "query %s: %v", match)
 		return
-	}
-	sort.Slice(names, func(i, j int) bool {
-		return names[i].Name() < names[j].Name()
-	})
-
-	listing := Listing{
-		Children: []Node{},
-	}
-	for _, name := range names {
-		fName := name.Name()
-		attrs := getAttrs(user, fsPath, fName)
-		listing.Children = append(listing.Children, Node{
-			Name:       fName,
-			IsDir:      name.IsDir(),
-			Size:       name.Size(),
-			Attributes: attrs,
-		})
 	}
 
 	q := r.URL.Query()
 	inJson := q.Get("json") == "true"
+	listing := data.Listing{
+		Children: []data.Node{},
+	}
+	user := data.GetUser(r)
+	for rows.Next() {
+		var path, name, highlighted string
+		var part int
+		rows.Scan(&path, &name, &part, &highlighted)
+		if IsImage(path+name) || IsVideo(path+name) {
+			highlighted = ""
+		}
+		listing.Children = append(listing.Children, data.Node{
+			Path:       path,
+			Name:       name,
+			Part:       part,
+			IsDir:      false,
+			Context:    highlighted,
+			Attributes: getAttrs(user, path, name),
+		})
+	}
+
 	if inJson {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(AsJson(listing)))
-		return
+		w.Write([]byte(utils.AsJson(listing)))
 	} else {
 		w.Header().Set("Content-Type", "text/html")
-		compiledListingTemplate.Execute(w, listing)
-		return
+		err := compiledSearchTemplate.Execute(w, listing)
+		if err != nil {
+			utils.HandleError(w, err, "Unable to execute searchTemplate: %v", err)
+			return
+		}
 	}
+}
+
+func indexTextFile(
+	command string,
+	path string,
+	name string,
+	part int,
+	originalPath string,
+	originalName string,
+	content []byte,
+) error {
+	// index the file -- if we are appending, we should only incrementally index
+	_, err := db.TheDB.Exec(
+		`INSERT INTO filesearch (cmd, path, name, part, original_path, original_name, content) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		command,
+		path,
+		name,
+		part,
+		originalPath,
+		originalName,
+		content,
+	)
+	if err != nil {
+		return fmt.Errorf("ERR while indexing %s %s%s: %v", command, path, name, err)
+	}
+	return nil
 }

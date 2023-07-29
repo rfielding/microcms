@@ -1,15 +1,15 @@
-package main
+package handler
 
 import (
 	"fmt"
 	"io"
 	"os/exec"
-	"strings"
 
 	"github.com/rfielding/gosqlite/fs"
+	"github.com/rfielding/gosqlite/utils"
 )
 
-func makeThumbnail(file string) (io.Reader, error) {
+func MakeThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-thumbnail", "x100",
@@ -23,7 +23,7 @@ func makeThumbnail(file string) (io.Reader, error) {
 	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
 	stdout, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, AsJson(command))
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, utils.AsJson(command))
 	}
 	// Give back a pipe that closes itself when it's read.
 	pipeReader, pipeWriter := io.Pipe()
@@ -45,7 +45,7 @@ func videoThumbnail(file string) (io.Reader, error) {
 	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
 	stdout, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, AsJson(command))
+		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, utils.AsJson(command))
 	}
 	// Give back a pipe that closes itself when it's read.
 	pipeReader, pipeWriter := io.Pipe()
@@ -54,27 +54,4 @@ func videoThumbnail(file string) (io.Reader, error) {
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
-}
-
-func IsVideo(fName string) bool {
-	if strings.HasSuffix(fName, ".mp4") {
-		return true
-	}
-	return false
-}
-
-func IsImage(fName string) bool {
-	if strings.HasSuffix(fName, ".jpg") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".jpeg") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".png") {
-		return true
-	}
-	if strings.HasSuffix(fName, ".gif") {
-		return true
-	}
-	return false
 }
