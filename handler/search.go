@@ -18,9 +18,18 @@ import (
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
 func getAttrsPermission(claims interface{}, fsPath string, fName string, initial map[string]interface{}) map[string]interface{} {
+	// TODO: should be using an assert library for things like this throughout the code
 	if strings.HasPrefix(fsPath, "/files/") == false {
 		panic(fmt.Sprintf("path %s should be rooted under /files/ and end in slash", fsPath))
 	}
+	// Calculate attributes with respect to original file
+	/*
+		if strings.Contains(fName, "--") {
+			fNameOriginal := fName[0:strings.LastIndex(fName, "--")]
+			if fs.IsExist(fNameOriginal) {
+				fName = fNameOriginal
+			}
+		}*/
 	// Try exact file if fName is not blank
 	attrFileName := fsPath + "permissions.rego"
 	if fName != "" {

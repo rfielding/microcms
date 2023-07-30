@@ -68,6 +68,15 @@ url=http://localhost:9321
   do
     curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
   done
+  for f in *.rego
+  do
+    if [ $f == "permissions.rego"]
+    then
+      true 
+    else
+      curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
+    fi
+  done
 )
 
-curl 'http://localhost:9321/search?json=true&match=king' | jq
+#curl 'http://localhost:9321/search?json=true&match=king' | jq
