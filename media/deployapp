@@ -5,8 +5,10 @@ url=http://localhost:9321
 (
   cd `dirname $0`
 
-  owner=rob.fielding@gmail.com
+  # This is the private cookie for a user
   auth=5ee5de77d0c566d2b8c170a03894ff2d
+  # this is the first email address of that user
+  owner=$(curl --cookie "account=${auth}" ${url}/me | jq -r '.email[0]')
 
   # Put in a html app
   ( cd app && tar cvf ../app.tar . ) 
