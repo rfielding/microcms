@@ -74,9 +74,12 @@ url=http://localhost:9321
     then
       true 
     else
+      echo write $f
       curl -X POST --cookie "account=${auth}" --data-binary @${f} ${url}/files/${owner}/documents/${f}
     fi
   done
+  # make sure that permissions.rego does not exist (not sure how it got uploaded before)
+  curl -X DELETE --cookie "account=${auth}" ${url}/files/${owner}/documents/permissions.rego
 )
 
 #curl 'http://localhost:9321/search?json=true&match=king' | jq

@@ -46,6 +46,21 @@ func detectNewUser(user string) (io.Reader, error) {
 	return pipeReader, nil
 }
 
+func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+	if strings.HasPrefix(r.URL.Path, "/files/") {
+		if fs.IsExist(r.URL.Path) {
+			err := fs.Remove(r.URL.Path)
+			if err != nil {
+				w.Write([]byte(fmt.Sprintf("unable to delete file: %v", err)))
+				return
+			}
+		}
+		// If it's gone, then it's deleted
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}
+
 // Use the standard file serving of Go, because media behavior
 // is really really complicated; and you do not want to serve it manually
 // if you can help it.
@@ -187,6 +202,8 @@ func rootRouter(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		postHandler(w, r, pathTokens)
 		return
+	case http.MethodDelete:
+		deleteHandler(w, r, pathTokens)
 	}
 	w.WriteHeader(http.StatusNotFound)
 }

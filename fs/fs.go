@@ -24,6 +24,10 @@ func ReadDir(name string) ([]fs.FileInfo, error) {
 	return d, err
 }
 
+func Remove(name string) error {
+	return os.Remove(name)
+}
+
 func IsExist(name string) bool {
 	_, err := os.Stat(At + name)
 	return err == nil
