@@ -3,8 +3,14 @@
   "users": {
     "5ee5de77d0c566d2b8c170a03894ff2d": {
       "name": ["robf"],
-      "role": ["admin","user"],
+      "role": ["user"],
       "email": ["rob.fielding@gmail.com"],
+      "age": ["adult","driving"]
+    },
+    "a9fef6d3cfad67cd12cfe12eab1248904": {
+      "name": ["robadmin"],
+      "role": ["admin","user"],
+      "email": ["rrr00bb@twitter.com"],
       "age": ["adult","driving"]
     },
     "33b98226f52c0e39e8f94cb565becd7d": {

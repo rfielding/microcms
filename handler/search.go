@@ -22,12 +22,12 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 		panic(fmt.Sprintf("path %s should be rooted under /files/ and end in slash", fsPath))
 	}
 	// Try exact file if fName is not blank
-	attrFileName := ""
-	if fName == "" {
-		// for consistency, should use: /files/--permission.rego as the standard
-		attrFileName = fsPath + "permissions.rego"
-	} else {
+	attrFileName := fsPath + "permissions.rego"
+	if fName != "" {
 		attrFileName = fsPath + fName + "--permissions.rego"
+		if fs.IsDir(fsPath + fName) {
+			attrFileName = fsPath + fName + "/permissions.rego"
+		}
 	}
 	//log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
 	if fs.IsExist(attrFileName) {
@@ -60,7 +60,6 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 }
 
 func getAttrs(claims interface{}, fsPath string, fName string) map[string]interface{} {
-	// Get the attributes for the file if they exist
 	attrs := make(map[string]interface{})
 	attrFileName := fsPath + fName + "--attributes.json"
 	if fs.IsExist(attrFileName) {
