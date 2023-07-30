@@ -76,9 +76,9 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		// must be different.
 		// Your first email address is your email.
 		userName := user["email"][0]
-		parentDir := "/files/" + userName
+		parentDir := "/files/" + userName // i can't make it end in slash, seems inconsistent
 		fileName := "permissions.rego"
-		if !fs.IsExist(parentDir + fileName) {
+		if !fs.IsExist(parentDir + "/" + fileName) {
 			log.Printf("Welcome to %s", parentDir)
 			rdr, err := detectNewUser(userName)
 			if err != nil {

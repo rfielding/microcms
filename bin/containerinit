@@ -22,6 +22,7 @@ then
   then
     # pre-upload defaults
     mkdir persistent/files/init
+    cp media/permissions.rego persistent/files
     cp media/styles.css persistent/files/init
     cp media/rootTemplate.html.templ persistent/files/init
     cp media/searchTemplate.html.templ persistent/files/init

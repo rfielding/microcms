@@ -137,7 +137,7 @@ These files, along with permissions.rego, are initialization config. They are fi
 
 A user gets a link with a secret link, that sets a cookie to set user attributes.
 
-`GET /registration/?account=41234121234243`
+`GET /registration/?account=5ee5de77d0c566d2b8c170a03894ff2d`
 
 You can see what your attributes are once you have hit this link and your cookie is set:
 
