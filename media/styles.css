@@ -5,25 +5,25 @@ html {
 }
 
 a:link {
-    color: green;
+    color: white;
     background-color: transparent;
     text-decoration: none;
   }
   
   a:visited {
-    color: pink;
+    color: white;
     background-color: transparent;
     text-decoration: none;
   }
   
   a:hover {
-    color: red;
+    color: white;
     background-color: transparent;
     text-decoration: underline;
   }
   
   a:active {
-    color: yellow;
+    color: white;
     background-color: transparent;
     text-decoration: underline;
   }
