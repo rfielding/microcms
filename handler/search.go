@@ -125,7 +125,6 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 }
 
 func indexTextFile(
-	command string,
 	path string,
 	name string,
 	part int,
@@ -136,7 +135,7 @@ func indexTextFile(
 	// index the file -- if we are appending, we should only incrementally index
 	_, err := db.TheDB.Exec(
 		`INSERT INTO filesearch (cmd, path, name, part, original_path, original_name, content) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		command,
+		"files",
 		path,
 		name,
 		part,
@@ -145,7 +144,7 @@ func indexTextFile(
 		content,
 	)
 	if err != nil {
-		return fmt.Errorf("ERR while indexing %s %s%s: %v", command, path, name, err)
+		return fmt.Errorf("ERR while indexing files %s%s: %v", path, name, err)
 	}
 	return nil
 }

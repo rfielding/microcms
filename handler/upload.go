@@ -30,7 +30,6 @@ func postFileHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 	stream io.Reader,
-	command string,
 	parentDir string,
 	name string,
 	originalParentDir string,
@@ -38,18 +37,6 @@ func postFileHandler(
 	cascade bool,
 ) error {
 	fullName := fmt.Sprintf("%s/%s", parentDir, name)
-
-	// Write the file out
-	flags := os.O_WRONLY | os.O_CREATE
-
-	// We either append content, or overwrite it entirely
-	if command == "append" {
-		flags |= os.O_APPEND
-	} else {
-		flags |= os.O_TRUNC
-	}
-
-	// TODO: check permissions before allowing writes
 
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
 	err := fs.MkdirAll(parentDir, 0777)
@@ -107,7 +94,7 @@ func postFileHandler(
 		}
 		// Write the doc extract stream like an upload
 		extractName := fmt.Sprintf("%s--extract.txt", name)
-		err = postFileHandler(w, r, rdr, command, parentDir, extractName, originalParentDir, originalName, cascade)
+		err = postFileHandler(w, r, rdr, parentDir, extractName, originalParentDir, originalName, cascade)
 		if err != nil {
 			return utils.HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 		}
@@ -120,7 +107,7 @@ func postFileHandler(
 			}
 			// Only png works.  bug in imageMagick.  don't cascade on thumbnails
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
+			err = postFileHandler(w, r, rdr, parentDir, thumbnailName, originalParentDir, originalName, false)
 			if err != nil {
 				return utils.HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
@@ -136,7 +123,7 @@ func postFileHandler(
 			return utils.HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 		}
 		thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-		err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
+		err = postFileHandler(w, r, rdr, parentDir, thumbnailName, originalParentDir, originalName, false)
 		if err != nil {
 			return utils.HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 		}
@@ -150,7 +137,7 @@ func postFileHandler(
 				return utils.HandleReturnedError(w, err, "Could not make thumbnail for %s: %v", fullName)
 			}
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-			err = postFileHandler(w, r, rdr, command, parentDir, thumbnailName, originalParentDir, originalName, false)
+			err = postFileHandler(w, r, rdr, parentDir, thumbnailName, originalParentDir, originalName, false)
 			if err != nil {
 				return utils.HandleReturnedError(w, err, "Could not write make thumbnail for indexing %s: %v", fullName)
 			}
@@ -163,7 +150,7 @@ func postFileHandler(
 				return utils.HandleReturnedError(w, err, "Could not extract labels for %s: %v", fullName)
 			}
 			labelName := fmt.Sprintf("%s--labels.json", name)
-			err = postFileHandler(w, r, rdr, command, parentDir, labelName, originalParentDir, originalName, cascade)
+			err = postFileHandler(w, r, rdr, parentDir, labelName, originalParentDir, originalName, cascade)
 			if err != nil {
 				//return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 				log.Printf("Could not write label detect %s: %v\n", fullName, err)
@@ -191,7 +178,7 @@ func postFileHandler(
 							}
 							if rdr != nil {
 								faceName := fmt.Sprintf("%s--faces.json", name)
-								err = postFileHandler(w, r, rdr, command, parentDir, faceName, originalParentDir, originalName, cascade)
+								err = postFileHandler(w, r, rdr, parentDir, faceName, originalParentDir, originalName, cascade)
 								if err != nil {
 									//return HandleReturnedError(w, err, "Could not write extract file for indexing %s: %v", fullName)
 									log.Printf("Could not write face detect %s: %v\n", fullName, err)
@@ -226,7 +213,7 @@ func postFileHandler(
 			if err == io.EOF {
 				break
 			}
-			err = indexTextFile(command, parentDir+"/", name, part, originalParentDir+"/", originalName, buffer[:sz])
+			err = indexTextFile(parentDir+"/", name, part, originalParentDir+"/", originalName, buffer[:sz])
 			if err != nil {
 				log.Printf("failed indexing: %v", err)
 			}
@@ -253,8 +240,6 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		utils.HandleError(w, err, "path needs /[command]/[url] for post to %s: %v", r.URL.Path)
 		return
 	}
-	command := pathTokens[1]
-	pathTokens[1] = "files"
 
 	// Make sure that the path exists, and get the file name
 	parentDir := strings.Join(pathTokens[:len(pathTokens)-1], "/")
@@ -277,7 +262,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 				tardir := path.Dir(fmt.Sprintf("%s/%s/%s", parentDir, name, strings.Join(tname, "/")))
 				tarname := path.Base(header.Name)
 				log.Printf("writing: %s into %s", tarname, tardir)
-				err = postFileHandler(w, r, t, command, tardir, tarname, tardir, tarname, true)
+				err = postFileHandler(w, r, t, tardir, tarname, tardir, tarname, true)
 				if err != nil {
 					log.Printf("ERR %v", err)
 					return
@@ -286,7 +271,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		}
 	} else {
 		// Just a normal single-file upload
-		err = postFileHandler(w, r, r.Body, command, parentDir, name, parentDir, name, true)
+		err = postFileHandler(w, r, r.Body, parentDir, name, parentDir, name, true)
 		if err != nil {
 			log.Printf("ERR %v", err)
 			return
