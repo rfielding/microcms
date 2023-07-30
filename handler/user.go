@@ -59,3 +59,31 @@ func LoadConfig() {
 		log.Printf("please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to creds that can use AWSRekognition")
 	}
 }
+
+func CanWrite(r *http.Request, fsPath string, fsName string) bool {
+	user := data.GetUser(r)
+	if user != nil {
+		attrs := getAttrs(user, fsPath, fsName)
+		if attrs != nil {
+			canWrite, ok := attrs["Write"].(bool)
+			if ok && canWrite {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func CanRead(r *http.Request, fsPath string, fsName string) bool {
+	user := data.GetUser(r)
+	if user != nil {
+		attrs := getAttrs(user, fsPath, fsName)
+		if attrs != nil {
+			canRead, ok := attrs["Read"].(bool)
+			if ok && canRead {
+				return true
+			}
+		}
+	}
+	return false
+}

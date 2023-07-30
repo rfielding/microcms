@@ -47,6 +47,11 @@ func detectNewUser(user string) (io.Reader, error) {
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+	if !CanWrite(r, path.Dir(r.URL.Path), path.Base(r.URL.Path)) {
+		w.Write([]byte(fmt.Sprintf("write disallowed")))
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/files/") {
 		if fs.IsExist(r.URL.Path) {
 			err := fs.Remove(r.URL.Path)
@@ -101,7 +106,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 				return
 			}
 			if rdr != nil {
-				err = postFileHandler(w, r, rdr, parentDir, fileName, parentDir, fileName, false)
+				err = postFileHandler(w, r, rdr, parentDir, fileName, parentDir, fileName, false, true)
 				if err != nil {
 					utils.HandleReturnedError(w, err, "Could not create homedir permission for %s: %v", userName)
 					return

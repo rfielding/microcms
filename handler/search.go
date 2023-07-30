@@ -106,14 +106,18 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		if IsImage(path+name) || IsVideo(path+name) {
 			highlighted = ""
 		}
-		listing.Children = append(listing.Children, data.Node{
-			Path:       path,
-			Name:       name,
-			Part:       part,
-			IsDir:      false,
-			Context:    highlighted,
-			Attributes: getAttrs(user, path, name),
-		})
+		attrs := getAttrs(user, path, name)
+		canRead, ok := attrs["Read"].(bool)
+		if ok && canRead {
+			listing.Children = append(listing.Children, data.Node{
+				Path:       path,
+				Name:       name,
+				Part:       part,
+				IsDir:      false,
+				Context:    highlighted,
+				Attributes: attrs,
+			})
+		}
 	}
 
 	if inJson {

@@ -49,12 +49,14 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 	for _, name := range names {
 		fName := name.Name()
 		attrs := getAttrs(user, fsPath, fName)
-		listing.Children = append(listing.Children, data.Node{
-			Name:       fName,
-			IsDir:      name.IsDir(),
-			Size:       name.Size(),
-			Attributes: attrs,
-		})
+		if attrs["Read"] == true {
+			listing.Children = append(listing.Children, data.Node{
+				Name:       fName,
+				IsDir:      name.IsDir(),
+				Size:       name.Size(),
+				Attributes: attrs,
+			})
+		}
 	}
 
 	q := r.URL.Query()

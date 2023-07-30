@@ -133,7 +133,6 @@ These files, along with permissions.rego, are initialization config. They are fi
 
 ## Permissions
 
-> TODO: not implemented in here.
 
 A user gets a link with a secret link, that sets a cookie to set user attributes.
 
@@ -172,3 +171,7 @@ Write {
 ```
 
 So that when `rob.fielding@gmail.com` is used, the label is `PUBLIC RW`. And anyone else sees `PUBLIC R` to indicate that it is a read-only file.
+
+In this case, enforcement is happenint such that one adult user sees all files, and the non-adult does not. Also, not being the owner, the non-adult sees read-only files.
+
+![images/differentPermissions.png](images/differentPermissions.png)
