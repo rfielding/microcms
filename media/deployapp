@@ -70,7 +70,7 @@ url=http://localhost:9321
   done
   for f in *.rego
   do
-    if [ $f == "permissions.rego"]
+    if [ "$f" == "permissions.rego" ]
     then
       true 
     else

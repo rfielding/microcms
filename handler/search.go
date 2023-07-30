@@ -17,25 +17,20 @@ import (
 // Permission attributes are dynamic, and can come from parent directories.
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
-func getAttrsPermission(claims interface{}, fsPath string, fName string, initial map[string]interface{}) map[string]interface{} {
-	// TODO: should be using an assert library for things like this throughout the code
-	if strings.HasPrefix(fsPath, "/files/") == false {
-		panic(fmt.Sprintf("path %s should be rooted under /files/ and end in slash", fsPath))
-	}
+func getAttrsPermission(claims interface{}, fsPath string, fsName string, initial map[string]interface{}) map[string]interface{} {
 	// Calculate attributes with respect to original file
-	/*
-		if strings.Contains(fName, "--") {
-			fNameOriginal := fName[0:strings.LastIndex(fName, "--")]
-			if fs.IsExist(fNameOriginal) {
-				fName = fNameOriginal
-			}
-		}*/
+	if strings.Contains(fsName, "--") {
+		fNameOriginal := fsName[0:strings.LastIndex(fsName, "--")]
+		if fs.IsExist(fsPath + fNameOriginal) {
+			fsName = fNameOriginal
+		}
+	}
 	// Try exact file if fName is not blank
 	attrFileName := fsPath + "permissions.rego"
-	if fName != "" {
-		attrFileName = fsPath + fName + "--permissions.rego"
-		if fs.IsDir(fsPath + fName) {
-			attrFileName = fsPath + fName + "/permissions.rego"
+	if fsName != "" {
+		attrFileName = fsPath + fsName + "--permissions.rego"
+		if fs.IsDir(fsPath + fsName) {
+			attrFileName = fsPath + fsName + "/permissions.rego"
 		}
 	}
 	//log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
@@ -54,7 +49,7 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 		}
 		return initial
 	} else {
-		if fName != "" {
+		if fsName != "" {
 			return getAttrsPermission(claims, fsPath, "", initial)
 		} else {
 			if fsPath == "/files/" {
@@ -68,9 +63,9 @@ func getAttrsPermission(claims interface{}, fsPath string, fName string, initial
 	}
 }
 
-func getAttrs(claims interface{}, fsPath string, fName string) map[string]interface{} {
+func getAttrs(claims interface{}, fsPath string, fsName string) map[string]interface{} {
 	attrs := make(map[string]interface{})
-	attrFileName := fsPath + fName + "--attributes.json"
+	attrFileName := fsPath + fsName + "--attributes.json"
 	if fs.IsExist(attrFileName) {
 		jf, err := fs.ReadFile(attrFileName)
 		if err != nil {
@@ -82,7 +77,8 @@ func getAttrs(claims interface{}, fsPath string, fName string) map[string]interf
 			}
 		}
 	}
-	return getAttrsPermission(claims, fsPath, fName, attrs)
+	// overwrite with calculated values
+	return getAttrsPermission(claims, fsPath, fsName, attrs)
 }
 
 func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
