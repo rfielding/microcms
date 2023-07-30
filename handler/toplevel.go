@@ -89,12 +89,6 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 
 	user := data.GetUser(r)
 	if len(user["email"]) > 0 {
-		// When a user comes in, for rob.fielding@gmail.com
-		// /files/rob.fielding@gmail.com/permissions.rego
-		// should be uploaded with default permissions if it
-		// does not exist. User can override it if permissions
-		// must be different.
-		// Your first email address is your email.
 		userName := user["email"][0]
 		parentDir := "/files/" + userName // i can't make it end in slash, seems inconsistent
 		fileName := "permissions.rego"
