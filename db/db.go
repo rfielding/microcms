@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/utils"
 )
 
 var TheDB *sql.DB

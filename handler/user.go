@@ -8,16 +8,16 @@ import (
 	"os"
 
 	"github.com/open-policy-agent/opa/rego"
-	"github.com/rfielding/gosqlite/data"
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/data"
+	"github.com/rfielding/microcms/utils"
 )
 
 // Evaluate an opa string against some parsed json claims
 func CalculateRego(claims interface{}, s string) (map[string]interface{}, error) {
 	ctx := context.TODO()
 	compiler := rego.New(
-		rego.Query("data.gosqlite"),
-		rego.Module("gosqlite.rego", s),
+		rego.Query("data.microcms"),
+		rego.Module("microcms.rego", s),
 	)
 	query, err := compiler.PrepareForEval(ctx)
 	if err != nil {

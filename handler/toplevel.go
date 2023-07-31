@@ -8,9 +8,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/rfielding/gosqlite/data"
-	"github.com/rfielding/gosqlite/fs"
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/data"
+	"github.com/rfielding/microcms/fs"
+	"github.com/rfielding/microcms/utils"
 )
 
 var FileServer = http.FileServer(http.Dir(fs.At))

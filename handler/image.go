@@ -5,8 +5,8 @@ import (
 	"io"
 	"os/exec"
 
-	"github.com/rfielding/gosqlite/fs"
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/fs"
+	"github.com/rfielding/microcms/utils"
 )
 
 func MakeThumbnail(file string) (io.Reader, error) {

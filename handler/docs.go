@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os/exec"
 
-	"github.com/rfielding/gosqlite/fs"
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/fs"
+	"github.com/rfielding/microcms/utils"
 )
 
 var DocExtractor string

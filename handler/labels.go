@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
-	"github.com/rfielding/gosqlite/fs"
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/fs"
+	"github.com/rfielding/microcms/utils"
 )
 
 // detectLabels gets labels from the rekognition API for an image at the given file path.

@@ -1,4 +1,4 @@
-module github.com/rfielding/gosqlite
+module github.com/rfielding/microcms
 
 go 1.18
 

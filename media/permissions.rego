@@ -1,4 +1,4 @@
-package gosqlite
+package microcms
 
 default Read = true
 default Write = false

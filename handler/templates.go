@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"text/template"
 
-	"github.com/rfielding/gosqlite/fs"
+	"github.com/rfielding/microcms/fs"
 )
 
 func compileTemplate(name string) *template.Template {

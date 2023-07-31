@@ -8,10 +8,10 @@ import (
 	"path"
 	"strings"
 
-	"github.com/rfielding/gosqlite/data"
-	"github.com/rfielding/gosqlite/db"
-	"github.com/rfielding/gosqlite/fs"
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/data"
+	"github.com/rfielding/microcms/db"
+	"github.com/rfielding/microcms/fs"
+	"github.com/rfielding/microcms/utils"
 )
 
 // Permission attributes are dynamic, and can come from parent directories.

@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/rfielding/gosqlite/data"
-	"github.com/rfielding/gosqlite/fs"
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/data"
+	"github.com/rfielding/microcms/fs"
+	"github.com/rfielding/microcms/utils"
 )
 
 func getRootHandler(w http.ResponseWriter, r *http.Request) {

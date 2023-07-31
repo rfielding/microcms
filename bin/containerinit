@@ -4,7 +4,7 @@
 # This should only be invoked from inside docker container on startup
 #
 
-if [ -f ./cmd/gosqlite/gosqlite ]
+if [ -f ./cmd/microcms/microcms ]
 then
   if [ ! -d persistent ]
   then
@@ -29,5 +29,5 @@ then
     cp media/listingTemplate.html.templ persistent/files/init
     cp media/defaultPermissions.rego.templ persistent/files/init
   fi
-  ./cmd/gosqlite/gosqlite & java -jar ./bin/tika-server-standard.jar
+  ./cmd/microcms/microcms & java -jar ./bin/tika-server-standard.jar
 fi

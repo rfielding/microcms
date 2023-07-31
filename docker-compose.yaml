@@ -1,12 +1,12 @@
 version: '3.2'
 
 services:
-  gosqlite:
+  microcms:
     networks:
       mesh:
         aliases:
-          - gosqlite
-    image: gosqlite:latest
+          - microcms
+    image: microcms:latest
     user: 1000:1000
     ports:
       - '9321:9321'

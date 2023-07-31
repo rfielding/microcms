@@ -1,4 +1,4 @@
-# GoSQLite
+# microcms
 
 A YouTube video to show what this is. It is the backend part of accessibility,
 by getting text searching and image labelling done by an AI.
@@ -119,7 +119,7 @@ When a file is uploaded, it triggers a cascade of related simulated uploads.
     - extract thumbnails on pdf
   - If it's a video, then extract a thumbnail for it. There are no known text extracts for video right now.
   - If it's an image, then submit to a vision API to extract labels on it. Ex: if it's a picture of a dog, then it should show up in a json file later. Extract a thumbnail. This is why imagemagick is included.
-  - If it's a text file of some sort, then full-text extract it with gosqlite. This is the main purpose of including gosqlite.
+  - If it's a text file of some sort, then full-text extract it with microcms. This is the main purpose of including microcms.
   
 Because of this recursive breakdown of either unpacking tarballs, or turning files into extracted text, full-text search can now work well. The basic idea is to upload individual files, or tarballs of files. It is known what files will be automatically created (thubnails, text extracts). We can override all of the automatically created files.
 
@@ -162,7 +162,7 @@ The reason for these attributes is that that the `*.rego` files ingests claims t
 For example. Anyone can read it, but you must have email `rob.fielding@gmail.com`
 
 ```
-package gosqlite
+package microcms
 
 default Label = "PUBLIC"
 default LabelBg = "green"

@@ -1,7 +1,7 @@
 schema.db
 media/app.tar
 media/react-test
-./gosqlite
+./microcms
 ./files
 persistent
 vendor

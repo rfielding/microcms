@@ -1,0 +1,9 @@
+package microcms
+default Label = "PUBLIC"
+default LabelBg = "green"
+default LabelFg = "white"	
+default Read = true
+default Write = false
+Write {
+	input["email"][_] == "{{.Name}}"
+}

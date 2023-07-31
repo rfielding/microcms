@@ -1,4 +1,4 @@
-package gosqlite
+package microcms
 
 default Label = "TOP SECRET//MANHATTAN"
 default LabelBg = "yellow"

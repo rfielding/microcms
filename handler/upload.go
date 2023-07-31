@@ -11,9 +11,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/rfielding/gosqlite/utils"
+	"github.com/rfielding/microcms/utils"
 
-	"github.com/rfielding/gosqlite/fs"
+	"github.com/rfielding/microcms/fs"
 )
 
 type LabelModel struct {

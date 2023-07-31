@@ -1,4 +1,4 @@
-package gosqlite
+package microcms
 
 default Label = "SECRET//SQUIRREL"
 default LabelBg = "red"
