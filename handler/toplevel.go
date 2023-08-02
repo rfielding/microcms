@@ -92,7 +92,7 @@ func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.U
 				return true
 			}
 			if rdr != nil {
-				herr, err := postFileHandler(user, rdr, parentDir, fsName, parentDir, fsName, false, true)
+				herr, err := postFileHandler(user, rdr, fsPath, fsName, fsPath, fsName, false, true)
 				if err != nil {
 					w.WriteHeader(int(herr))
 					err2 := fmt.Errorf("Could not create homedir permission for %s: %v", userName, err)
