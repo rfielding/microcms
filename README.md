@@ -55,7 +55,7 @@ Launch the contaihner
 ./startup # launch docker compose
 ```
 
-> note that you have to run `./media/deployapp` in a different window because of stylesheets and templates that must be uploaded for init.
+> note that you have to run `./deployapp` in a different window because of stylesheets and templates that must be uploaded for init.
 
 ## API
 
@@ -75,7 +75,7 @@ Install a react app in a tarball, or a simple html app.  Install means to expect
 > All directories are created as a side-effect.  But before or after uploading file, it's a TODO to be able to upload metadata such as permissions.  In that case, upload permissions before files.
 
 ```
-./media/deployapp # read it to see how it uploads files
+./deployapp # read it to see how it uploads files
 ```
 
 The API is designed to be easily explored from a web browser.  A few things are not completely obvious though.

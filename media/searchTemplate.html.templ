@@ -4,7 +4,7 @@
   <ul>
     {{range .Children}}
 	    <li>
-        <span style="color:{{.Attributes.LabelFg}}; background-color:{{.Attributes.LabelBg}}">{{.Attributes.Label}}&nbsp;{{if .Attributes.Read}}<i>R</i>{{end}}{{if .Attributes.Write}}<i>W</i>{{end}}</span>
+        <span style="color:{{.Attributes.LabelFg}}; background-color:{{.Attributes.LabelBg}}">{{.Attributes.Label}}&nbsp;{{if .Attributes.Read}}<i>R</i>{{end}}{{if .Attributes.Write}}<i>W</i>{{end}}}{{if .Attributes.Moderation}}!!{{end}}</span>
         <img src="{{.Path}}{{.Name}}--thumbnail.png" alt="">
         <a href="{{.Path}}{{.Name}}">{{.Path}}{{.Name}} [part {{.Part}}]</a>
         {{.Context}}
