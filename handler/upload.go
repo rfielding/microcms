@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/rfielding/microcms/data"
 	"github.com/rfielding/microcms/fs"
 )
 
@@ -23,22 +24,23 @@ type LabelObject struct {
 	Name string `json:"Name"`
 }
 
+// When we return the error type, also suggest the http error to return,
+// as at the time the error happens, that is when it is best known how to handle it.
 type HttpError int
 
 // postFileHandler can be re-used as long as err != nil
 func postFileHandler(
-	w http.ResponseWriter,
-	r *http.Request,
+	user data.User,
 	stream io.Reader,
 	parentDir string,
 	name string,
-	originalParentDir string,
-	originalName string,
-	cascade bool,
-	privileged bool,
+	originalParentDir string, // the path that triggered the creation of this file
+	originalName string, // the file that triggered the creation of this file
+	cascade bool, // allow further derivatives
+	privileged bool, // ignore the permissions, because this is startup
 ) (HttpError, error) {
 
-	if !privileged && !CanWrite(r, parentDir, name) {
+	if !privileged && !CanWrite(user, parentDir, name) {
 		return http.StatusForbidden, fmt.Errorf("write disallowed")
 	}
 
@@ -47,42 +49,41 @@ func postFileHandler(
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
 	err := fs.MkdirAll(parentDir, 0777)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Could not create path for %s: %v", r.URL.Path, err)
+		return http.StatusInternalServerError, fmt.Errorf("Could not create path for %s: %v", parentDir, err)
 	}
 
 	existingSize := fs.Size(fullName)
 
 	// Ensure that the file in question exists on disk.
 	if true {
-		df := fullName
-		f, err := fs.Create(df)
+		f, err := fs.Create(fullName)
 		if err != nil {
-			return http.StatusInternalServerError, fmt.Errorf("Could not create file %s: %v", r.URL.Path, err)
+			return http.StatusInternalServerError, fmt.Errorf("Could not create file %s: %v", fullName, err)
 		}
 
 		// Save the stream to a file
 		sz, err := io.Copy(f, stream)
 		f.Close() // strange positioning, but we must close before defer can get to it.
 		if err != nil {
-			return http.StatusInternalServerError, fmt.Errorf("Could not write to file (%d bytes written) %s: %v", sz, r.URL.Path, err)
+			return http.StatusInternalServerError, fmt.Errorf("Could not write to file (%d bytes written) %s: %v", sz, fullName, err)
 		}
 
 		// Make sure that these are re-compiled on upload
 		if fullName == "/files/init/searchTemplate.html.templ" {
 			log.Printf("Recompiling %s", fullName)
-			compiledSearchTemplate = compileTemplate(df)
+			compiledSearchTemplate = compileTemplate(fullName)
 		}
 		if fullName == "/files/init/listingTemplate.html.templ" {
 			log.Printf("Recompiling %s", fullName)
-			compiledListingTemplate = compileTemplate(df)
+			compiledListingTemplate = compileTemplate(fullName)
 		}
 		if fullName == "/files/init/rootTemplate.html.templ" {
 			log.Printf("Recompiling %s", fullName)
-			compiledRootTemplate = compileTemplate(df)
+			compiledRootTemplate = compileTemplate(fullName)
 		}
 		if fullName == "/files/init/defaultPermissions.rego.templ" {
 			log.Printf("Recompiling %s", fullName)
-			compiledDefaultPermissionsTemplate = compileTemplate(df)
+			compiledDefaultPermissionsTemplate = compileTemplate(fullName)
 		}
 	}
 
@@ -100,7 +101,7 @@ func postFileHandler(
 		}
 		// Write the doc extract stream like an upload
 		extractName := fmt.Sprintf("%s--extract.txt", name)
-		herr, err := postFileHandler(w, r, rdr, parentDir, extractName, originalParentDir, originalName, cascade, privileged)
+		herr, err := postFileHandler(user, rdr, parentDir, extractName, originalParentDir, originalName, cascade, privileged)
 		if err != nil {
 			return herr, fmt.Errorf("Could not write extract file for indexing %s: %v", fullName, err)
 		}
@@ -113,7 +114,7 @@ func postFileHandler(
 			}
 			// Only png works.  bug in imageMagick.  don't cascade on thumbnails
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-			herr, err := postFileHandler(w, r, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
+			herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
 			if err != nil {
 				return herr, fmt.Errorf("Could not write make thumbnail for indexing %s: %v", fullName, err)
 			}
@@ -129,7 +130,7 @@ func postFileHandler(
 			return http.StatusInternalServerError, fmt.Errorf("Could not make thumbnail for %s: %v", fullName, err)
 		}
 		thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-		herr, err := postFileHandler(w, r, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
+		herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
 		if err != nil {
 			return herr, fmt.Errorf("Could not write make thumbnail for indexing %s: %v", fullName, err)
 		}
@@ -143,7 +144,7 @@ func postFileHandler(
 				return http.StatusInternalServerError, fmt.Errorf("Could not make thumbnail for %s: %v", fullName, err)
 			}
 			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-			herr, err := postFileHandler(w, r, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
+			herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
 			if err != nil {
 				return herr, fmt.Errorf("Could not write make thumbnail for indexing %s: %v", fullName, err)
 			}
@@ -156,7 +157,7 @@ func postFileHandler(
 				return http.StatusInternalServerError, fmt.Errorf("Could not extract labels for %s: %v", fullName, err)
 			}
 			labelName := fmt.Sprintf("%s--labels.json", name)
-			herr, err := postFileHandler(w, r, rdr, parentDir, labelName, originalParentDir, originalName, cascade, privileged)
+			herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalName, cascade, privileged)
 			if err != nil {
 				return herr, fmt.Errorf("Could not write labgel detect %s: %v", fullName, err)
 			}
@@ -181,7 +182,7 @@ func postFileHandler(
 						}
 						if rdr != nil {
 							faceName := fmt.Sprintf("%s--faces.json", name)
-							herr, err := postFileHandler(w, r, rdr, parentDir, faceName, originalParentDir, originalName, cascade, privileged)
+							herr, err := postFileHandler(user, rdr, parentDir, faceName, originalParentDir, originalName, cascade, privileged)
 							if err != nil {
 								return herr, fmt.Errorf("Could not write face detect %s: %v", fullName, err)
 							}
@@ -229,6 +230,7 @@ func postFileHandler(
 func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	var err error
 	defer r.Body.Close()
+	user := data.GetUser(r)
 
 	if len(pathTokens) < 2 {
 		err := fmt.Errorf("path needs /[command]/[url] for post to %s: %v", r.URL.Path, err)
@@ -267,7 +269,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 				tardir := path.Dir(fmt.Sprintf("%s/%s/%s", parentDir, name, strings.Join(tname, "/")))
 				tarname := path.Base(header.Name)
 				log.Printf("writing: %s into %s", tarname, tardir)
-				herr, err := postFileHandler(w, r, t, tardir, tarname, tardir, tarname, true, false)
+				herr, err := postFileHandler(user, t, tardir, tarname, tardir, tarname, true, false)
 				if err != nil {
 					w.WriteHeader(int(herr))
 					w.Write([]byte(fmt.Sprintf("ERR: %v", err)))
@@ -278,7 +280,7 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		}
 	} else {
 		// Just a normal single-file upload
-		herr, err := postFileHandler(w, r, r.Body, parentDir, name, parentDir, name, true, false)
+		herr, err := postFileHandler(user, r.Body, parentDir, name, parentDir, name, true, false)
 		if err != nil {
 			w.WriteHeader(int(herr))
 			w.Write([]byte(fmt.Sprintf("ERR: %v", err)))

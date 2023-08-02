@@ -17,7 +17,7 @@ import (
 // Permission attributes are dynamic, and can come from parent directories.
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
-func getAttrsPermission(claims interface{}, fsPath string, fsName string, initial map[string]interface{}) map[string]interface{} {
+func getAttrsPermission(claims data.User, fsPath string, fsName string, initial map[string]interface{}) map[string]interface{} {
 	// Calculate attributes with respect to original file
 	if strings.Contains(fsName, "--") {
 		fNameOriginal := fsName[0:strings.LastIndex(fsName, "--")]
@@ -26,22 +26,22 @@ func getAttrsPermission(claims interface{}, fsPath string, fsName string, initia
 		}
 	}
 	// Try exact file if fName is not blank
-	attrFileName := fsPath + "permissions.rego"
+	regoFile := fsPath + "permissions.rego"
 	if fsName != "" {
-		attrFileName = fsPath + fsName + "--permissions.rego"
+		regoFile = fsPath + fsName + "--permissions.rego"
 		if fs.IsDir(fsPath + fsName) {
-			attrFileName = fsPath + fsName + "/permissions.rego"
+			regoFile = fsPath + fsName + "/permissions.rego"
 		}
 	}
-	//log.Printf("look for permissions at: %s (%s,%s)", attrFileName, fsPath, fName)
-	if fs.IsExist(attrFileName) {
-		jf, err := fs.ReadFile(attrFileName)
+	if fs.IsExist(regoFile) {
+		jf, err := fs.ReadFile(regoFile)
 		if err != nil {
-			log.Printf("Failed to open %s!: %v", attrFileName, err)
+			log.Printf("Failed to open %s!: %v", regoFile, err)
 		} else {
-			calculation, err := CalculateRego(claims, string(jf))
+			regoString := string(jf)
+			calculation, err := CalculateRego(claims, regoString)
 			if err != nil {
-				log.Printf("Failed to parse %s!: %v", attrFileName, err)
+				log.Printf("Failed to parse rego %s!: %v\n%s", regoFile, err, regoString)
 			}
 			for k, v := range calculation {
 				initial[k] = v
@@ -63,17 +63,19 @@ func getAttrsPermission(claims interface{}, fsPath string, fsName string, initia
 	}
 }
 
-func getAttrs(claims interface{}, fsPath string, fsName string) map[string]interface{} {
+func getAttrs(claims data.User, fsPath string, fsName string) map[string]interface{} {
 	attrs := make(map[string]interface{})
-	attrFileName := fsPath + fsName + "--attributes.json"
-	if fs.IsExist(attrFileName) {
-		jf, err := fs.ReadFile(attrFileName)
+	// Start parsing attributes with a custom set of values that
+	// get overridden with calculated values
+	customFileName := fsPath + fsName + "--custom.json"
+	if fs.IsExist(customFileName) {
+		jf, err := fs.ReadFile(customFileName)
 		if err != nil {
-			log.Printf("Failed to open %s!: %v", attrFileName, err)
+			log.Printf("Failed to open %s!: %v", customFileName, err)
 		} else {
 			err := json.Unmarshal(jf, &attrs)
 			if err != nil {
-				log.Printf("Failed to parse %s!: %v", attrFileName, err)
+				log.Printf("Failed to parse json %s!: %v", customFileName, err)
 			}
 		}
 	}

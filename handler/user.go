@@ -60,8 +60,7 @@ func LoadConfig() {
 	}
 }
 
-func CanWrite(r *http.Request, fsPath string, fsName string) bool {
-	user := data.GetUser(r)
+func CanWrite(user data.User, fsPath string, fsName string) bool {
 	if user != nil {
 		attrs := getAttrs(user, fsPath, fsName)
 		if attrs != nil {
@@ -74,8 +73,7 @@ func CanWrite(r *http.Request, fsPath string, fsName string) bool {
 	return false
 }
 
-func CanRead(r *http.Request, fsPath string, fsName string) bool {
-	user := data.GetUser(r)
+func CanRead(user data.User, fsPath string, fsName string) bool {
 	if user != nil {
 		attrs := getAttrs(user, fsPath, fsName)
 		if attrs != nil {

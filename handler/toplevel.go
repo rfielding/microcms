@@ -47,15 +47,16 @@ func detectNewUser(user string) (io.Reader, error) {
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
-	if !CanWrite(r, path.Dir(r.URL.Path), path.Base(r.URL.Path)) {
-		w.Write([]byte(fmt.Sprintf("write disallowed")))
+	if !CanWrite(data.GetUser(r), path.Dir(r.URL.Path), path.Base(r.URL.Path)) {
 		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(fmt.Sprintf("write disallowed")))
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/files/") {
 		if fs.IsExist(r.URL.Path) {
 			err := fs.Remove(r.URL.Path)
 			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("unable to delete file: %v", err)))
 				return
 			}
@@ -102,7 +103,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 				return
 			}
 			if rdr != nil {
-				herr, err := postFileHandler(w, r, rdr, parentDir, fileName, parentDir, fileName, false, true)
+				herr, err := postFileHandler(user, rdr, parentDir, fileName, parentDir, fileName, false, true)
 				if err != nil {
 					w.WriteHeader(int(herr))
 					err2 := fmt.Errorf("Could not create homedir permission for %s: %v", userName, err)
@@ -196,7 +197,8 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
-// We route on method and first segment of the path
+// Note that all http handling MUST be tail calls. That makes
+// top level routing a little ugly.
 func rootRouter(w http.ResponseWriter, r *http.Request) {
 	pathTokens := strings.Split(r.URL.Path, "/")
 	switch r.Method {
@@ -208,6 +210,7 @@ func rootRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	case http.MethodDelete:
 		deleteHandler(w, r, pathTokens)
+		return
 	}
 	w.WriteHeader(http.StatusNotFound)
 }
