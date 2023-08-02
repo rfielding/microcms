@@ -43,20 +43,20 @@ func postFileHandler(
 	// when that is correct, it will be fullName := fsPath + fsName
 	// the name fsPath implies that it is a known directory with a trailing slash.
 	//    fsPath == path.Dir(fullName) + "/"
+	fsPath := parentDir + "/"
+	//originalFsPath := originalParentDir + "/"
 
-	if !privileged && !CanWrite(user, parentDir, fsName) {
+	if !privileged && !CanWrite(user, fsPath, fsName) {
 		return http.StatusForbidden, fmt.Errorf("write disallowed")
 	}
 
-	fullName := fmt.Sprintf("%s/%s", parentDir, fsName)
+	fullName := fsPath + fsName
 
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
-	err := fs.MkdirAll(parentDir, 0777)
+	err := fs.MkdirAll(path.Dir(fullName), 0777)
 	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Could not create path for %s: %v", parentDir, err)
+		return http.StatusInternalServerError, fmt.Errorf("Could not create path for %s: %v", fsPath, err)
 	}
-
-	existingSize := fs.Size(fullName)
 
 	// Ensure that the file in question exists on disk.
 	if true {
@@ -221,12 +221,10 @@ func postFileHandler(
 			return http.StatusInternalServerError, fmt.Errorf("Could not open file for indexing %s: %v", fullName, err)
 		}
 		defer f.Close()
-		if existingSize > 0 {
-			// we are appending, so we need to start at the end of the file
-			f.Seek(existingSize, 0)
-		}
+
 		var rdr io.Reader = f
-		buffer := make([]byte, 4*1024)
+		// chunk sizes for making search results
+		buffer := make([]byte, 16*1024)
 		part := 0
 		for {
 			sz, err := rdr.Read(buffer)
