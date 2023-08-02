@@ -3,7 +3,7 @@
 A YouTube video to show what this is. It is the backend part of accessibility,
 by getting text searching and image labelling done by an AI.
 
-https://www.youtube.com/watch?v=QRvdqJ6sjYA
+https://www.youtube.com/watch?v=yuDblOFiPcQ
 
 Requirements:
 
