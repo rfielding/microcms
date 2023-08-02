@@ -67,6 +67,13 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) 
 	w.WriteHeader(http.StatusNotFound)
 }
 
+func ToBoolString(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
 // Use the standard file serving of Go, because media behavior
 // is really really complicated; and you do not want to serve it manually
 // if you can help it.
@@ -89,6 +96,8 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	}
 
 	user := data.GetUser(r)
+
+	// Make home directories exist on first visit
 	if len(user["email"]) > 0 {
 		userName := user["email"][0]
 		parentDir := "/files/" + userName // i can't make it end in slash, seems inconsistent
@@ -123,20 +132,42 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 
+	// try search handler
+	if r.URL.Path == "/search" || strings.HasPrefix(r.URL.Path, "/search/") {
+		GetSearchHandler(w, r, pathTokens)
+		return
+	}
+
 	// Don't deal with directories missing slashes
 	if r.URL.Path == "/files" {
 		http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
 		return
 	}
+
+	if strings.HasPrefix(r.URL.Path, "/files/") && fs.IsDir(r.URL.Path) {
+		if r.URL.Path[len(r.URL.Path)-1] != '/' {
+			http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
+			return
+		}
+	}
+
 	// If it's a file in our tree...do redirects if we must, or handle a dir reference
 	if strings.HasPrefix(r.URL.Path, "/files/") {
+		fsPath := path.Dir(r.URL.Path) + "/"
+		fsName := path.Base(r.URL.Path)
+		attrs := GetAttrs(user, fsPath, fsName)
+
+		// Set headers
+		w.Header().Add("Label", attrs["Label"].(string))
+		w.Header().Add("LabelFg", attrs["LabelFg"].(string))
+		w.Header().Add("LabelBg", attrs["LabelBg"].(string))
+		w.Header().Add("CanRead", ToBoolString(attrs["Read"].(bool)))
+		w.Header().Add("CanWrite", ToBoolString(attrs["Write"].(bool)))
+
 		if fs.IsDir(r.URL.Path) {
-			if r.URL.Path[len(r.URL.Path)-1] != '/' {
-				http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
-				return
-			}
+			isListing := r.URL.Query().Get("listing") == "true"
 			fsIndex := r.URL.Path + "index.html"
-			if fs.IsExist(fsIndex) && !fs.IsDir(fsIndex) {
+			if fs.IsExist(fsIndex) && !fs.IsDir(fsIndex) && !isListing {
 				fs.ServeFile(w, r, fsIndex)
 				return
 			} else {
@@ -144,6 +175,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 				return
 			}
 		}
+
 		// set a mime type that the handler won't know about if we must
 		if strings.HasSuffix(r.URL.Path, ".css") {
 			w.Header().Set("Content-Type", "text/css")
@@ -195,11 +227,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		FileServer.ServeHTTP(w, r)
 		return
 	}
-	// try search handler
-	if r.URL.Path == "/search" || strings.HasPrefix(r.URL.Path, "/search/") {
-		GetSearchHandler(w, r, pathTokens)
-		return
-	}
+
 	// give up
 	w.WriteHeader(http.StatusNotFound)
 }
