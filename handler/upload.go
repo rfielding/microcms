@@ -43,8 +43,11 @@ func postFileHandler(
 	// when that is correct, it will be fullName := fsPath + fsName
 	// the name fsPath implies that it is a known directory with a trailing slash.
 	//    fsPath == path.Dir(fullName) + "/"
+	if strings.HasSuffix(parentDir, "/") {
+		log.Printf("!!!! inconsistent parentDir ends in slash here! %s", parentDir+fsName)
+	}
 	fsPath := parentDir + "/"
-	//originalFsPath := originalParentDir + "/"
+	originalFsPath := originalParentDir + "/"
 
 	if !privileged && !CanWrite(user, fsPath, fsName) {
 		return http.StatusForbidden, fmt.Errorf("write disallowed")
@@ -231,9 +234,8 @@ func postFileHandler(
 			if err == io.EOF {
 				break
 			}
-			err = indexTextFile(parentDir+"/", fsName, part, originalParentDir+"/", originalFsName, buffer[:sz])
+			err = indexTextFile(fsPath, fsName, part, originalFsPath, originalFsName, buffer[:sz])
 			if err != nil {
-				// just let it go and continue??
 				return http.StatusInternalServerError, fmt.Errorf("failed indexing: %v", err)
 			}
 			part++

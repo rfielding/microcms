@@ -79,9 +79,10 @@ func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.U
 	if len(user["email"]) > 0 {
 		userName := user["email"][0]
 		parentDir := "/files/" + userName // i can't make it end in slash, seems inconsistent
-		fileName := "permissions.rego"
-		if !fs.IsExist(parentDir + "/" + fileName) {
-			log.Printf("Welcome to %s", parentDir)
+		fsPath := parentDir + "/"
+		fsName := "permissions.rego"
+		if !fs.IsExist(fsPath + fsName) {
+			log.Printf("Welcome to %s", fsPath)
 			rdr, err := detectNewUser(userName)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -91,7 +92,7 @@ func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.U
 				return true
 			}
 			if rdr != nil {
-				herr, err := postFileHandler(user, rdr, parentDir, fileName, parentDir, fileName, false, true)
+				herr, err := postFileHandler(user, rdr, parentDir, fsName, parentDir, fsName, false, true)
 				if err != nil {
 					w.WriteHeader(int(herr))
 					err2 := fmt.Errorf("Could not create homedir permission for %s: %v", userName, err)

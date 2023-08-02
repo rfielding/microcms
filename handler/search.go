@@ -56,8 +56,9 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 				return initial
 			} else {
 				// careful! if it ends in slash, then parent is same file, fsName is blank!
-				parent := path.Dir(path.Clean(fsPath)) + "/"
-				return getAttrsPermission(claims, parent, "", initial)
+				fsPath := path.Dir(path.Clean(fsPath)) + "/"
+				fsName := ""
+				return getAttrsPermission(claims, fsPath, fsName, initial)
 			}
 		}
 	}
