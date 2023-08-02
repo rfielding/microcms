@@ -74,29 +74,7 @@ func ToBoolString(b bool) string {
 	return "false"
 }
 
-// Use the standard file serving of Go, because media behavior
-// is really really complicated; and you do not want to serve it manually
-// if you can help it.
-func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
-	// preserve redirect parameters
-	q := r.URL.Query().Encode()
-	if q != "" {
-		q = "?" + q
-	}
-
-	if r.URL.Path == "/" {
-		getRootHandler(w, r)
-		return
-	}
-
-	// User hits us with an email link, and we set a cookie
-	if r.URL.Path == "/registration/" {
-		RegistrationHandler(w, r)
-		return
-	}
-
-	user := data.GetUser(r)
-
+func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.User) bool {
 	// Make home directories exist on first visit
 	if len(user["email"]) > 0 {
 		userName := user["email"][0]
@@ -106,10 +84,11 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 			log.Printf("Welcome to %s", parentDir)
 			rdr, err := detectNewUser(userName)
 			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
 				err2 := fmt.Errorf("Could not create homedir for %s: %v", userName, err)
 				w.Write([]byte(fmt.Sprintf("%v", err2)))
 				log.Printf("%v", err2)
-				return
+				return true
 			}
 			if rdr != nil {
 				herr, err := postFileHandler(user, rdr, parentDir, fileName, parentDir, fileName, false, true)
@@ -118,39 +97,17 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 					err2 := fmt.Errorf("Could not create homedir permission for %s: %v", userName, err)
 					w.Write([]byte(fmt.Sprintf("%v", err2)))
 					log.Printf("%v", err2)
-					return
+					return true
 				}
 			}
 		}
 	} else {
 		log.Printf("Welcome anonymous user")
 	}
+	return false
+}
 
-	// User hits us with an email link, and we set a cookie
-	if r.URL.Path == "/me" {
-		w.Write([]byte(utils.AsJsonPretty(user)))
-		return
-	}
-
-	// try search handler
-	if r.URL.Path == "/search" || strings.HasPrefix(r.URL.Path, "/search/") {
-		GetSearchHandler(w, r, pathTokens)
-		return
-	}
-
-	// Don't deal with directories missing slashes
-	if r.URL.Path == "/files" {
-		http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
-		return
-	}
-
-	if strings.HasPrefix(r.URL.Path, "/files/") && fs.IsDir(r.URL.Path) {
-		if r.URL.Path[len(r.URL.Path)-1] != '/' {
-			http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
-			return
-		}
-	}
-
+func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 	// If it's a file in our tree...do redirects if we must, or handle a dir reference
 	if strings.HasPrefix(r.URL.Path, "/files/") {
 		fsPath := path.Dir(r.URL.Path) + "/"
@@ -169,10 +126,10 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 			fsIndex := r.URL.Path + "index.html"
 			if fs.IsExist(fsIndex) && !fs.IsDir(fsIndex) && !isListing {
 				fs.ServeFile(w, r, fsIndex)
-				return
+				return true
 			} else {
 				dirHandler(w, r)
-				return
+				return true
 			}
 		}
 
@@ -219,12 +176,70 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 			fsPath := path.Dir(r.URL.Path) + "/"
 			fsName := path.Base(r.URL.Path)
 			w.Write([]byte(utils.AsJsonPretty(GetAttrs(user, fsPath, fsName))))
-			return
+			return true
 		}
 
 		// Serve the file we were looking for, possibly with modified URL,
 		// set mime types, etc. Special headers could have been set too
 		FileServer.ServeHTTP(w, r)
+		return true
+	}
+	return false
+}
+
+// Use the standard file serving of Go, because media behavior
+// is really really complicated; and you do not want to serve it manually
+// if you can help it.
+func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+	// preserve redirect parameters
+	q := r.URL.Query().Encode()
+	if q != "" {
+		q = "?" + q
+	}
+
+	if r.URL.Path == "/" {
+		getRootHandler(w, r)
+		return
+	}
+
+	// User hits us with an email link, and we set a cookie
+	if r.URL.Path == "/registration/" {
+		RegistrationHandler(w, r)
+		return
+	}
+
+	user := data.GetUser(r)
+
+	if ensureThatHomeDirExists(w, r, user) {
+		return
+	}
+
+	// User hits us with an email link, and we set a cookie
+	if r.URL.Path == "/me" {
+		w.Write([]byte(utils.AsJsonPretty(user)))
+		return
+	}
+
+	// try search handler
+	if r.URL.Path == "/search" || strings.HasPrefix(r.URL.Path, "/search/") {
+		GetSearchHandler(w, r, pathTokens)
+		return
+	}
+
+	// Don't deal with directories missing slashes
+	if r.URL.Path == "/files" {
+		http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
+		return
+	}
+
+	if strings.HasPrefix(r.URL.Path, "/files/") && fs.IsDir(r.URL.Path) {
+		if r.URL.Path[len(r.URL.Path)-1] != '/' {
+			http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
+			return
+		}
+	}
+
+	if handleFiles(w, r, user) {
 		return
 	}
 
