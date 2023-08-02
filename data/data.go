@@ -9,8 +9,7 @@ type Node struct {
 	IsDir      bool                   `json:"isDir"`
 	Context    string                 `json:"context,omitempty"`
 	Size       int64                  `json:"size,omitempty"`
-	// Used for listings of results
-	Part int `json:"part,omitempty"`
+	Part       int                    `json:"part,omitempty"`
 }
 
 type Listing struct {

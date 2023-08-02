@@ -58,7 +58,7 @@ func detectLabels(file string) (io.Reader, error) {
 
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		pipeWriter.Write([]byte(utils.AsJson(result)))
+		pipeWriter.Write([]byte(utils.AsJsonPretty(result)))
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
@@ -107,7 +107,56 @@ func detectCeleb(file string) (io.Reader, error) {
 
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		pipeWriter.Write([]byte(utils.AsJson(result)))
+		pipeWriter.Write([]byte(utils.AsJsonPretty(result)))
+		pipeWriter.Close()
+	}()
+	return pipeReader, nil
+}
+
+func detectModeration(file string) (io.Reader, error) {
+	svc := rekognition.New(session.New())
+
+	imageBytes, err := fs.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	input := &rekognition.DetectModerationLabelsInput{
+		Image: &rekognition.Image{
+			Bytes: imageBytes,
+		},
+	}
+
+	result, err := svc.DetectModerationLabels(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case rekognition.ErrCodeInvalidS3ObjectException:
+				fmt.Println(rekognition.ErrCodeInvalidS3ObjectException, aerr.Error())
+			case rekognition.ErrCodeInvalidParameterException:
+				fmt.Println(rekognition.ErrCodeInvalidParameterException, aerr.Error())
+			case rekognition.ErrCodeImageTooLargeException:
+				fmt.Println(rekognition.ErrCodeImageTooLargeException, aerr.Error())
+			case rekognition.ErrCodeAccessDeniedException:
+				fmt.Println(rekognition.ErrCodeAccessDeniedException, aerr.Error())
+			case rekognition.ErrCodeInternalServerError:
+				fmt.Println(rekognition.ErrCodeInternalServerError, aerr.Error())
+			case rekognition.ErrCodeThrottlingException:
+				fmt.Println(rekognition.ErrCodeThrottlingException, aerr.Error())
+			case rekognition.ErrCodeProvisionedThroughputExceededException:
+				fmt.Println(rekognition.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+			case rekognition.ErrCodeInvalidImageFormatException:
+				fmt.Println(rekognition.ErrCodeInvalidImageFormatException, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		}
+		return nil, err
+	}
+
+	pipeReader, pipeWriter := io.Pipe()
+	go func() {
+		pipeWriter.Write([]byte(utils.AsJsonPretty(result)))
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil

@@ -79,6 +79,30 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 			}
 		}
 	}
+	// If there is content moderation, then add it in here
+	mods := make(map[string]interface{})
+	if strings.Contains(fsName, "--") {
+		fNameOriginal := fsName[0:strings.LastIndex(fsName, "--")]
+		if fs.IsExist(fsPath + fNameOriginal) {
+			fsName = fNameOriginal
+		}
+	}
+	moderationFileName := fsPath + fsName + "--moderation.json"
+	if fs.IsExist(moderationFileName) {
+		jf, err := fs.ReadFile(moderationFileName)
+		if err != nil {
+			log.Printf("Failed to open %s!: %v", customFileName, err)
+		} else {
+			err := json.Unmarshal(jf, &mods)
+			if err != nil {
+				log.Printf("Failed to parse json %s!: %v", customFileName, err)
+			}
+			modsList, ok := mods["ModerationLabels"].([]interface{})
+			if ok && len(modsList) > 0 {
+				attrs["Moderation"] = true
+			}
+		}
+	}
 	// overwrite with calculated values
 	return getAttrsPermission(claims, fsPath, fsName, attrs)
 }

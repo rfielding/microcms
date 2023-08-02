@@ -151,44 +151,58 @@ func postFileHandler(
 		}
 
 		if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
-			log.Printf("detect labels on %s", fullName)
-			rdr, err := detectLabels(fullName)
-			if err != nil {
-				return http.StatusInternalServerError, fmt.Errorf("Could not extract labels for %s: %v", fullName, err)
-			}
-			labelName := fmt.Sprintf("%s--labels.json", name)
-			herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalName, cascade, privileged)
-			if err != nil {
-				return herr, fmt.Errorf("Could not write labgel detect %s: %v", fullName, err)
-			}
-			// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it
-			labelFile := fullName + "--labels.json"
-			jf, err := fs.ReadFile(labelFile)
-			if err != nil {
-				return http.StatusInternalServerError, fmt.Errorf("Could not find file: %s %v", labelFile, err)
-			}
-			var j LabelModel
-			err = json.Unmarshal(jf, &j)
-			if err != nil {
-				return http.StatusInternalServerError, fmt.Errorf("Could not look for celeb detect on labels for %s", fullName)
-			} else {
-				for i := range j.Labels {
-					v := j.Labels[i].Name
-					if v == "Face" || v == "Person" || v == "People" {
-						log.Printf("detect faces on %s", fullName)
-						rdr, err = detectCeleb(fullName)
-						if err != nil {
-							return http.StatusInternalServerError, fmt.Errorf("Could not extract labels for %s: %v", fullName, err)
-						}
-						if rdr != nil {
-							faceName := fmt.Sprintf("%s--faces.json", name)
-							herr, err := postFileHandler(user, rdr, parentDir, faceName, originalParentDir, originalName, cascade, privileged)
+			{
+				log.Printf("detect labels on %s", fullName)
+				rdr, err := detectLabels(fullName)
+				if err != nil {
+					return http.StatusInternalServerError, fmt.Errorf("Could not extract labels for %s: %v", fullName, err)
+				}
+				labelName := fmt.Sprintf("%s--labels.json", name)
+				herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalName, cascade, privileged)
+				if err != nil {
+					return herr, fmt.Errorf("Could not write labgel detect %s: %v", fullName, err)
+				}
+				// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it
+				labelFile := fullName + "--labels.json"
+				jf, err := fs.ReadFile(labelFile)
+				if err != nil {
+					return http.StatusInternalServerError, fmt.Errorf("Could not find file: %s %v", labelFile, err)
+				}
+				var j LabelModel
+				err = json.Unmarshal(jf, &j)
+				if err != nil {
+					return http.StatusInternalServerError, fmt.Errorf("Could not look for celeb detect on labels for %s", fullName)
+				} else {
+					for i := range j.Labels {
+						v := j.Labels[i].Name
+						if v == "Face" || v == "Person" || v == "People" {
+							log.Printf("detect celebs on %s", fullName)
+							rdr, err = detectCeleb(fullName)
 							if err != nil {
-								return herr, fmt.Errorf("Could not write face detect %s: %v", fullName, err)
+								return http.StatusInternalServerError, fmt.Errorf("Could not extract labels for %s: %v", fullName, err)
 							}
-							break
+							if rdr != nil {
+								faceName := fmt.Sprintf("%s--celebs.json", name)
+								herr, err := postFileHandler(user, rdr, parentDir, faceName, originalParentDir, originalName, cascade, privileged)
+								if err != nil {
+									return herr, fmt.Errorf("Could not write face detect %s: %v", fullName, err)
+								}
+								break
+							}
 						}
 					}
+				}
+			}
+			{
+				log.Printf("content moderation on %s", fullName)
+				rdr, err := detectModeration(fullName)
+				if err != nil {
+					return http.StatusInternalServerError, fmt.Errorf("Could not do content moderation for %s: %v", fullName, err)
+				}
+				labelName := fmt.Sprintf("%s--moderation.json", name)
+				herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalName, cascade, privileged)
+				if err != nil {
+					return herr, fmt.Errorf("Could not content moderate %s: %v", fullName, err)
 				}
 			}
 		}
