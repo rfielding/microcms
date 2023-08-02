@@ -21,7 +21,7 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 				{Name: "files", IsDir: true},
 			},
 		}
-		w.Write([]byte(utils.AsJson(listing)))
+		w.Write([]byte(utils.AsJsonPretty(listing)))
 	} else {
 		w.Header().Set("Content-Type", "text/html")
 		err := compiledRootTemplate.Execute(w, nil)
@@ -71,7 +71,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 	inJson := q.Get("json") == "true"
 	if inJson {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(utils.AsJson(listing)))
+		w.Write([]byte(utils.AsJsonPretty(listing)))
 		return
 	} else {
 		w.Header().Set("Content-Type", "text/html")

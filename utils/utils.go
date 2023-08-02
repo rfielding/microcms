@@ -7,6 +7,15 @@ import (
 	"os"
 )
 
+func AsJsonPretty(v interface{}) string {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		log.Printf("ERR %v", err)
+		return ""
+	}
+	return string(b)
+}
+
 func AsJson(v interface{}) string {
 	b, err := json.Marshal(v)
 	if err != nil {

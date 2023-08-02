@@ -127,7 +127,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 
 	if inJson {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(utils.AsJson(listing)))
+		w.Write([]byte(utils.AsJsonPretty(listing)))
 	} else {
 		w.Header().Set("Content-Type", "text/html")
 		err := compiledSearchTemplate.Execute(w, listing)

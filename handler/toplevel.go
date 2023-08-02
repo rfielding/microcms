@@ -119,7 +119,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 
 	// User hits us with an email link, and we set a cookie
 	if r.URL.Path == "/me" {
-		w.Write([]byte(utils.AsJson(user)))
+		w.Write([]byte(utils.AsJsonPretty(user)))
 		return
 	}
 
@@ -181,6 +181,13 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 				}
 				w.Header().Set("usedfile", r.URL.Path)
 			}
+		}
+
+		if strings.HasSuffix(r.URL.Path, "--attributes.json") {
+			fsPath := path.Dir(r.URL.Path) + "/"
+			fsName := path.Base(r.URL.Path)
+			w.Write([]byte(utils.AsJsonPretty(getAttrs(user, fsPath, fsName))))
+			return
 		}
 
 		// Serve the file we were looking for, possibly with modified URL,
