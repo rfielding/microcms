@@ -33,18 +33,22 @@ func postFileHandler(
 	user data.User,
 	stream io.Reader,
 	parentDir string,
-	name string,
+	fsName string,
 	originalParentDir string, // the path that triggered the creation of this file
-	originalName string, // the file that triggered the creation of this file
+	originalFsName string, // the file that triggered the creation of this file
 	cascade bool, // allow further derivatives
 	privileged bool, // ignore the permissions, because this is startup
 ) (HttpError, error) {
+	// XXX: there is some issue with trailing slashes to make an fsPath work correctly.
+	// when that is correct, it will be fullName := fsPath + fsName
+	// the name fsPath implies that it is a known directory with a trailing slash.
+	//    fsPath == path.Dir(fullName) + "/"
 
-	if !privileged && !CanWrite(user, parentDir, name) {
+	if !privileged && !CanWrite(user, parentDir, fsName) {
 		return http.StatusForbidden, fmt.Errorf("write disallowed")
 	}
 
-	fullName := fmt.Sprintf("%s/%s", parentDir, name)
+	fullName := fmt.Sprintf("%s/%s", parentDir, fsName)
 
 	//log.Printf("Ensure existence of parentDir: %s", parentDir)
 	err := fs.MkdirAll(parentDir, 0777)
@@ -100,8 +104,8 @@ func postFileHandler(
 			return http.StatusInternalServerError, fmt.Errorf("Could not extract file for indexing %s: %v", fullName, err)
 		}
 		// Write the doc extract stream like an upload
-		extractName := fmt.Sprintf("%s--extract.txt", name)
-		herr, err := postFileHandler(user, rdr, parentDir, extractName, originalParentDir, originalName, cascade, privileged)
+		extractName := fmt.Sprintf("%s--extract.txt", fsName)
+		herr, err := postFileHandler(user, rdr, parentDir, extractName, originalParentDir, originalFsName, cascade, privileged)
 		if err != nil {
 			return herr, fmt.Errorf("Could not write extract file for indexing %s: %v", fullName, err)
 		}
@@ -113,8 +117,8 @@ func postFileHandler(
 				return http.StatusInternalServerError, fmt.Errorf("Could not make thumbnail for %s: %v", fullName, err)
 			}
 			// Only png works.  bug in imageMagick.  don't cascade on thumbnails
-			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-			herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
+			thumbnailName := fmt.Sprintf("%s--thumbnail.png", fsName)
+			herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalFsName, false, privileged)
 			if err != nil {
 				return herr, fmt.Errorf("Could not write make thumbnail for indexing %s: %v", fullName, err)
 			}
@@ -129,8 +133,8 @@ func postFileHandler(
 		if err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("Could not make thumbnail for %s: %v", fullName, err)
 		}
-		thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-		herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
+		thumbnailName := fmt.Sprintf("%s--thumbnail.png", fsName)
+		herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalFsName, false, privileged)
 		if err != nil {
 			return herr, fmt.Errorf("Could not write make thumbnail for indexing %s: %v", fullName, err)
 		}
@@ -143,8 +147,8 @@ func postFileHandler(
 			if err != nil {
 				return http.StatusInternalServerError, fmt.Errorf("Could not make thumbnail for %s: %v", fullName, err)
 			}
-			thumbnailName := fmt.Sprintf("%s--thumbnail.png", name)
-			herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalName, false, privileged)
+			thumbnailName := fmt.Sprintf("%s--thumbnail.png", fsName)
+			herr, err := postFileHandler(user, rdr, parentDir, thumbnailName, originalParentDir, originalFsName, false, privileged)
 			if err != nil {
 				return herr, fmt.Errorf("Could not write make thumbnail for indexing %s: %v", fullName, err)
 			}
@@ -157,8 +161,8 @@ func postFileHandler(
 				if err != nil {
 					return http.StatusInternalServerError, fmt.Errorf("Could not extract labels for %s: %v", fullName, err)
 				}
-				labelName := fmt.Sprintf("%s--labels.json", name)
-				herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalName, cascade, privileged)
+				labelName := fmt.Sprintf("%s--labels.json", fsName)
+				herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalFsName, cascade, privileged)
 				if err != nil {
 					return herr, fmt.Errorf("Could not write labgel detect %s: %v", fullName, err)
 				}
@@ -182,8 +186,8 @@ func postFileHandler(
 								return http.StatusInternalServerError, fmt.Errorf("Could not extract labels for %s: %v", fullName, err)
 							}
 							if rdr != nil {
-								faceName := fmt.Sprintf("%s--celebs.json", name)
-								herr, err := postFileHandler(user, rdr, parentDir, faceName, originalParentDir, originalName, cascade, privileged)
+								faceName := fmt.Sprintf("%s--celebs.json", fsName)
+								herr, err := postFileHandler(user, rdr, parentDir, faceName, originalParentDir, originalFsName, cascade, privileged)
 								if err != nil {
 									return herr, fmt.Errorf("Could not write face detect %s: %v", fullName, err)
 								}
@@ -199,8 +203,8 @@ func postFileHandler(
 				if err != nil {
 					return http.StatusInternalServerError, fmt.Errorf("Could not do content moderation for %s: %v", fullName, err)
 				}
-				labelName := fmt.Sprintf("%s--moderation.json", name)
-				herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalName, cascade, privileged)
+				labelName := fmt.Sprintf("%s--moderation.json", fsName)
+				herr, err := postFileHandler(user, rdr, parentDir, labelName, originalParentDir, originalFsName, cascade, privileged)
 				if err != nil {
 					return herr, fmt.Errorf("Could not content moderate %s: %v", fullName, err)
 				}
@@ -229,7 +233,7 @@ func postFileHandler(
 			if err == io.EOF {
 				break
 			}
-			err = indexTextFile(parentDir+"/", name, part, originalParentDir+"/", originalName, buffer[:sz])
+			err = indexTextFile(parentDir+"/", fsName, part, originalParentDir+"/", originalFsName, buffer[:sz])
 			if err != nil {
 				// just let it go and continue??
 				return http.StatusInternalServerError, fmt.Errorf("failed indexing: %v", err)

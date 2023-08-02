@@ -243,7 +243,6 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 
-	// give up
 	w.WriteHeader(http.StatusNotFound)
 }
 
