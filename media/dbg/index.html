@@ -29,73 +29,17 @@
 	  background-color: transparent;
   }
 </style>
-<script language="javascript">
-function readParameters() {
-/*
-  var url = new URL(window.location);
-  var seek_to_seconds = url.searchParams.get("seek_to_seconds");
-  var vt = document.getElementById("videotag");
-  vt.currentTime = seek_to_seconds;
-  if(vt.play) {
-    vt.play();
-  }
-*/
-  penty();
-}
-
-theClock = 0;
-
-function penty() {
-  var v = document.getElementById("videotag");
-  var c = document.getElementById("c");
-  var ctx = c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-  if(v.paused || v.ended || v.currentTime < 23) {
-  } else {
-  	var r = 15;
-  	var r2 = Math.sin((Math.PI*theClock)/2000);
-  	var x = c.width/2;
-  	var y = c.height - 2*r;;
-  	var d = 400.0;
-	var zmax = 1700;
-	for(var z=0; z<zmax; z++) {
-          var r3 = r + r2;
-	  var cl = theClock+z;
-	  var t = cl/d;
-	  var ax = -r3*Math.sin(2*((0+Math.floor(t))%5)*2*Math.PI/5);
-	  var ay = r3*Math.cos(2*((0+Math.floor(t))%5)*2*Math.PI/5);
-	  var bx = -r3*Math.sin(2*((1+Math.floor(t))%5)*2*Math.PI/5);
-	  var by = r3*Math.cos(2*((1+Math.floor(t))%5)*2*Math.PI/5);
-	  var f = t - Math.floor(cl/d);
-	  var a = (1-f)*ax + (f)*bx;
-	  var b = (1-f)*ay + (f)*by;
-	  var zm = (z/zmax)/5;
-	  var g = 255 * zm;
-	  if((2*60+5 < v.currentTime && v.currentTime < 2*60+55) ||
-	     (v.currentTime > 4*60+30) ||
-	     (2*60+5 < v.currentTime && v.currentTime < 2*60+55)) {
-	  	ctx.fillStyle = "rgba(255,0,0,"+g+")";
-          } else {
-	  	ctx.fillStyle = "rgba(0,255,0,"+g+")";
-	  }
-	  ctx.beginPath();
-	  ctx.arc(x+a,y+b,zm,0,2*Math.PI,true);
-	  ctx.arc(x+-r3*Math.sin(2*t),y+r3*Math.cos(2*t),zm,0,2*Math.PI,true);
-	  ctx.closePath();
-	  ctx.fill();
-	  theClock = theClock + 0.08;
-	}
-  }
-  window.setTimeout("penty()",1000/15);
-}
-</script>
 </head>
-<body onload="penty()" bgcolor="black">
-<canvas id="c"></canvas>
+<body bgcolor="black">
 <video id="videotag"
-       src="dimmu-borgir-gateways.mp4"
-        style="display: block; margin-left: auto; margin-right: auto; width: auto; height: calc(100% - 36px); max-width=100% max-height: 100%; " controls autoplay name="media"
-       >
+    type="video/mp4"
+    src="dimmu-borgir-gateways.mp4"
+    width="100%"
+    height="100%"
+    controls="true" 
+    autoplay
+    playsInline 
+    >
 
     <track default kind="captions"
            srclang="en"
