@@ -82,14 +82,16 @@ The API is designed to be easily explored from a web browser.  A few things are 
 If you want a json rendition to a directory listing, or a search, then add `json=true` http parameter:
 
 ```
-GET http://localhost:9321/files/documents/?json=true
-GET http://localhost:9321/search?json=true&match=king
+GET http://localhost:9321/files/documents/?json=true                     # show as json
+GET http://localhost:9321/files/documents/app/react-test/?listing=true   # list instead of run index.html
+GET http://localhost:9321/search?json=true&match=king                    # keyword search
+GET http://localhost:9321/me                                             # my attributes
 ```
 
 Upload a normal file, one by one
 
 ```
-  curl -X POST --data-binary @resume.pdf http://localhost:9321/files/doc/rob/resume.pdf
+  curl -X POST --data-binary @resume.pdf http://localhost:9321/files/rob.fielding@gmail.com/docs/resume.pdf
 ```
 
 Search by keyword king:
