@@ -63,7 +63,7 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 	}
 }
 
-func getAttrs(claims data.User, fsPath string, fsName string) map[string]interface{} {
+func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interface{} {
 	attrs := make(map[string]interface{})
 	// Start parsing attributes with a custom set of values that
 	// get overridden with calculated values
@@ -111,7 +111,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		if IsImage(path+name) || IsVideo(path+name) {
 			highlighted = ""
 		}
-		attrs := getAttrs(user, path, name)
+		attrs := GetAttrs(user, path, name)
 		canRead, ok := attrs["Read"].(bool)
 		if ok && canRead {
 			listing.Children = append(listing.Children, data.Node{

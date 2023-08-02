@@ -56,7 +56,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, name := range names {
 		fName := name.Name()
-		attrs := getAttrs(user, fsPath, fName)
+		attrs := GetAttrs(user, fsPath, fName)
 		if attrs["Read"] == true {
 			listing.Children = append(listing.Children, data.Node{
 				Name:       fName,

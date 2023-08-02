@@ -64,7 +64,7 @@ func LoadConfig() {
 
 func CanWrite(user data.User, fsPath string, fsName string) bool {
 	if user != nil {
-		attrs := getAttrs(user, fsPath, fsName)
+		attrs := GetAttrs(user, fsPath, fsName)
 		if attrs != nil {
 			canWrite, ok := attrs["Write"].(bool)
 			if ok && canWrite {
@@ -77,7 +77,7 @@ func CanWrite(user data.User, fsPath string, fsName string) bool {
 
 func CanRead(user data.User, fsPath string, fsName string) bool {
 	if user != nil {
-		attrs := getAttrs(user, fsPath, fsName)
+		attrs := GetAttrs(user, fsPath, fsName)
 		if attrs != nil {
 			canRead, ok := attrs["Read"].(bool)
 			if ok && canRead {

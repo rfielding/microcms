@@ -186,7 +186,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		if strings.HasSuffix(r.URL.Path, "--attributes.json") {
 			fsPath := path.Dir(r.URL.Path) + "/"
 			fsName := path.Base(r.URL.Path)
-			w.Write([]byte(utils.AsJsonPretty(getAttrs(user, fsPath, fsName))))
+			w.Write([]byte(utils.AsJsonPretty(GetAttrs(user, fsPath, fsName))))
 			return
 		}
 
