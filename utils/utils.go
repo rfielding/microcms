@@ -4,24 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 )
-
-func HandleError(w http.ResponseWriter, err error, mask string, args ...interface{}) {
-	msg := fmt.Sprintf(mask, append(args, err.Error())...)
-	log.Printf("ERR %s", msg)
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(msg))
-}
-
-func HandleReturnedError(w http.ResponseWriter, err error, mask string, args ...interface{}) error {
-	msg := fmt.Sprintf(mask, append(args, err.Error())...)
-	log.Printf("ERR %s", msg)
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(msg))
-	return fmt.Errorf("%v", msg)
-}
 
 func AsJson(v interface{}) string {
 	b, err := json.Marshal(v)

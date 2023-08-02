@@ -89,7 +89,10 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		where filesearch match ?
 	`, match)
 	if err != nil {
-		utils.HandleError(w, err, "query %s: %v", match)
+		msg := fmt.Sprintf("query %s: %v", match, err)
+		log.Printf("ERR %s", msg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(msg))
 		return
 	}
 
@@ -127,7 +130,10 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		w.Header().Set("Content-Type", "text/html")
 		err := compiledSearchTemplate.Execute(w, listing)
 		if err != nil {
-			utils.HandleError(w, err, "Unable to execute searchTemplate: %v", err)
+			msg := fmt.Sprintf("Unable to execute searchTemplate: %v", err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
 			return
 		}
 	}

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"sort"
 
@@ -24,7 +26,10 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		err := compiledRootTemplate.Execute(w, nil)
 		if err != nil {
-			utils.HandleError(w, err, "Unable to execute rootTemplate: %v", err)
+			msg := fmt.Sprintf("unable to execute rootTemplate: %v", err)
+			log.Printf("ERR %s", msg)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(msg))
 			return
 		}
 	}
@@ -36,7 +41,10 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 	// Get directory names
 	names, err := fs.ReadDir(fsPath)
 	if err != nil {
-		utils.HandleError(w, err, "readdir %s: %v", fsPath)
+		msg := fmt.Sprintf("readdir %s: %v", fsPath, err)
+		log.Printf("ERR %s", msg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(msg))
 		return
 	}
 	sort.Slice(names, func(i, j int) bool {

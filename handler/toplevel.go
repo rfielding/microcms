@@ -96,13 +96,18 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 			log.Printf("Welcome to %s", parentDir)
 			rdr, err := detectNewUser(userName)
 			if err != nil {
-				utils.HandleReturnedError(w, err, "Could not create homedir for %s: %v", userName)
+				err2 := fmt.Errorf("Could not create homedir for %s: %v", userName, err)
+				w.Write([]byte(fmt.Sprintf("%v", err2)))
+				log.Printf("%v", err2)
 				return
 			}
 			if rdr != nil {
-				err = postFileHandler(w, r, rdr, parentDir, fileName, parentDir, fileName, false, true)
+				herr, err := postFileHandler(w, r, rdr, parentDir, fileName, parentDir, fileName, false, true)
 				if err != nil {
-					utils.HandleReturnedError(w, err, "Could not create homedir permission for %s: %v", userName)
+					w.WriteHeader(int(herr))
+					err2 := fmt.Errorf("Could not create homedir permission for %s: %v", userName, err)
+					w.Write([]byte(fmt.Sprintf("%v", err2)))
+					log.Printf("%v", err2)
 					return
 				}
 			}
