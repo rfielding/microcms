@@ -3,7 +3,7 @@
 A YouTube video to show what this is. It is the backend part of accessibility,
 by getting text searching and image labelling done by an AI.
 
-[![MicroCMS Demo]](https://www.youtube.com/watch?v=yuDblOFiPcQ)
+[![MicroCMS Demo](images/video.png)](https://www.youtube.com/watch?v=yuDblOFiPcQ)
 
 Requirements:
 
