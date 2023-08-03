@@ -100,9 +100,13 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 			}
 			modsList, ok := mods["ModerationLabels"].([]interface{})
 			if ok && len(modsList) > 0 {
+				attrs["Moderation"] = true
 				modsObj, ok := modsList[0].(map[string]interface{})
 				if ok {
-					attrs["ModerationLabels"] = modsObj["Name"]
+					val, ok := modsObj["Name"].(string)
+					if ok {
+						attrs["ModerationLabel"] = val
+					}
 				}
 			}
 		}
