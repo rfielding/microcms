@@ -41,8 +41,8 @@ Todo:
 - the reverse proxy endpoints would allow full apps to work 
 - OpenPolicyAgent for security enforcement, I did this in a separate project, and it took a few hours.
 
-It only runs in Docker, with go1.20 under Linux amd64 architecture.
-And it currently isn't dealing with volume mount persistence at the moment.
+It only builds in a Docker container, with go1.20 under Linux amd64 architecture.
+I might start splitting things up and moving to ElasticSearch at some point.
 
 ```
 # runs on http://localhost:9321
