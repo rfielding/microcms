@@ -71,6 +71,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 		if attrs["Read"] == true {
 			listing.Children = append(listing.Children, data.Node{
 				Name:       fName,
+				Path:       fsPath,
 				IsDir:      name.IsDir(),
 				Size:       name.Size(),
 				Attributes: attrs,
