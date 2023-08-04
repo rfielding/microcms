@@ -1,0 +1,103 @@
+#!/bin/bash
+
+url=http://localhost:9321
+
+(
+  cd `dirname $0`/media
+
+  # This is the private cookie for a user
+  auth=5ee5de77d0c566d2b8c170a03894ff2d
+  echo get user email address
+  owner=$(curl --cookie "account=${auth}" ${url}/me | jq -r '.email[0]')
+
+  echo put in an html app
+  ( cd app && tar cvf ../app.tar . ) 
+  curl -X POST --cookie "account=${auth}" --data-binary @app.tar ${url}/files/${owner}/app/v1?install=true
+  rm app.tar
+
+  echo put up a js braille typewriter app
+  ( cd brl && tar cvf ../brl.tar . ) 
+  curl -X POST --cookie "account=${auth}" --data-binary @brl.tar ${url}/files/${owner}/brl?install=true
+  rm brl.tar
+
+  echo put up a vtt mp4 video
+  ( cd dbg && tar cvf ../dbg.tar . )
+  curl -X POST --cookie "account=${auth}" --data-binary @dbg.tar ${url}/files/${owner}/gateways?install=true
+  rm dbg.tar
+
+  echo put up The Gilgamesh
+  ( cd Gilgamesh && tar cvf ../gilgamesh.tar . )
+  curl -X POST --cookie "account=${auth}" --data-binary @gilgamesh.tar ${url}/files/${owner}/gilgamesh?install=true
+  rm gilgamesh.tar
+
+  echo put up The Bible
+  ( cd kjv-bible && tar cvf ../kjv-bible.tar . )
+  curl -X POST --cookie "account=${auth}" --data-binary @kjv-bible.tar ${url}/files/${owner}/kjv-bible?install=true
+  rm kjv-bible.tar
+
+  echo put up a React app
+  if [ -d react-test/build ]
+  then
+    echo build exists for react app
+  else
+    export PUBLIC_URL="."
+    npx create-react-app react-test
+    (cd react-test && npm run build)
+  fi
+  ( cd react-test/build && tar cvf ../../react-test.tar . ) 
+  curl -X POST --cookie "account=${auth}" --data-binary @react-test.tar ${url}/files/${owner}/app/react-test?install=true
+  rm react-test.tar
+
+  echo put up pdf files
+  for f in *.pdf
+  do
+    curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/documents/${f}"
+  done
+
+  echo put up json files
+  for f in *.json
+  do
+    curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/documents/${f}"
+  done
+
+  echo put up text files
+  for f in *.txt
+  do
+    curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/documents/${f}"
+  done
+
+  echo put up jpg files
+  for f in *.jpg
+  do
+    curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/documents/${f}"
+  done
+
+  echo put up mp4 files
+  for f in *.mp4
+  do
+    curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/documents/${f}"
+  done
+
+  echo put up png files
+  for f in *.png
+  do
+    curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/documents/${f}"
+  done
+
+  echo put up rego files
+  for f in *.rego
+  do
+    if [ "$f" == "permissions.rego" ]
+    then
+      true 
+    else
+      echo write $f
+      curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/documents/${f}"
+    fi
+  done
+
+  echo ensure that we did not make our home dir read only
+  curl -X DELETE --cookie "account=${auth}" "${url}/files/${owner}/documents/permissions.rego"
+)
+
+#curl 'http://localhost:9321/search?json=true&match=king' | jq
