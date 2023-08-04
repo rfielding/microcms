@@ -117,10 +117,10 @@ function labeledNode(node: Node) {
   );
 }
 
-function renderTree(nodes : Node) {
+function renderTree(node : Node) {
   return (
-    <TreeItem key={nodes.id} nodeId={nodes.id} label={labeledNode(nodes)}>
-      {Array.isArray(nodes.children) ? nodes.children.map((id) => renderTree(treeData[id])) : null}
+    <TreeItem key={node.id} nodeId={node.id} label={labeledNode(node)}>
+      {Array.isArray(node.children) ? node.children.map((id) => renderTree(treeData[id])) : null}
     </TreeItem>
   );
 }
@@ -150,50 +150,46 @@ function convertNode(p: SNode) : Node {
   return td;
 }
 
-// Translate to MaterialUI tree format
-function assignNode(v: string) : Node {
+// Update the tree state
+function updateTreeState(v: string) {
   var p = JSON.parse(v) as SNode;
   var n = convertNode(p);
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
       var c = convertNode(p.children[i])
       treeData[c.id] = c;
-      n.children.push(c.id);
+      treeData[n.id].children.push(c.id);
     }
   }
-  return n;
 }
 
-async function getTreeNode(fsPath: string,setTreeNode:(n:Node)=>void) {
-  console.log("getTreeNode "+fsPath);
+async function fetchNode(fullName: string) {
+  var url = endpoint + fullName + "?json=true";
   try {
-    if(fsPath.endsWith("/") && fsPath != "/") {
+    console.log("Fetching "+fullName);
+    if(fullName.endsWith("/") && fullName != "/") {
       const response = await fetch(
-        endpoint + fsPath + "?json=true",
+        url,
         {credentials: "same-origin"}
       );
       const data = await response.text();
-      var n = assignNode(data);
-      setTreeNode(n);
-      console.log("Set node "+JSON.stringify(n));
+      updateTreeState(data);
+      //console.log("Set node "+JSON.stringify(treeData));
     }
   } catch(err) {
-    console.log(err);
+    console.log("while fetching "+url+" "+err);
   }
 }
 
 
 function FullTreeView() : JSX.Element {
   const selected = (event: React.ChangeEvent<{}>, value: string[]) => {
-    const p = value[0];
-    if(p != "/") {
-      getTreeNode(p,(n:Node) => { 
-        console.log("Set node "+n.id); 
-      });  
-    }
+    const p = value+"";
+    console.log("Selected "+p);
+    fetchNode(p);
   };
   return (
-    <TreeView
+    <TreeView      
       onNodeSelect={(event: React.ChangeEvent<{}>, value: string[]) => selected(event, value)}
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
