@@ -4,7 +4,7 @@ import "net/http"
 
 type Node struct {
 	Attributes map[string]interface{} `json:"attributes,omitempty"`
-	Path       string                 `json:"path,omitempty"`
+	Path       string                 `json:"path"`
 	Name       string                 `json:"name"`
 	IsDir      bool                   `json:"isDir"`
 	Context    string                 `json:"context,omitempty"`

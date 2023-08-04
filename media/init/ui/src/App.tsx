@@ -10,6 +10,26 @@ import TreeItem from '@material-ui/lab/TreeItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 
+interface Attributes {
+  Label: string;
+  LabelFg: string;
+  LabelBg: string;
+  Read: boolean;
+  Write: boolean;
+  Derived?: boolean;
+  Moderation?: boolean;
+  ModerationLabel?: string;
+}
+
+interface SNode {
+  name: string;
+  path: string;
+  isDir: boolean;
+  size?: number;
+  attributes: Attributes;
+  children?: SNode[];
+};
+
 interface Node {
   id: string;
   label: string;
@@ -24,45 +44,43 @@ interface Node {
   nodes: Node[];
 };
 
-//var treeData = {"id":"?"} as Node;
-
 // This is where we store the tree, as we load it
 var treeData = {
-  "id":"/files/",
-  "label":"files/",
-  "securityLabel":"PUBLIC",
-  "securityFg":"white",
-  "securityBg":"green",
-  "canRead":true,
-  "canWrite":false,
-  "derived":false,
-  "moderation":false,
-  "moderationLabel":"",
-  "nodes":[
+  id:"/files/",
+  label:"files/",
+  securityLabel:"PUBLIC",
+  securityFg:"white",
+  securityBg:"green",
+  canRead:true,
+  canWrite:false,
+  derived:false,
+  moderation:false,
+  moderationLabel:"",
+  nodes:[
     {
-      "id":"/files/init/",
-      "label":"init/",
-      "securityLabel":"PUBLIC",
-      "securityFg":"white",
-      "securityBg":"green",
-      "canRead":true,
-      "canWrite":false,
-      "derived":false,
-      "moderation":false,
-      "moderationLabel":"",
-      "nodes":[]
+      id:"/files/init/",
+      label:"init/",
+      securityLabel:"PUBLIC",
+      securityFg:"white",
+      securityBg:"green",
+      canRead:true,
+      canWrite:false,
+      derived:false,
+      moderation:false,
+      moderationLabel:"",
+      nodes:[]
     },{
-      "id":"/files/permissions.rego",
-      "label":"permissions.rego",
-      "securityLabel":"PUBLIC",
-      "securityFg":"white",
-      "securityBg":"green",
-      "canRead":true,
-      "canWrite":false,
-      "derived":false,
-      "moderation":false,
-      "moderationLabel":"",
-      "nodes":[]
+      id:"/files/permissions.rego",
+      label:"permissions.rego",
+      securityLabel:"PUBLIC",
+      securityFg:"white",
+      securityBg:"green",
+      canRead:true,
+      canWrite:false,
+      derived:false,
+      moderation:false,
+      moderationLabel:"",
+      nodes:[]
     }
   ]
 } as Node;
@@ -99,45 +117,47 @@ function renderTree(nodes : Node) {
 }
 
 // Maybe make our json match Material UI's TreeView
-function assignNodeLeaf(parsedv: any) : Node {
+function convertNode(p: SNode) : Node {
   var td = {} as Node;
-  td["id"] = parsedv["path"] + parsedv["name"];
-  td["label"] = parsedv["name"];
-  if(parsedv["isDir"]) {
-    td["id"] += "/";
-    td["label"] += "/";
+  td.id = p.path + p.name;
+  td.label = p.name;
+  if(p.isDir) {
+    td.id += "/";
+    td.label += "/";
   }
-  var a = parsedv["attributes"];
-  td["securityLabel"] = a["Label"];
-  td["securityFg"] = a["LabelFg"];
-  td["securityBg"] = a["LabelBg"];
-  td["canRead"] = a["Read"];
-  td["canWrite"] = a["Write"];
-  td["derived"] = a["Derived"] ? true : false;
-  td["moderation"] = a["Moderation"] ? true : false;
-  td["moderationLabel"] = a["ModerationLabel"] ? a["ModerationLabel"] : "";
-  td["nodes"] = [];
+  var a = p.attributes;
+  if(a === undefined) {
+    console.log("No attributes for "+JSON.stringify(p));
+  }
+  td.securityLabel = a.Label;
+  td.securityFg = a.LabelFg;
+  td.securityBg = a.LabelBg;
+  td.canRead = a.Read;
+  td.canWrite = a.Write;
+  td.derived = a.Derived ? true : false;
+  td.moderation = a.Moderation ? true : false;
+  td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
+  td.nodes = [];
   return td;
 }
 
 // Translate to MaterialUI tree format
 function assignNode(v: string) : Node {
-  var parsedv = JSON.parse(v);
-  var leaf = assignNodeLeaf(parsedv);
-  if(parsedv["isDir"]) {
-    for(var i=0; i<parsedv["children"].length; i++) {
-      var c = parsedv["children"][i];
-      c["path"] = parsedv["path"] + parsedv["name"] + "/";
-      var n = assignNodeLeaf(c);
-      leaf.nodes.push(n);
+  var p = JSON.parse(v) as SNode;
+  var n = convertNode(p);
+  if(p.isDir && p.children) {
+    for(var i=0; i<p.children.length; i++) {
+      var c = convertNode(p.children[i]);
+      n.nodes.push(c);
     }
   }
-  return leaf;
+  return n;
 }
 
 async function getTreeNode(fsPath: string,setTreeNode:(n:Node)=>void) {
+  console.log("getTreeNode "+fsPath);
   try {
-    if(fsPath.endsWith("/")) {
+    if(fsPath.endsWith("/") && fsPath != "/") {
       const response = await fetch(
         endpoint + fsPath + "?json=true",
         {credentials: "same-origin"}
@@ -154,13 +174,15 @@ async function getTreeNode(fsPath: string,setTreeNode:(n:Node)=>void) {
 
 
 function FullTreeView() : JSX.Element {
-  var selected = (event: React.ChangeEvent<{}>, value: string[]) => {
-    getTreeNode(value+"",(n:Node) => { 
-      treeData = n;
-      console.log("Set node "+n.id); 
-    });
+  const selected = (event: React.ChangeEvent<{}>, value: string[]) => {
+    const p = value[0];
+    if(p != "/") {
+      getTreeNode(p,(n:Node) => { 
+        console.log("Set node "+n.id); 
+      });  
+    }
   };
-  var tv = (
+  return (
     <TreeView
       onNodeSelect={(event: React.ChangeEvent<{}>, value: string[]) => selected(event, value)}
       aria-label="file system navigator"
@@ -171,7 +193,6 @@ function FullTreeView() : JSX.Element {
       {renderTree(treeData)}
     </TreeView>
   );
-  return tv;
 }
 
 
