@@ -21,7 +21,8 @@ then
   if [ ! -d persistent/files/init ]
   then
     # pre-upload defaults
-    mkdir persistent/files/init
+    mkdir -p persistent/files/init/ui
+    cp -R media/init/ui/build/* persistent/files/init/ui
     cp media/permissions.rego persistent/files
     cp media/init/styles.css persistent/files/init
     cp media/init/rootTemplate.html.templ persistent/files/init
