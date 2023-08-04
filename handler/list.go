@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 	"sort"
 
 	"github.com/rfielding/microcms/data"
@@ -51,7 +52,17 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 		return names[i].Name() < names[j].Name()
 	})
 
+	thePath := path.Dir(path.Clean(fsPath)) + "/"
+	if thePath == "//" {
+		thePath = "/"
+	}
 	listing := data.Listing{
+		Node: data.Node{
+			Path:       thePath,
+			Name:       path.Base(path.Clean(fsPath)),
+			IsDir:      true,
+			Attributes: GetAttrs(user, fsPath, ""),
+		},
 		Children: []data.Node{},
 	}
 	for _, name := range names {

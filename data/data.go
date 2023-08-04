@@ -13,8 +13,8 @@ type Node struct {
 }
 
 type Listing struct {
-	Attributes map[string]interface{} `json:"attributes,omitempty"`
-	Children   []Node                 `json:"children"`
+	Node
+	Children []Node `json:"children"`
 }
 
 type UserSecret string
