@@ -41,49 +41,58 @@ interface Node {
   derived?: boolean;
   moderation?: boolean;
   moderationLabel?: string;
-  nodes: Node[];
+  children: string[];
+};
+
+type Nodes = {
+  [id: string]: Node;
 };
 
 // This is where we store the tree, as we load it
 var treeData = {
-  id:"/files/",
-  label:"files/",
-  securityLabel:"PUBLIC",
-  securityFg:"white",
-  securityBg:"green",
-  canRead:true,
-  canWrite:false,
-  derived:false,
-  moderation:false,
-  moderationLabel:"",
-  nodes:[
-    {
-      id:"/files/init/",
-      label:"init/",
-      securityLabel:"PUBLIC",
-      securityFg:"white",
-      securityBg:"green",
-      canRead:true,
-      canWrite:false,
-      derived:false,
-      moderation:false,
-      moderationLabel:"",
-      nodes:[]
-    },{
-      id:"/files/permissions.rego",
-      label:"permissions.rego",
-      securityLabel:"PUBLIC",
-      securityFg:"white",
-      securityBg:"green",
-      canRead:true,
-      canWrite:false,
-      derived:false,
-      moderation:false,
-      moderationLabel:"",
-      nodes:[]
-    }
-  ]
-} as Node;
+  "/files/": {
+    id:"/files/",
+    label:"files/",
+    securityLabel:"PUBLIC",
+    securityFg:"white",
+    securityBg:"green",
+    canRead:true,
+    canWrite:false,
+    derived:false,
+    moderation:false,
+    moderationLabel:"",
+    children:[
+      "/files/init/",
+      "/files/permissions.rego"
+    ]
+  },
+  "/files/init/":{
+    id:"/files/init/",
+    label:"init/",
+    securityLabel:"PUBLIC",
+    securityFg:"white",
+    securityBg:"green",
+    canRead:true,
+    canWrite:false,
+    derived:false,
+    moderation:false,
+    moderationLabel:"",
+    children:[]
+  },
+  "/files/permissions.rego": {
+    id:"/files/permissions.rego",
+    label:"permissions.rego",
+    securityLabel:"PUBLIC",
+    securityFg:"white",
+    securityBg:"green",
+    canRead:true,
+    canWrite:false,
+    derived:false,
+    moderation:false,
+    moderationLabel:"",
+    children:[]
+  }
+} as Nodes;
 
 // XXX: along with busting open CORS ... 
 var endpoint = "http://localhost:9321";
@@ -111,7 +120,7 @@ function labeledNode(node: Node) {
 function renderTree(nodes : Node) {
   return (
     <TreeItem key={nodes.id} nodeId={nodes.id} label={labeledNode(nodes)}>
-      {Array.isArray(nodes.nodes) ? nodes.nodes.map((node) => renderTree(node)) : null}
+      {Array.isArray(nodes.children) ? nodes.children.map((id) => renderTree(treeData[id])) : null}
     </TreeItem>
   );
 }
@@ -137,7 +146,7 @@ function convertNode(p: SNode) : Node {
   td.derived = a.Derived ? true : false;
   td.moderation = a.Moderation ? true : false;
   td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
-  td.nodes = [];
+  td.children = [];
   return td;
 }
 
@@ -147,8 +156,9 @@ function assignNode(v: string) : Node {
   var n = convertNode(p);
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
-      var c = convertNode(p.children[i]);
-      n.nodes.push(c);
+      var c = convertNode(p.children[i])
+      treeData[c.id] = c;
+      n.children.push(c.id);
     }
   }
   return n;
@@ -190,7 +200,7 @@ function FullTreeView() : JSX.Element {
       defaultExpandIcon={<ChevronRightIcon />}
       style={{ alignContent: 'left', textAlign: 'left', height: 240, flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}   
     >
-      {renderTree(treeData)}
+      {renderTree(treeData["/files/"])}
     </TreeView>
   );
 }
