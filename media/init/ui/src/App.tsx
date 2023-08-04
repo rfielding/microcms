@@ -18,9 +18,9 @@ interface Node {
   securityBg: string;
   canRead: boolean;
   canWrite: boolean;
-  derived: boolean;
-  moderation: boolean;
-  moderationLabel: string;
+  derived?: boolean;
+  moderation?: boolean;
+  moderationLabel?: string;
   nodes: Node[];
 };
 
@@ -28,19 +28,46 @@ interface Node {
 
 // This is where we store the tree, as we load it
 var treeData = {
-  "id": "/files/",
-  "label": "files",
-  "securityLabel": "PUBLIC",
-  "securityFg": "white",
-  "securityBg": "green",
-  "canRead": true,
-  "canWrite": false,
-  "derived": false,
-  "moderation": false,
-  "moderationLabel": "",
-  "nodes": []
+  "id":"/files/",
+  "label":"files/",
+  "securityLabel":"PUBLIC",
+  "securityFg":"white",
+  "securityBg":"green",
+  "canRead":true,
+  "canWrite":false,
+  "derived":false,
+  "moderation":false,
+  "moderationLabel":"",
+  "nodes":[
+    {
+      "id":"/files/init/",
+      "label":"init/",
+      "securityLabel":"PUBLIC",
+      "securityFg":"white",
+      "securityBg":"green",
+      "canRead":true,
+      "canWrite":false,
+      "derived":false,
+      "moderation":false,
+      "moderationLabel":"",
+      "nodes":[]
+    },{
+      "id":"/files/permissions.rego",
+      "label":"permissions.rego",
+      "securityLabel":"PUBLIC",
+      "securityFg":"white",
+      "securityBg":"green",
+      "canRead":true,
+      "canWrite":false,
+      "derived":false,
+      "moderation":false,
+      "moderationLabel":"",
+      "nodes":[]
+    }
+  ]
 } as Node;
 
+// XXX: along with busting open CORS ... 
 var endpoint = "http://localhost:9321";
 
 
@@ -72,33 +99,54 @@ function renderTree(nodes : Node) {
 }
 
 // Maybe make our json match Material UI's TreeView
-function assignNode(v: string) : Node {
-  var parsedv = JSON.parse(v);
+function assignNodeLeaf(parsedv: any) : Node {
   var td = {} as Node;
   td["id"] = parsedv["path"] + parsedv["name"];
   td["label"] = parsedv["name"];
   if(parsedv["isDir"]) {
     td["id"] += "/";
+    td["label"] += "/";
   }
-  td["securityLabel"] = parsedv["attributes"]["Label"];
-  td["securityFg"] = parsedv["attributes"]["LabelFg"];
-  td["securityBg"] = parsedv["attributes"]["LabelBg"];
-  td["canRead"] = parsedv["attributes"]["Read"];
-  td["canWrite"] = parsedv["attributes"]["Write"];
-  td["derived"] = parsedv["attributes"]["Derived"];
-  td["moderation"] = parsedv["attributes"]["Moderation"];
-  td["moderationLabel"] = parsedv["attributes"]["ModerationLabel"];
+  var a = parsedv["attributes"];
+  td["securityLabel"] = a["Label"];
+  td["securityFg"] = a["LabelFg"];
+  td["securityBg"] = a["LabelBg"];
+  td["canRead"] = a["Read"];
+  td["canWrite"] = a["Write"];
+  td["derived"] = a["Derived"] ? true : false;
+  td["moderation"] = a["Moderation"] ? true : false;
+  td["moderationLabel"] = a["ModerationLabel"] ? a["ModerationLabel"] : "";
   td["nodes"] = [];
   return td;
 }
 
+// Translate to MaterialUI tree format
+function assignNode(v: string) : Node {
+  var parsedv = JSON.parse(v);
+  var leaf = assignNodeLeaf(parsedv);
+  if(parsedv["isDir"]) {
+    for(var i=0; i<parsedv["children"].length; i++) {
+      var c = parsedv["children"][i];
+      c["path"] = parsedv["path"] + parsedv["name"] + "/";
+      var n = assignNodeLeaf(c);
+      leaf.nodes.push(n);
+    }
+  }
+  return leaf;
+}
+
 async function getTreeNode(fsPath: string,setTreeNode:(n:Node)=>void) {
   try {
-    const response = await fetch(endpoint + fsPath );
-    const data = await response.text();
-    var n = assignNode(data);
-    setTreeNode(n);
-    console.log("Set node "+JSON.stringify(n));
+    if(fsPath.endsWith("/")) {
+      const response = await fetch(
+        endpoint + fsPath + "?json=true",
+        {credentials: "same-origin"}
+      );
+      const data = await response.text();
+      var n = assignNode(data);
+      setTreeNode(n);
+      console.log("Set node "+JSON.stringify(n));
+    }
   } catch(err) {
     console.log(err);
   }
@@ -106,13 +154,15 @@ async function getTreeNode(fsPath: string,setTreeNode:(n:Node)=>void) {
 
 
 function FullTreeView() : JSX.Element {
-  //TODO: figure out responding to expand events
-  getTreeNode("/files/?json=true",(n:Node) => { 
-    treeData = n;
-    console.log("Set node "+n.id); 
-  });
-  return (
+  var selected = (event: React.ChangeEvent<{}>, value: string[]) => {
+    getTreeNode(value+"",(n:Node) => { 
+      treeData = n;
+      console.log("Set node "+n.id); 
+    });
+  };
+  var tv = (
     <TreeView
+      onNodeSelect={(event: React.ChangeEvent<{}>, value: string[]) => selected(event, value)}
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
@@ -121,14 +171,14 @@ function FullTreeView() : JSX.Element {
       {renderTree(treeData)}
     </TreeView>
   );
+  return tv;
 }
 
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>MicroCMS</h1>
+      <header className="App-header" style={{alignContent:'left'}}>
         <FullTreeView/>
       </header>
     </div>
