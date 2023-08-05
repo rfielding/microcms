@@ -162,6 +162,7 @@ function LabeledNode(node: Node) : JSX.Element {
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
       {node.label}&nbsp;
       {note}
+      {theImg}
     </a>
 
     if(node.isDir) {
