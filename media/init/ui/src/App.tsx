@@ -83,6 +83,7 @@ function convertNode(p: SNode) : Node {
   td.securityBg = a.LabelBg;
   td.canRead = a.Read;
   td.canWrite = a.Write;
+  td.matchesQuery = true;
   td.derived = a.Derived ? true : false;
   td.moderation = a.Moderation ? true : false;
   td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
@@ -176,7 +177,7 @@ function FullTreeView() : JSX.Element {
         securityLabel:"PUBLIC",
         securityFg:"white",
         securityBg:"green",
-        matchesQuery: false,
+        matchesQuery: true, // we can run a search to make id and all parents true, false otherwise
         canRead:true,
         canWrite:false,
         children:[]
@@ -248,6 +249,11 @@ function App() {
         overflow: 'auto' 
       }}   
     >
+      <div style={{padding: 20}}>
+        <form action="/search" method="get">
+          Search: &nbsp; <input type="text" name="match" size={80} />
+        </form>
+      </div>
       <FullTreeView/>
     </div>
   );
