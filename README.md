@@ -182,3 +182,18 @@ So that when `rob.fielding@gmail.com` is used, the label is `PUBLIC RW`. And any
 In this case, enforcement is happenint such that one adult user sees all files, and the non-adult does not. Also, not being the owner, the non-adult sees read-only files.
 
 ![images/differentPermissions.png](images/differentPermissions.png)
+
+# The React UI
+
+The React UI sitting at `/files/init/ui/` is a basic React UI for the tree.
+It implements searching that marks the tree for where content can be found.
+
+Here is a keywoard search that stays around while you are navigating the tree. The word "adam" shows up in the book of Enoch below.
+
+![images/reactSearch.png](images/reactSearch.png)
+
+Here is an example of a moderation filter, ie: looking for inappropriate images so that they can be hidden or blurred, or the user being disciplined for posting it.
+
+![images/reactSearch.png](images/reactSearch2.png)
+
+
