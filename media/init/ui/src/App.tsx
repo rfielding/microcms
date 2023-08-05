@@ -73,11 +73,12 @@ function doesMatchQuery(node: Node, query: Nodes) : boolean {
     return true;
   }
   // parent match if our key is a substring of one in query
-  for(var k in Object.keys(query)) {
-    if(k.startsWith(node.id)) {
+  Object.keys(query).forEach(function(k) {
+    var answer = k.startsWith(node.id);
+    if(answer) {
       return true;
     }
-  }
+  });
   return false;
 }
 
@@ -102,7 +103,7 @@ function convertNode(p: SNode, query: Nodes) : Node {
   td.derived = a.Derived ? true : false;
   td.moderation = a.Moderation ? true : false;
   td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
-  td.matchesQuery = doesMatchQuery(td, query); 
+  td.matchesQuery = false;
   td.children = [];
   return td;
 }
@@ -110,10 +111,12 @@ function convertNode(p: SNode, query: Nodes) : Node {
 // Update the tree state
 function convertTreeState(p: SNode, nodes: Nodes, query: Nodes):Nodes {
   var n = convertNode(p,query);
+  n.matchesQuery = doesMatchQuery(n, query);
   nodes[n.id] = n;
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
       var c = convertNode(p.children[i], query)
+      c.matchesQuery = doesMatchQuery(c, query);
       nodes[c.id] = c;
       nodes[n.id].children.push(c.id);
     }
@@ -200,13 +203,6 @@ function FullTreeView() : JSX.Element {
   const detectKeys = async (e:any) => {
     try {
       if(e.key === "Enter") {
-
-        // Clear all matches
-        for(var k in treeData.nodes) {
-          treeData[k].matchesQuery = false;
-        }
-        setTreeData({...treeData});
-
         const response = await fetch(
           endpoint + "/search?json=true&match="+e.target.value,
           {"credentials": "same-origin"},
