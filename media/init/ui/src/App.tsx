@@ -111,13 +111,13 @@ function convertNode(p: SNode, query: Nodes) : Node {
 // Update the tree state
 function convertTreeState(p: SNode, nodes: Nodes, query: Nodes):Nodes {
   var n = convertNode(p,query);
-  n.matchesQuery = doesMatchQuery(n, query);
   nodes[n.id] = n;
+  nodes[n.id].matchesQuery = doesMatchQuery(n,query);
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
       var c = convertNode(p.children[i], query)
-      c.matchesQuery = doesMatchQuery(c, query);
       nodes[c.id] = c;
+      nodes[c.id].matchesQuery = doesMatchQuery(c,query);
       nodes[n.id].children.push(c.id);
     }
   }
