@@ -196,4 +196,8 @@ Here is an example of a moderation filter, ie: looking for inappropriate images 
 
 ![images/reactSearch.png](images/reactSearch2.png)
 
+Here, a search in a different user's site came back. Hover over the thumbnail to see it larger before clicking it.
+
+![images/huskyDog.png](images/huskyDog.png)
+
 
