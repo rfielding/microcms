@@ -25,7 +25,7 @@ interface SNode {
   path: string;
   isDir: boolean;
   size?: number;
-  context?: string;
+  //context?: string;
   part?: number;
   attributes: Attributes;
   children?: SNode[];
@@ -42,7 +42,7 @@ interface Node {
   canWrite: boolean;
   matchesQuery: boolean;
   part?: number;
-  context?: string;
+  //context?: string;
   derived?: boolean;
   moderation?: boolean;
   moderationLabel?: string;
@@ -63,7 +63,23 @@ var endpoint = "http://localhost:9321";
 
 
 
-
+function doesMatchQuery(node: Node, query: Nodes) : boolean {
+  // cant match empty
+  if(Object.keys(query).length === 0) {
+    return false;
+  }
+  // exact match is easy
+  if(query[node.id]) {
+    return true;
+  }
+  // parent match if our key is a substring of one in query
+  for(var k in Object.keys(query)) {
+    if(k.startsWith(node.id)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Maybe make our json match Material UI's TreeView
 function convertNode(p: SNode, query: Nodes) : Node {
@@ -76,20 +92,17 @@ function convertNode(p: SNode, query: Nodes) : Node {
   }
   td.isDir = p.isDir;
   var a = p.attributes;
-  if(a === undefined) {
-    console.log("No attributes for "+JSON.stringify(p));
-  }
   td.securityLabel = a.Label;
   td.securityFg = a.LabelFg;
   td.securityBg = a.LabelBg;
   td.canRead = a.Read;
   td.canWrite = a.Write;
-  td.matchesQuery = false; // need to compare to latest query
   td.part = p.part;
-  td.context = p.context;
+  //td.context = p.context;
   td.derived = a.Derived ? true : false;
   td.moderation = a.Moderation ? true : false;
   td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
+  td.matchesQuery = doesMatchQuery(td, query); 
   td.children = [];
   return td;
 }
@@ -139,13 +152,13 @@ function LabeledNode(node: Node) : JSX.Element {
       style={{verticalAlign:'center'}}
       onMouseOver={e => (e.currentTarget.height=200)}
       onMouseOut={e => (e.currentTarget.height=20)}
+      onError={e => (e.currentTarget.onerror = null, e.currentTarget.src = "")}
     />;
 
     var theText = 
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
       {node.label}&nbsp;
       {note}
-      {theImg} // TODO: this should not be an error if not found!
     </a>
 
     if(node.isDir) {
@@ -181,6 +194,33 @@ function LabeledNode(node: Node) : JSX.Element {
 
 
 function FullTreeView() : JSX.Element {
+  const [searchData, setSearchData] = useState<Nodes>({
+  });
+
+  const detectKeys = async (e:any) => {
+    try {
+      if(e.key === "Enter") {
+
+        // Clear all matches
+        for(var k in treeData.nodes) {
+          treeData[k].matchesQuery = false;
+        }
+        setTreeData({...treeData});
+
+        const response = await fetch(
+          endpoint + "/search?json=true&match="+e.target.value,
+          {"credentials": "same-origin"},
+        );
+        const p = await response.json() as SNode;
+        var newSearchData = convertTreeState(p, searchData, {});
+        setSearchData({...newSearchData});
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+
   const [treeData, setTreeData] = useState<Nodes>({
       "/files/": {
         id:"/files/",
@@ -204,7 +244,7 @@ function FullTreeView() : JSX.Element {
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
-        var newTreeData = convertTreeState(p, treeData,{});
+        var newTreeData = convertTreeState(p, treeData,searchData);
         setTreeData({...newTreeData});
       }
     } catch (error) {
@@ -212,44 +252,7 @@ function FullTreeView() : JSX.Element {
     }
   };
 
-  const [searchData, setSearchData] = useState<Nodes>({
-      "/files/": {
-        id:"/files/",
-        label:"files/",
-        isDir:true,
-        securityLabel:"PUBLIC",
-        securityFg:"white",
-        securityBg:"green",
-        matchesQuery: false, 
-        canRead:true,
-        canWrite:false,
-        children:[]
-      }
-  });
-
-  const detectKeys = async (e:any) => {
-    try {
-      if(e.key === "Enter") {
-
-        // Clear all matches
-        for(var k in treeData.nodes) {
-          treeData[k].matchesQuery = false;
-        }
-        setTreeData({...treeData});
-
-        const response = await fetch(
-          endpoint + "/search?json=true&match="+e.target.value,
-          {"credentials": "same-origin"},
-        );
-        const p = await response.json() as SNode;
-        console.log("Got search results: "+JSON.stringify(p));
-        var newSearchData = convertTreeState(p, searchData, {});
-        //setSearchData({...newSearchData});
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
+  
   const handleClick = async (node: Node) => {
     if(node.isDir) {
       await handleToggle(node);
