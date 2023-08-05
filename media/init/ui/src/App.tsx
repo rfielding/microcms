@@ -104,9 +104,25 @@ function convertTreeState(p: SNode, ins: NodesStart):NodesStart {
 }
 
 function LabeledNode(node: Node) : JSX.Element {
-  var theText = <>{node.label}</>;
+  var theText = <>{node.label}</>;  
   if(!node.isDir) {
-    theText = <a href={node.id} target="_blank" style={{color:'white', textDecoration:'none'}}>{node.label}</a>
+    var thumbnail = node.id+"--thumbnail.png";
+    var color="white";
+    var note = "";
+    if(node.moderation && !node.derived) {
+      color = "red";
+      note = " ( "+node.moderationLabel+" )";
+    }
+    if(node.derived) {
+      thumbnail = "";
+      color="gray";
+    }
+    theText = 
+    <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
+      {node.label}&nbsp;
+      <img src={thumbnail} height="20" width="auto" alt="" style={{verticalAlign:'center'}}/>
+      {note}
+    </a>
   }
   return (
     <div>
