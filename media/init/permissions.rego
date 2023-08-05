@@ -1,6 +1,6 @@
 package microcms
-default Label = "PUBLIC"
-default LabelBg = "green"
+default Label = "ADMIN"
+default LabelBg = "blue"
 default LabelFg = "white"	
 default Read = true
 default Write = false

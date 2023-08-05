@@ -98,6 +98,12 @@ url=http://localhost:9321
 
   echo ensure that we did not make our home dir read only
   curl -X DELETE --cookie "account=${auth}" "${url}/files/${owner}/documents/permissions.rego"
+
+  echo a different user puts up a file
+  auth=33b98226f52c0e39e8f94cb565becd7d
+  f=huskies.jpg
+  owner=danica777@gmail.com
+  curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/${f}"
 )
 
 #curl 'http://localhost:9321/search?json=true&match=king' | jq
