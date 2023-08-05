@@ -127,11 +127,22 @@ function LabeledNode(node: Node) : JSX.Element {
       }
     }
 
+    var theImg = 
+    <img 
+      src={thumbnail} 
+      height="20"
+      width="auto" 
+      alt="" 
+      style={{verticalAlign:'center'}}
+      onMouseOver={e => (e.currentTarget.height=200)}
+      onMouseOut={e => (e.currentTarget.height=20)}
+    />;
+
     var theText = 
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
       {node.label}&nbsp;
-      <img src={thumbnail} height="20" width="auto" alt="" style={{verticalAlign:'center'}}/>
       {note}
+      {theImg}
     </a>
 
     if(node.isDir) {
