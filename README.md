@@ -192,7 +192,7 @@ Here is a keywoard search that stays around while you are navigating the tree. T
 
 ![images/reactSearch.png](images/reactSearch.png)
 
-Here is an example of a moderation filter, ie: looking for inappropriate images so that they can be hidden or blurred, or the user being disciplined for posting it.
+Here is an example of a moderation filter, ie: looking for inappropriate images so that they can be hidden or blurred, or the user being disciplined for posting it. When I search for a "person", a picture identified by AWSRekognition is identified. But notice that an image near by (an infamous Nicki Minaj pick) is labelled as suggestive.
 
 ![images/reactSearch.png](images/reactSearch2.png)
 
