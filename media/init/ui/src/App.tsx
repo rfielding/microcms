@@ -48,82 +48,20 @@ type Nodes = {
   [id: string]: Node;
 };
 
-// This is where we store the tree, as we load it
-var treeData = {
-  "/files/": {
-    id:"/files/",
-    label:"files/",
-    securityLabel:"PUBLIC",
-    securityFg:"white",
-    securityBg:"green",
-    canRead:true,
-    canWrite:false,
-    derived:false,
-    moderation:false,
-    moderationLabel:"",
-    children:[
-      "/files/init/",
-      "/files/permissions.rego"
-    ]
-  },
-  "/files/init/":{
-    id:"/files/init/",
-    label:"init/",
-    securityLabel:"PUBLIC",
-    securityFg:"white",
-    securityBg:"green",
-    canRead:true,
-    canWrite:false,
-    derived:false,
-    moderation:false,
-    moderationLabel:"",
-    children:[]
-  },
-  "/files/permissions.rego": {
-    id:"/files/permissions.rego",
-    label:"permissions.rego",
-    securityLabel:"PUBLIC",
-    securityFg:"white",
-    securityBg:"green",
-    canRead:true,
-    canWrite:false,
-    derived:false,
-    moderation:false,
-    moderationLabel:"",
-    children:[]
-  }
-} as Nodes;
+type NodesStart = {
+  nodes: Nodes;
+  start: string;
+};
+
+
 
 // XXX: along with busting open CORS ... 
 var endpoint = "http://localhost:9321";
 
 
-function labeledNode(node: Node) {
-  return (
-    <>
-    <span style={{
-      backgroundColor: node.securityBg, 
-      color: node.securityFg, 
-      opacity: 100,
-    }}>
-      {node.securityLabel}&nbsp;
-      {node.canRead ? 'R' : ''}
-      {node.canWrite ? 'W' : ''}
-      {node.moderation ? '!!' : ''}
-    </span>
-    &nbsp;
-    <span>{node.label}</span>
-    </>
-  );
-}
 
-function renderTree(node : Node) {
-  return (
-    <TreeItem key={node.id} nodeId={node.id} label={labeledNode(node)}>
-      {Array.isArray(node.children) ? node.children.map((id) => renderTree(treeData[id])) : null}
-    </TreeItem>
-  );
-}
+
+
 
 // Maybe make our json match Material UI's TreeView
 function convertNode(p: SNode) : Node {
@@ -151,52 +89,92 @@ function convertNode(p: SNode) : Node {
 }
 
 // Update the tree state
-function updateTreeState(v: string) {
-  var p = JSON.parse(v) as SNode;
+function convertTreeState(p: SNode, ins: NodesStart):NodesStart {
   var n = convertNode(p);
+  ins.nodes[n.id] = n;
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
       var c = convertNode(p.children[i])
-      treeData[c.id] = c;
-      treeData[n.id].children.push(c.id);
+      ins.nodes[c.id] = c;
+      ins.nodes[n.id].children.push(c.id);
     }
   }
-}
-
-async function fetchNode(fullName: string) {
-  var url = endpoint + fullName + "?json=true";
-  try {
-    console.log("Fetching "+fullName);
-    if(fullName.endsWith("/") && fullName != "/") {
-      const response = await fetch(
-        url,
-        {credentials: "same-origin"}
-      );
-      const data = await response.text();
-      updateTreeState(data);
-      //console.log("Set node "+JSON.stringify(treeData));
-    }
-  } catch(err) {
-    console.log("while fetching "+url+" "+err);
-  }
+  return ins;
 }
 
 
 function FullTreeView() : JSX.Element {
-  const selected = (event: React.ChangeEvent<{}>, value: string[]) => {
-    const p = value+"";
-    console.log("Selected "+p);
-    fetchNode(p);
+  const [treeData, setTreeData] = useState<NodesStart>({
+    start: "/files/",
+    nodes: {
+      "/files/": {
+        id:"/files/",
+        label:"files/",
+        securityLabel:"PUBLIC",
+        securityFg:"white",
+        securityBg:"green",
+        canRead:true,
+        canWrite:false,
+        children:[]
+      }
+    }
+  });
+
+  const handleToggle = async (node: Node) => {
+    try {
+      const response = await fetch(
+        endpoint + node.id + "?json=true",
+        {"credentials": "same-origin"},
+      );
+      const p = await response.json() as SNode;
+      var newTreeData = convertTreeState(p, treeData);
+      setTreeData({...newTreeData});
+      console.log("Got "+JSON.stringify(newTreeData));
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
   };
+  
+  var labeledNode = function(node: Node) : JSX.Element {
+    return (
+      <>
+      <span style={{
+        backgroundColor: node.securityBg, 
+        color: node.securityFg, 
+        opacity: 100,
+      }}>
+        {node.securityLabel}&nbsp;
+        {node.canRead ? 'R' : ''}
+        {node.canWrite ? 'W' : ''}
+        {node.moderation ? '!!' : ''}
+      </span>
+      &nbsp;
+      <span>{node.label}</span>
+      </>
+    );
+  };
+
+  var renderTree = function(ins : NodesStart, id:string) : JSX.Element {
+    return (
+      <TreeItem 
+        nodeId={id} 
+        label={labeledNode(ins.nodes[id])}
+        onIconClick={() => handleToggle(ins.nodes[id])}
+        onLabelClick={() => handleToggle(ins.nodes[id])}
+      >
+        {Array.isArray(ins.nodes[id].children) ? ins.nodes[id].children.map((v) => renderTree(ins,v)) : null}
+      </TreeItem>
+    );
+  };
+
   return (
     <TreeView      
-      onNodeSelect={(event: React.ChangeEvent<{}>, value: string[]) => selected(event, value)}
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
-      style={{ alignContent: 'left', textAlign: 'left', height: 240, flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}   
+      style={{ alignContent: 'left', textAlign: 'left', height: 240, flexGrow: 1, maxWidth: 800, overflowY: 'auto' }}   
     >
-      {renderTree(treeData["/files/"])}
+      {renderTree(treeData,"/files/")}
     </TreeView>
   );
 }
