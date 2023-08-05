@@ -133,6 +133,12 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	q := r.URL.Query()
 	inJson := q.Get("json") == "true"
 	listing := data.Listing{
+		Node: data.Node{
+			Path:       "/",
+			Name:       "files",
+			IsDir:      true,
+			Attributes: GetAttrs(data.GetUser(r), "/", "files"),
+		},
 		Children: []data.Node{},
 	}
 	user := data.GetUser(r)

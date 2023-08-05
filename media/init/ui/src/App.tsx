@@ -25,6 +25,8 @@ interface SNode {
   path: string;
   isDir: boolean;
   size?: number;
+  context?: string;
+  part?: number;
   attributes: Attributes;
   children?: SNode[];
 };
@@ -39,6 +41,8 @@ interface Node {
   canRead: boolean;
   canWrite: boolean;
   matchesQuery: boolean;
+  part?: number;
+  context?: string;
   derived?: boolean;
   moderation?: boolean;
   moderationLabel?: string;
@@ -83,7 +87,9 @@ function convertNode(p: SNode) : Node {
   td.securityBg = a.LabelBg;
   td.canRead = a.Read;
   td.canWrite = a.Write;
-  td.matchesQuery = true;
+  td.matchesQuery = false; // need to compare to latest query
+  td.part = p.part;
+  td.context = p.context;
   td.derived = a.Derived ? true : false;
   td.moderation = a.Moderation ? true : false;
   td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
@@ -188,7 +194,7 @@ function FullTreeView() : JSX.Element {
         securityLabel:"PUBLIC",
         securityFg:"white",
         securityBg:"green",
-        matchesQuery: true, // we can run a search to make id and all parents true, false otherwise
+        matchesQuery: false, 
         canRead:true,
         canWrite:false,
         children:[]
@@ -212,6 +218,47 @@ function FullTreeView() : JSX.Element {
     }
   };
 
+  const [searchData, setSearchData] = useState<NodesStart>({
+    start: "/files/",
+    nodes: {
+      "/files/": {
+        id:"/files/",
+        label:"files/",
+        isDir:true,
+        securityLabel:"PUBLIC",
+        securityFg:"white",
+        securityBg:"green",
+        matchesQuery: false, 
+        canRead:true,
+        canWrite:false,
+        children:[]
+      }
+    }
+  });
+
+  const detectKeys = async (e:any) => {
+    try {
+      if(e.key === "Enter") {
+
+        // Clear all matches
+        for(var k in treeData.nodes) {
+          treeData.nodes[k].matchesQuery = false;
+        }
+        setTreeData({...treeData});
+
+        const response = await fetch(
+          endpoint + "/search?json=true&match="+e.target.value,
+          {"credentials": "same-origin"},
+        );
+        const p = await response.json() as SNode;
+        console.log("Got search results: "+JSON.stringify(p));
+        var newSearchData = convertTreeState(p, searchData);
+        //setSearchData({...newSearchData});
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
   const handleClick = async (node: Node) => {
     if(node.isDir) {
       await handleToggle(node);
@@ -234,6 +281,10 @@ function FullTreeView() : JSX.Element {
   };
 
   return (
+    <>
+    <div style={{padding: 20}}>
+    Search: &nbsp; <input type="text" name="match" size={80} onKeyUp={e => detectKeys(e)} />
+    </div>    
     <TreeView      
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
@@ -241,6 +292,7 @@ function FullTreeView() : JSX.Element {
     >
       {renderTree(treeData,"/files/")}
     </TreeView>
+    </>
   );
 }
 
@@ -260,11 +312,7 @@ function App() {
         overflow: 'auto' 
       }}   
     >
-      <div style={{padding: 20}}>
-        <form action="/search" method="get">
-          Search: &nbsp; <input type="text" name="match" size={80} />
-        </form>
-      </div>
+
       <FullTreeView/>
     </div>
   );
