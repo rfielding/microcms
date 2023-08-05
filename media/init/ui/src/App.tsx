@@ -38,6 +38,7 @@ interface Node {
   securityBg: string;
   canRead: boolean;
   canWrite: boolean;
+  matchesQuery: boolean;
   derived?: boolean;
   moderation?: boolean;
   moderationLabel?: string;
@@ -104,26 +105,47 @@ function convertTreeState(p: SNode, ins: NodesStart):NodesStart {
 }
 
 function LabeledNode(node: Node) : JSX.Element {
-  var theText = <>{node.label}</>;  
-  if(!node.isDir) {
     var thumbnail = node.id+"--thumbnail.png";
     var color="white";
+    if(!node.matchesQuery) {
+      color = "gray";
+    }
     var note = "";
     if(node.moderation && !node.derived) {
       color = "red";
+      if(!node.matchesQuery) {
+        color = "darkred";
+      }
       note = " ( "+node.moderationLabel+" )";
     }
     if(node.derived) {
       thumbnail = "";
       color="gray";
+      if(!node.matchesQuery) {
+        color = "darkgray";
+      }
     }
-    theText = 
+
+    var theText = 
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
       {node.label}&nbsp;
       <img src={thumbnail} height="20" width="auto" alt="" style={{verticalAlign:'center'}}/>
       {note}
     </a>
-  }
+
+    if(node.isDir) {
+      thumbnail = "";
+      color="white";
+      if(!node.matchesQuery) {
+        color = "gray";
+      }
+      theText = 
+      <span style={{color:color, textDecoration:'none'}}>
+        {node.label}
+      </span>;
+
+    }
+  
   return (
     <div>
     <span style={{
@@ -154,6 +176,7 @@ function FullTreeView() : JSX.Element {
         securityLabel:"PUBLIC",
         securityFg:"white",
         securityBg:"green",
+        matchesQuery: false,
         canRead:true,
         canWrite:false,
         children:[]
