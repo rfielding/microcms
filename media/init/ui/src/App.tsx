@@ -72,14 +72,14 @@ function doesMatchQuery(node: Node, query: Nodes) : boolean {
   if(query[node.id]) {
     return true;
   }
+  var answer = false;
   // parent match if our key is a substring of one in query
   Object.keys(query).forEach(function(k) {
-    var answer = k.startsWith(node.id);
-    if(answer) {
-      return true;
+    if(k.startsWith(node.id)) {
+      answer = true;
     }
   });
-  return false;
+  return answer;
 }
 
 // Maybe make our json match Material UI's TreeView
