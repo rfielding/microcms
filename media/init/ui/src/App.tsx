@@ -3,7 +3,6 @@ import React from 'react';
 import './App.css';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
@@ -33,6 +32,7 @@ interface SNode {
 interface Node {
   id: string;
   label: string;
+  isDir: boolean;
   securityLabel: string;
   securityFg: string;
   securityBg: string;
@@ -72,6 +72,7 @@ function convertNode(p: SNode) : Node {
     td.id += "/";
     td.label += "/";
   }
+  td.isDir = p.isDir;
   var a = p.attributes;
   if(a === undefined) {
     console.log("No attributes for "+JSON.stringify(p));
@@ -110,6 +111,7 @@ function FullTreeView() : JSX.Element {
       "/files/": {
         id:"/files/",
         label:"files/",
+        isDir:true,
         securityLabel:"PUBLIC",
         securityFg:"white",
         securityBg:"green",
@@ -119,19 +121,28 @@ function FullTreeView() : JSX.Element {
       }
     }
   });
-
+  
   const handleToggle = async (node: Node) => {
     try {
-      const response = await fetch(
-        endpoint + node.id + "?json=true",
-        {"credentials": "same-origin"},
-      );
-      const p = await response.json() as SNode;
-      var newTreeData = convertTreeState(p, treeData);
-      setTreeData({...newTreeData});
-      console.log("Got "+JSON.stringify(newTreeData));
+      if(node.id.endsWith("/")) {
+        const response = await fetch(
+          endpoint + node.id + "?json=true&listing=true",
+          {"credentials": "same-origin"},
+        );
+        const p = await response.json() as SNode;
+        var newTreeData = convertTreeState(p, treeData);
+        setTreeData({...newTreeData});
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const handleClick = async (node: Node) => {
+    if(node.isDir) {
+      await handleToggle(node);
+    } else {
+      console.log("Clicked on "+node.id);
     }
   };
   
@@ -160,7 +171,7 @@ function FullTreeView() : JSX.Element {
         nodeId={id} 
         label={labeledNode(ins.nodes[id])}
         onIconClick={() => handleToggle(ins.nodes[id])}
-        onLabelClick={() => handleToggle(ins.nodes[id])}
+        onLabelClick={() => handleClick(ins.nodes[id])}
       >
         {Array.isArray(ins.nodes[id].children) ? ins.nodes[id].children.map((v) => renderTree(ins,v)) : null}
       </TreeItem>
@@ -172,7 +183,7 @@ function FullTreeView() : JSX.Element {
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
-      style={{ alignContent: 'left', textAlign: 'left', height: 240, flexGrow: 1, maxWidth: 800, overflowY: 'auto' }}   
+      style={{ color: 'white', background: 'black', alignContent: 'left', textAlign: 'left', width: 640, height: 1000, flexGrow: 0, overflow: 'auto' }}   
     >
       {renderTree(treeData,"/files/")}
     </TreeView>
@@ -183,9 +194,7 @@ function FullTreeView() : JSX.Element {
 function App() {
   return (
     <div className="App">
-      <header className="App-header" style={{alignContent:'left'}}>
-        <FullTreeView/>
-      </header>
+      <FullTreeView/>
     </div>
   );
 }

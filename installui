@@ -1,0 +1,3 @@
+#!/bin/bash
+
+(cd media/init/ui; npm run build; cd build ; cp -R . ../../../../persistent/files/init/ui)
