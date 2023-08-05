@@ -53,10 +53,7 @@ type Nodes = {
   [id: string]: Node;
 };
 
-type NodesStart = {
-  nodes: Nodes;
-  start: string;
-};
+
 
 
 
@@ -98,17 +95,17 @@ function convertNode(p: SNode) : Node {
 }
 
 // Update the tree state
-function convertTreeState(p: SNode, ins: NodesStart):NodesStart {
+function convertTreeState(p: SNode, nodes: Nodes):Nodes {
   var n = convertNode(p);
-  ins.nodes[n.id] = n;
+  nodes[n.id] = n;
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
       var c = convertNode(p.children[i])
-      ins.nodes[c.id] = c;
-      ins.nodes[n.id].children.push(c.id);
+      nodes[c.id] = c;
+      nodes[n.id].children.push(c.id);
     }
   }
-  return ins;
+  return nodes;
 }
 
 function LabeledNode(node: Node) : JSX.Element {
@@ -184,9 +181,7 @@ function LabeledNode(node: Node) : JSX.Element {
 
 
 function FullTreeView() : JSX.Element {
-  const [treeData, setTreeData] = useState<NodesStart>({
-    start: "/files/",
-    nodes: {
+  const [treeData, setTreeData] = useState<Nodes>({
       "/files/": {
         id:"/files/",
         label:"files/",
@@ -199,7 +194,6 @@ function FullTreeView() : JSX.Element {
         canWrite:false,
         children:[]
       }
-    }
   });
   
   const handleToggle = async (node: Node) => {
@@ -218,9 +212,7 @@ function FullTreeView() : JSX.Element {
     }
   };
 
-  const [searchData, setSearchData] = useState<NodesStart>({
-    start: "/files/",
-    nodes: {
+  const [searchData, setSearchData] = useState<Nodes>({
       "/files/": {
         id:"/files/",
         label:"files/",
@@ -233,7 +225,6 @@ function FullTreeView() : JSX.Element {
         canWrite:false,
         children:[]
       }
-    }
   });
 
   const detectKeys = async (e:any) => {
@@ -242,7 +233,7 @@ function FullTreeView() : JSX.Element {
 
         // Clear all matches
         for(var k in treeData.nodes) {
-          treeData.nodes[k].matchesQuery = false;
+          treeData[k].matchesQuery = false;
         }
         setTreeData({...treeData});
 
@@ -267,15 +258,15 @@ function FullTreeView() : JSX.Element {
     }
   };
   
-  var renderTree = function(ins : NodesStart, id:string) : JSX.Element {
+  var renderTree = function(nodes : Nodes, id:string) : JSX.Element {
     return (
       <TreeItem 
         nodeId={id} 
-        label={LabeledNode(ins.nodes[id])}
-        onIconClick={() => handleToggle(ins.nodes[id])}
-        onLabelClick={() => handleClick(ins.nodes[id])}
+        label={LabeledNode(nodes[id])}
+        onIconClick={() => handleToggle(nodes[id])}
+        onLabelClick={() => handleClick(nodes[id])}
       >
-        {Array.isArray(ins.nodes[id].children) ? ins.nodes[id].children.map((v) => renderTree(ins,v)) : null}
+        {Array.isArray(nodes[id].children) ? nodes[id].children.map((v) => renderTree(nodes,v)) : null}
       </TreeItem>
     );
   };
