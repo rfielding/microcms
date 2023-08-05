@@ -103,6 +103,29 @@ function convertTreeState(p: SNode, ins: NodesStart):NodesStart {
   return ins;
 }
 
+function LabeledNode(node: Node) : JSX.Element {
+  var theText = <>{node.label}</>;
+  if(!node.isDir) {
+    theText = <a href={node.id} target="_blank" style={{color:'white', textDecoration:'none'}}>{node.label}</a>
+  }
+  return (
+    <div>
+    <span style={{
+      backgroundColor: node.securityBg, 
+      color: node.securityFg, 
+      opacity: 100,
+    }}>
+      {node.securityLabel}&nbsp;
+      {node.canRead ? 'R' : ''}
+      {node.canWrite ? 'W' : ''}
+      {node.moderation ? '!!' : ''}
+    </span>
+    &nbsp;
+    <span>{theText}</span>
+    </div>
+  );
+};
+
 
 function FullTreeView() : JSX.Element {
   const [treeData, setTreeData] = useState<NodesStart>({
@@ -146,30 +169,11 @@ function FullTreeView() : JSX.Element {
     }
   };
   
-  var labeledNode = function(node: Node) : JSX.Element {
-    return (
-      <>
-      <span style={{
-        backgroundColor: node.securityBg, 
-        color: node.securityFg, 
-        opacity: 100,
-      }}>
-        {node.securityLabel}&nbsp;
-        {node.canRead ? 'R' : ''}
-        {node.canWrite ? 'W' : ''}
-        {node.moderation ? '!!' : ''}
-      </span>
-      &nbsp;
-      <span>{node.label}</span>
-      </>
-    );
-  };
-
   var renderTree = function(ins : NodesStart, id:string) : JSX.Element {
     return (
       <TreeItem 
         nodeId={id} 
-        label={labeledNode(ins.nodes[id])}
+        label={LabeledNode(ins.nodes[id])}
         onIconClick={() => handleToggle(ins.nodes[id])}
         onLabelClick={() => handleClick(ins.nodes[id])}
       >
@@ -199,7 +203,7 @@ function App() {
         background: 'black', 
         alignContent: 'left', 
         textAlign: 'left', 
-        width: 640, 
+        width: 1040, 
         height: 1000, 
         flexGrow: 0, 
         overflow: 'auto' 
