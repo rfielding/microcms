@@ -66,7 +66,7 @@ var endpoint = "http://localhost:9321";
 
 
 // Maybe make our json match Material UI's TreeView
-function convertNode(p: SNode) : Node {
+function convertNode(p: SNode, query: Nodes) : Node {
   var td = {} as Node;
   td.id = p.path + p.name;
   td.label = p.name;
@@ -95,12 +95,12 @@ function convertNode(p: SNode) : Node {
 }
 
 // Update the tree state
-function convertTreeState(p: SNode, nodes: Nodes):Nodes {
-  var n = convertNode(p);
+function convertTreeState(p: SNode, nodes: Nodes, query: Nodes):Nodes {
+  var n = convertNode(p,query);
   nodes[n.id] = n;
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
-      var c = convertNode(p.children[i])
+      var c = convertNode(p.children[i], query)
       nodes[c.id] = c;
       nodes[n.id].children.push(c.id);
     }
@@ -145,7 +145,7 @@ function LabeledNode(node: Node) : JSX.Element {
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
       {node.label}&nbsp;
       {note}
-      {theImg}
+      {theImg} // TODO: this should not be an error if not found!
     </a>
 
     if(node.isDir) {
@@ -204,7 +204,7 @@ function FullTreeView() : JSX.Element {
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
-        var newTreeData = convertTreeState(p, treeData);
+        var newTreeData = convertTreeState(p, treeData,{});
         setTreeData({...newTreeData});
       }
     } catch (error) {
@@ -243,7 +243,7 @@ function FullTreeView() : JSX.Element {
         );
         const p = await response.json() as SNode;
         console.log("Got search results: "+JSON.stringify(p));
-        var newSearchData = convertTreeState(p, searchData);
+        var newSearchData = convertTreeState(p, searchData, {});
         //setSearchData({...newSearchData});
       }
     } catch (error) {
