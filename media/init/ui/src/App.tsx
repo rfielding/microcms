@@ -183,7 +183,6 @@ function FullTreeView() : JSX.Element {
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
-      style={{ color: 'white', background: 'black', alignContent: 'left', textAlign: 'left', width: 640, height: 1000, flexGrow: 0, overflow: 'auto' }}   
     >
       {renderTree(treeData,"/files/")}
     </TreeView>
@@ -193,7 +192,19 @@ function FullTreeView() : JSX.Element {
 
 function App() {
   return (
-    <div className="App">
+    <div 
+      className="App" 
+      style={{ 
+        color: 'white', 
+        background: 'black', 
+        alignContent: 'left', 
+        textAlign: 'left', 
+        width: 640, 
+        height: 1000, 
+        flexGrow: 0, 
+        overflow: 'auto' 
+      }}   
+    >
       <FullTreeView/>
     </div>
   );
