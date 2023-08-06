@@ -236,7 +236,8 @@ function SearchableTreeView() : JSX.Element {
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
-        var newSearchData = convertTreeState(p, searchData, {});
+        var existingSearchData = {} as Nodes;
+        var newSearchData = convertTreeState(p, existingSearchData, {});
         var newTreeData = matchTreeState(treeData,newSearchData);
         setSearchData({...newSearchData});
         setTreeData({...newTreeData});
