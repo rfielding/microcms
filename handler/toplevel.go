@@ -219,14 +219,24 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 
-	// User hits us with an email link, and we set a cookie
 	if r.URL.Path == "/me" {
+		http.Redirect(w, r, "/me/", http.StatusMovedPermanently)
+		return
+	}
+
+	// User hits us with an email link, and we set a cookie
+	if r.URL.Path == "/me/" {
 		w.Write([]byte(utils.AsJsonPretty(user)))
 		return
 	}
 
+	if r.URL.Path == "/search" {
+		http.Redirect(w, r, "/search/", http.StatusMovedPermanently)
+		return
+	}
+
 	// try search handler
-	if r.URL.Path == "/search" || strings.HasPrefix(r.URL.Path, "/search/") {
+	if strings.HasPrefix(r.URL.Path, "/search/") {
 		GetSearchHandler(w, r, pathTokens)
 		return
 	}

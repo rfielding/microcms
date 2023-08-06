@@ -239,7 +239,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
     if(e.key === "Enter") {
       // Clean the tree before the query
       const response = await fetch(
-        endpoint + "/search?json=true&match="+e.currentTarget.value,
+        endpoint + "/search/?json=true&match="+e.currentTarget.value,
         {"credentials": "same-origin"},
       );
       const p = await response.json() as SNode;
