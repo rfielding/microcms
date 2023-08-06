@@ -59,6 +59,12 @@ in an orderly way. First is the CMS itself
 ```
 # Make sure that docker is running first!
 #  ./cleanbuild is a prerequisite so that the imagee exists
+#  also, these env vars need to be set to legitimate keys
+#  if you want the AI pipeline to work. I have full
+#  AWSRekognition access on my keys here.
+#      - AWS_ACCESS_KEY_ID
+#      - AWS_REGION
+#      - AWS_SECRET_ACCESS_KEY
 ./startCMS
 ```
 
