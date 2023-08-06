@@ -57,8 +57,10 @@ type Nodes = {
 
 
 
-// XXX: along with busting open CORS ... 
-var endpoint = ".";
+// this works when we can overlay over our service.
+// should be configurable with a file actually written by the user
+// inside the unpacked tarball.
+var endpoint = "";
 
 
 
