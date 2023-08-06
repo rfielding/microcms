@@ -317,7 +317,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
   return (
     <>
     <div style={{padding: 20}}>
-    Search (AND, OR, NOT): &nbsp; <input type="text" name="match" size={40} onKeyUp={e => detectKeys(e)} />
+    Search like <i>"/files/rob dog OR cat"</i>: &nbsp; <input type="text" name="match" size={40} onKeyUp={e => detectKeys(e)} />
     &nbsp; <input type="checkbox" name="hidemismatch" value="/files/" onClick={e => detectSelect(e)}/> Hide Mismatch
     </div>    
     <TreeView      
