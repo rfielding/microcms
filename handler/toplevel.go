@@ -152,6 +152,8 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 			w.Header().Set("Content-Type", "text/plain")
 		}
 
+		// TODO: If thumbnail doesn't exist, then return it virtually
+
 		// Recursively find our permissions and return it virtually.
 		// It won't show up directly in listings, but should come back
 		// with what it finds
@@ -219,24 +221,13 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 
-	if r.URL.Path == "/me" {
-		http.Redirect(w, r, "/me/", http.StatusMovedPermanently)
-		return
-	}
-
 	// User hits us with an email link, and we set a cookie
-	if r.URL.Path == "/me/" {
+	if utils.IsIn(r.URL.Path, "/me", "/me/") {
 		w.Write([]byte(utils.AsJsonPretty(user)))
 		return
 	}
 
-	if r.URL.Path == "/search" {
-		http.Redirect(w, r, "/search/", http.StatusMovedPermanently)
-		return
-	}
-
-	// try search handler
-	if strings.HasPrefix(r.URL.Path, "/search/") {
+	if utils.IsIn(r.URL.Path, "/search", "/search/") {
 		GetSearchHandler(w, r, pathTokens)
 		return
 	}

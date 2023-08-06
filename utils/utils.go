@@ -7,6 +7,15 @@ import (
 	"os"
 )
 
+func IsIn(s string, ss ...string) bool {
+	for _, v := range ss {
+		if s == v {
+			return true
+		}
+	}
+	return false
+}
+
 func AsJsonPretty(v interface{}) string {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {

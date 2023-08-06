@@ -161,7 +161,7 @@ function LabeledNode(node: Node) : JSX.Element {
         color = "darkgray";
       }
     }
-
+    
     var theImg = 
     <img 
       src={thumbnail} 
@@ -171,7 +171,6 @@ function LabeledNode(node: Node) : JSX.Element {
       style={{verticalAlign:'center'}}
       onMouseOver={e => (e.currentTarget.height=200)}
       onMouseOut={e => (e.currentTarget.height=20)}
-      onError={e => (e.currentTarget.onerror = null, e.currentTarget.src = "")}
     />;
 
     var theText = 

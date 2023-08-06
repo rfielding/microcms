@@ -28,7 +28,7 @@ func MakeThumbnail(file string) (io.Reader, error) {
 	// Give back a pipe that closes itself when it's read.
 	pipeReader, pipeWriter := io.Pipe()
 	go func() {
-		pipeWriter.Write(stdout)
+		pipeWriter.Write(stdout) // !! if client refuses to read it all, or not full write...
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
