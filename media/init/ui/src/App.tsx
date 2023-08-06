@@ -53,6 +53,10 @@ type Nodes = {
   [id: string]: Node;
 };
 
+type HideableNodes = {
+  nodes : Nodes;
+  hidden : boolean;
+};
 
 
 
@@ -210,42 +214,45 @@ function LabeledNode(node: Node) : JSX.Element {
 
 
 function SearchableTreeView() : JSX.Element {
-  const [searchData, setSearchData] = useState<Nodes>({
-  });
-
-  const [treeData, setTreeData] = useState<Nodes>({
-    "/files/": {
-      id:"/files/",
-      label:"files/",
-      isDir:true,
-      securityLabel:"PUBLIC",
-      securityFg:"white",
-      securityBg:"green",
-      matchesQuery: false, 
-      canRead:true,
-      canWrite:false,
-      children:[]
+  const [hideData, setHideData] = useState<boolean>(false);
+  const [searchData, setSearchData] = useState<Nodes>({});
+  const [hideableData, setHideableData] = useState<HideableNodes>({
+    hidden: false,
+    nodes: {
+      "/files/": {
+        id:"/files/",
+        label:"files/",
+        isDir:true,
+        securityLabel:"PUBLIC",
+        securityFg:"white",
+        securityBg:"green",
+        matchesQuery: false, 
+        canRead:true,
+        canWrite:false,
+        children:[]
+      }
     }
 }); 
 
-  const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
-    try {
-      if(e.key === "Enter") {
-        // Clean the tree before the query
-        const response = await fetch(
-          endpoint + "/search?json=true&match="+e.currentTarget.value,
-          {"credentials": "same-origin"},
-        );
-        const p = await response.json() as SNode;
-        var existingSearchData = {} as Nodes;
-        var newSearchData = convertTreeState(p, existingSearchData, {});
-        var newTreeData = matchTreeState(treeData,newSearchData);
-        setSearchData({...newSearchData});
-        setTreeData({...newTreeData});
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
+const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
+  try {
+    if(e.key === "Enter") {
+      // Clean the tree before the query
+      const response = await fetch(
+        endpoint + "/search?json=true&match="+e.currentTarget.value,
+        {"credentials": "same-origin"},
+      );
+      const p = await response.json() as SNode;
+      var existingSearchData = {} as Nodes;
+      var newSearchData = convertTreeState(p, existingSearchData, {});
+      var newTreeData = matchTreeState(hideableData.nodes,newSearchData);
+      var newHideableData = {nodes: newTreeData, hidden: hideData};
+      setSearchData({...newSearchData});
+      setHideableData({...newHideableData});
     }
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
   };
   
   const handleClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
@@ -257,20 +264,36 @@ function SearchableTreeView() : JSX.Element {
         );
         const p = await response.json() as SNode;
         var newTreeData = matchTreeState(
-          convertTreeState(p, treeData,searchData),
+          convertTreeState(p, hideableData.nodes,searchData),
           searchData
         );
-        setTreeData({...newTreeData});
+        var newHideableData = {nodes: newTreeData, hidden: hideData};
+        setHideableData({...newHideableData});
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
   
+  const detectSelect = async (e: React.SyntheticEvent<Element,Event>) => {
+    try {
+      console.log("select");
+      var newHideData = !hideData;
+      setHideData(newHideData);
+      var newHideableData = {nodes: hideableData.nodes, hidden: !hideData};
+      setHideableData({...newHideableData});
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
   var renderTree = function(nodes : Nodes, id:string) : JSX.Element {
+    var matches = nodes[id].matchesQuery? true : false;;
+    var hidden = !matches && hideData;
     return (
       <TreeItem 
-        nodeId={id} 
+        nodeId={id}
+        hidden={hidden} 
         label={LabeledNode(nodes[id])}
         onIconClick={e => handleClick(e,nodes[id])}
         onLabelClick={e => handleClick(e,nodes[id])}
@@ -284,13 +307,14 @@ function SearchableTreeView() : JSX.Element {
     <>
     <div style={{padding: 20}}>
     Search (AND, OR, NOT): &nbsp; <input type="text" name="match" size={20} onKeyUp={e => detectKeys(e)} />
+    &nbsp; <input type="checkbox" name="hidemismatch" value="moderation" onClick={e => detectSelect(e)}/> Hide Mismatch
     </div>    
     <TreeView      
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
       defaultExpandIcon={<ChevronRightIcon />}
     >
-      {renderTree(treeData,"/files/")}
+      {renderTree(hideableData.nodes,"/files/")}
     </TreeView>
     </>
   );
