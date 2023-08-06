@@ -58,8 +58,8 @@ type Nodes = {
 
 
 // this works when we can overlay over our service.
-// should be configurable with a file actually written by the user
-// inside the unpacked tarball.
+// should be configurable with a file actually written 
+// into this directory
 var endpoint = "";
 
 
@@ -101,6 +101,7 @@ function convertNode(p: SNode, query: Nodes) : Node {
   td.canRead = a.Read;
   td.canWrite = a.Write;
   td.part = p.part;
+  td.matchesQuery = false;
   //td.context = p.context;
   td.derived = a.Derived ? true : false;
   td.moderation = a.Moderation ? true : false;
@@ -110,33 +111,41 @@ function convertNode(p: SNode, query: Nodes) : Node {
   return td;
 }
 
+function matchTreeState(nodes: Nodes, query: Nodes):Nodes {
+  var newTreeData = Object.assign({}, nodes) as Nodes;
+  Object.keys(nodes).forEach(function(k) {
+    nodes[k].matchesQuery = doesMatchQuery(nodes[k],query);
+  });
+  return nodes;
+}
+
 // Update the tree state
 function convertTreeState(p: SNode, nodes: Nodes, query: Nodes):Nodes {
   var n = convertNode(p,query);
   nodes[n.id] = n;
-  nodes[n.id].matchesQuery = doesMatchQuery(n,query);
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
       var c = convertNode(p.children[i], query)
       nodes[c.id] = c;
-      nodes[c.id].matchesQuery = doesMatchQuery(c,query);
       nodes[n.id].children.push(c.id);
     }
   }
-  return nodes;
+  return matchTreeState(nodes,query);
 }
+
+
 
 function LabeledNode(node: Node) : JSX.Element {
     var thumbnail = node.id+"--thumbnail.png";
     var color="white";
     if(!node.matchesQuery) {
-      color = "gray";
+      color = "#b0b0b0";
     }
     var note = "";
     if(node.moderation && !node.derived) {
-      color = "red";
+      color = "#ff4040";
       if(!node.matchesQuery) {
-        color = "darkred";
+        color = "#a03030";
       }
       note = " ( "+node.moderationLabel+" )";
     }
@@ -171,7 +180,7 @@ function LabeledNode(node: Node) : JSX.Element {
       thumbnail = "";
       color="white";
       if(!node.matchesQuery) {
-        color = "gray";
+        color = "#b0b0b0";
       }
       theText = 
       <span style={{color:color, textDecoration:'none'}}>
@@ -199,43 +208,45 @@ function LabeledNode(node: Node) : JSX.Element {
 };
 
 
-function FullTreeView() : JSX.Element {
+function SearchableTreeView() : JSX.Element {
   const [searchData, setSearchData] = useState<Nodes>({
   });
 
-  const detectKeys = async (e:any) => {
+  const [treeData, setTreeData] = useState<Nodes>({
+    "/files/": {
+      id:"/files/",
+      label:"files/",
+      isDir:true,
+      securityLabel:"PUBLIC",
+      securityFg:"white",
+      securityBg:"green",
+      matchesQuery: false, 
+      canRead:true,
+      canWrite:false,
+      children:[]
+    }
+}); 
+
+  const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
     try {
       if(e.key === "Enter") {
+        // Clean the tree before the query
         const response = await fetch(
-          endpoint + "/search?json=true&match="+e.target.value,
+          endpoint + "/search?json=true&match="+e.currentTarget.value,
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
         var newSearchData = convertTreeState(p, searchData, {});
+        var newTreeData = matchTreeState(treeData,newSearchData);
         setSearchData({...newSearchData});
+        setTreeData({...newTreeData});
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-
-
-  const [treeData, setTreeData] = useState<Nodes>({
-      "/files/": {
-        id:"/files/",
-        label:"files/",
-        isDir:true,
-        securityLabel:"PUBLIC",
-        securityFg:"white",
-        securityBg:"green",
-        matchesQuery: false, 
-        canRead:true,
-        canWrite:false,
-        children:[]
-      }
-  });
   
-  const handleToggle = async (node: Node) => {
+  const handleToggle = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
     try {
       if(node.id.endsWith("/")) {
         const response = await fetch(
@@ -243,7 +254,10 @@ function FullTreeView() : JSX.Element {
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
-        var newTreeData = convertTreeState(p, treeData,searchData);
+        var newTreeData = matchTreeState(
+          convertTreeState(p, treeData,searchData),
+          searchData
+        );
         setTreeData({...newTreeData});
       }
     } catch (error) {
@@ -252,11 +266,9 @@ function FullTreeView() : JSX.Element {
   };
 
   
-  const handleClick = async (node: Node) => {
+  const handleClick = async (e : React.MouseEvent<Element,MouseEvent>,node: Node) => {
     if(node.isDir) {
-      await handleToggle(node);
-    } else {
-      console.log("Clicked on "+node.id);
+      await handleToggle(e,node);
     }
   };
   
@@ -265,8 +277,8 @@ function FullTreeView() : JSX.Element {
       <TreeItem 
         nodeId={id} 
         label={LabeledNode(nodes[id])}
-        onIconClick={() => handleToggle(nodes[id])}
-        onLabelClick={() => handleClick(nodes[id])}
+        onIconClick={e => handleToggle(e,nodes[id])}
+        onLabelClick={e => handleClick(e,nodes[id])}
       >
         {Array.isArray(nodes[id].children) ? nodes[id].children.map((v) => renderTree(nodes,v)) : null}
       </TreeItem>
@@ -306,7 +318,7 @@ function App() {
       }}   
     >
 
-      <FullTreeView/>
+      <SearchableTreeView/>
     </div>
   );
 }
