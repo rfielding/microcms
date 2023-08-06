@@ -254,10 +254,11 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 // Note that all http handling MUST be tail calls. That makes
 // top level routing a little ugly.
 func rootRouter(w http.ResponseWriter, r *http.Request) {
-	// TODO: deal with CORS later
+	// XXX: dont use CORS with react:3000...
+	//   use startup's reverse proxy to make this work!
 	// a config file in certai dirs to allow it?
 	//if strings.HasPrefix("/files/init/ui") {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	////w.Header().Set("Access-Control-Allow-Origin", "*")
 	//}
 	pathTokens := strings.Split(r.URL.Path, "/")
 	switch r.Method {

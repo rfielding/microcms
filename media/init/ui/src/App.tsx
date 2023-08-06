@@ -58,7 +58,7 @@ type Nodes = {
 
 
 // XXX: along with busting open CORS ... 
-var endpoint = "http://localhost:9321";
+var endpoint = ".";
 
 
 
