@@ -1,6 +1,11 @@
 # microcms
 
-A YouTube video to show what this is. It is the backend part of accessibility,
+![images/filteredSearch.png](images/filteredSearch.png)
+
+This is a CMS with an AI pipeline, to augment uploaded files, to assist
+in full-text searching of all content. It supports common media, such as
+pdf, docx, images, and video.
+Here is a YouTube video to show what this is. It is the backend part of accessibility,
 by getting text searching and image labelling done by an AI.
 
 [![MicroCMS Demo](images/video.png)](https://www.youtube.com/watch?v=yuDblOFiPcQ)
@@ -22,7 +27,6 @@ This is an experiment in quickly creating a Content Management System (CMS), by 
 - simple GET/POST to urls to alter content
 - perform filtered keyword searches
 
-![images/filteredSearch.png](images/filteredSearch.png)
 
 Note:
 
@@ -38,11 +42,7 @@ Note:
   read, but pseudononymous writes as well. ie: GDPR cases, such as directory
   open to adults living in certain countries.
   
-Todo:
-
-- reverse proxy endpoints (A few hundred lines of code at most, as I write reverse proxies often)
-- the reverse proxy endpoints would allow full apps to work 
-- OpenPolicyAgent for security enforcement, I did this in a separate project, and it took a few hours.
+# Running it
 
 It only builds in a Docker container, with go1.20 under Linux amd64 architecture.
 I might start splitting things up and moving to ElasticSearch at some point.
@@ -89,7 +89,7 @@ Currently, there are just GET and POST, where certain prefixes are special.
 
 - POST or GET to `/files/${URL}` means to write the file blob to the given URL.  Not having any kind of oid means that URLs must uniquely identify files (where oids, which I don't want to support) would complicate this.
 - a POST to `/files/${URL}` with a parameter `installed=true` means to expect a tarball, and the url is specifying the directory in which it goes.
-- GET `/search/${URL}?match=${term}` with a term that you are looking for will render a simple html page of hits.
+- GET `/search/files/${URL}?match=${term}` with a term that you are looking for will render a simple html page of hits.
 
 Install a react app in a tarball, or a simple html app.  Install means to expect a tarball, and unpack it into the named directory.
 
@@ -171,7 +171,7 @@ These files, along with permissions.rego, are initialization config. They are fi
 ## Permissions
 
 
-A user gets a link with a secret link, that sets a cookie to set user attributes.
+A user gets sent a secret link, that sets a cookie to set user attributes.
 
 `GET /registration/?account=5ee5de77d0c566d2b8c170a03894ff2d`
 

@@ -116,12 +116,13 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 }
 
 func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+	lookInside := r.URL.Path[len("/search"):]
 	match := r.URL.Query().Get("match")
 	rows, err := db.TheDB.Query(`
 		SELECT original_path,original_name,part,highlight(filesearch,7,'<b style="background-color:gray">','</b>') highlighted 
 		from filesearch
-		where filesearch match ?
-	`, match)
+		where filesearch match ? and original_path like ?
+	`, match, lookInside+"%")
 	if err != nil {
 		msg := fmt.Sprintf("query %s: %v", match, err)
 		log.Printf("ERR %s", msg)

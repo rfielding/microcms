@@ -237,7 +237,11 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 
-	if utils.IsIn(r.URL.Path, "/search", "/search/") {
+	// TODO: GET /search/files/rob.fielding@gmail.com/ to limit to that dir
+	if strings.HasPrefix(r.URL.Path, "/search") {
+		if r.URL.Path == "/search" {
+			r.URL.Path = "/search/"
+		}
 		GetSearchHandler(w, r, pathTokens)
 		return
 	}

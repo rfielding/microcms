@@ -238,9 +238,18 @@ function SearchableTreeView() : JSX.Element {
 const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
   try {
     if(e.key === "Enter") {
+      // Get the keyword and the root to search at
+      var searchTerms = e.currentTarget.value;
+      var keywords = searchTerms
+      var searchAt = "/files/";
+      if(searchTerms.startsWith("/files/") ) {
+        var tokens = searchTerms.split(" ");
+        searchAt = tokens[0];
+        keywords = tokens.slice(1).join(" ");
+      }
       // Clean the tree before the query
       const response = await fetch(
-        endpoint + "/search/?json=true&match="+e.currentTarget.value,
+        endpoint + "/search"+searchAt+"?json=true&match="+keywords,
         {"credentials": "same-origin"},
       );
       const p = await response.json() as SNode;
@@ -309,7 +318,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
     <>
     <div style={{padding: 20}}>
     Search (AND, OR, NOT): &nbsp; <input type="text" name="match" size={40} onKeyUp={e => detectKeys(e)} />
-    &nbsp; <input type="checkbox" name="hidemismatch" value="moderation" onClick={e => detectSelect(e)}/> Hide Mismatch
+    &nbsp; <input type="checkbox" name="hidemismatch" value="/files/" onClick={e => detectSelect(e)}/> Hide Mismatch
     </div>    
     <TreeView      
       aria-label="file system navigator"
