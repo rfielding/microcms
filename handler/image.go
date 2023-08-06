@@ -1,12 +1,9 @@
 package handler
 
 import (
-	"fmt"
 	"io"
-	"os/exec"
 
 	"github.com/rfielding/microcms/fs"
-	"github.com/rfielding/microcms/utils"
 )
 
 func MakeThumbnail(file string) (io.Reader, error) {
@@ -19,19 +16,7 @@ func MakeThumbnail(file string) (io.Reader, error) {
 		(fs.At + file),
 		"-",
 	}
-	cmd := exec.Command(command[0], command[1:]...)
-	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
-	stdout, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, utils.AsJson(command))
-	}
-	// Give back a pipe that closes itself when it's read.
-	pipeReader, pipeWriter := io.Pipe()
-	go func() {
-		pipeWriter.Write(stdout) // !! if client refuses to read it all, or not full write...
-		pipeWriter.Close()
-	}()
-	return pipeReader, nil
+	return CommandReader(file, command)
 }
 
 func videoThumbnail(file string) (io.Reader, error) {
@@ -41,17 +26,5 @@ func videoThumbnail(file string) (io.Reader, error) {
 		(fs.At + file + "[100]"),
 		"png:-",
 	}
-	cmd := exec.Command(command[0], command[1:]...)
-	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
-	stdout, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, utils.AsJson(command))
-	}
-	// Give back a pipe that closes itself when it's read.
-	pipeReader, pipeWriter := io.Pipe()
-	go func() {
-		pipeWriter.Write(stdout)
-		pipeWriter.Close()
-	}()
-	return pipeReader, nil
+	return CommandReader(file, command)
 }

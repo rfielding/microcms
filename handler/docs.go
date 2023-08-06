@@ -12,18 +12,12 @@ import (
 
 var DocExtractor string
 
-func pdfThumbnail(file string) (io.Reader, error) {
-	command := []string{
-		"convert",
-		"-resize", "x100",
-		(fs.At + file + "[0]"),
-		"png:-",
-	}
+func CommandReader(file string, command []string) (io.Reader, error) {
 	cmd := exec.Command(command[0], command[1:]...)
 	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
 	stdout, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to run thumbnail command: %v\n%s", err, utils.AsJson(command))
+		return nil, fmt.Errorf("Unable to run command: %v\n%s", err, utils.AsJson(command))
 	}
 	// Give back a pipe that closes itself when it's read.
 	pipeReader, pipeWriter := io.Pipe()
@@ -32,6 +26,16 @@ func pdfThumbnail(file string) (io.Reader, error) {
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
+}
+
+func pdfThumbnail(file string) (io.Reader, error) {
+	command := []string{
+		"convert",
+		"-resize", "x100",
+		(fs.At + file + "[0]"),
+		"png:-",
+	}
+	return CommandReader(file, command)
 }
 
 // Make a request to tika in this case
