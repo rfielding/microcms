@@ -283,7 +283,7 @@ function SearchableTreeView() : JSX.Element {
   return (
     <>
     <div style={{padding: 20}}>
-    Keyword Search: &nbsp; <input type="text" name="match" size={20} onKeyUp={e => detectKeys(e)} />
+    Search (AND, OR, NOT): &nbsp; <input type="text" name="match" size={20} onKeyUp={e => detectKeys(e)} />
     </div>    
     <TreeView      
       aria-label="file system navigator"
