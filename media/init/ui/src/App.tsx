@@ -138,8 +138,9 @@ function convertTreeState(p: SNode, nodes: Nodes, query: Nodes):Nodes {
 function LabeledNode(node: Node) : JSX.Element {
     var thumbnail = node.id+"--thumbnail.png";
     var color="white";
+    var textNotMatched = "#a0a0a0";
     if(!node.matchesQuery) {
-      color = "#b0b0b0";
+      color = textNotMatched;
     }
     var note = "";
     if(node.moderation && !node.derived) {
@@ -180,7 +181,7 @@ function LabeledNode(node: Node) : JSX.Element {
       thumbnail = "";
       color="white";
       if(!node.matchesQuery) {
-        color = "#b0b0b0";
+        color = textNotMatched;
       }
       theText = 
       <span style={{color:color, textDecoration:'none'}}>
@@ -282,7 +283,7 @@ function SearchableTreeView() : JSX.Element {
   return (
     <>
     <div style={{padding: 20}}>
-    Search: &nbsp; <input type="text" name="match" size={80} onKeyUp={e => detectKeys(e)} />
+    Keyword Search: &nbsp; <input type="text" name="match" size={20} onKeyUp={e => detectKeys(e)} />
     </div>    
     <TreeView      
       aria-label="file system navigator"
