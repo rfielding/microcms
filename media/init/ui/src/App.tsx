@@ -247,9 +247,9 @@ function SearchableTreeView() : JSX.Element {
     }
   };
   
-  const handleToggle = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
+  const handleClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
     try {
-      if(node.id.endsWith("/")) {
+      if(node.isDir && node.id.endsWith("/")) {
         const response = await fetch(
           endpoint + node.id + "?json=true&listing=true",
           {"credentials": "same-origin"},
@@ -265,20 +265,13 @@ function SearchableTreeView() : JSX.Element {
       console.error('Error fetching data:', error);
     }
   };
-
-  
-  const handleClick = async (e : React.MouseEvent<Element,MouseEvent>,node: Node) => {
-    if(node.isDir) {
-      await handleToggle(e,node);
-    }
-  };
   
   var renderTree = function(nodes : Nodes, id:string) : JSX.Element {
     return (
       <TreeItem 
         nodeId={id} 
         label={LabeledNode(nodes[id])}
-        onIconClick={e => handleToggle(e,nodes[id])}
+        onIconClick={e => handleClick(e,nodes[id])}
         onLabelClick={e => handleClick(e,nodes[id])}
       >
         {Array.isArray(nodes[id].children) ? nodes[id].children.map((v) => renderTree(nodes,v)) : null}
