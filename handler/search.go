@@ -18,13 +18,6 @@ import (
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
 func getAttrsPermission(claims data.User, fsPath string, fsName string, initial map[string]interface{}) map[string]interface{} {
-	// Calculate attributes with respect to original file
-	if strings.Contains(fsName, "--") {
-		fNameOriginal := fsName[0:strings.LastIndex(fsName, "--")]
-		if fs.IsExist(fsPath + fNameOriginal) {
-			fsName = fNameOriginal
-		}
-	}
 	// Try exact file if fName is not blank
 	regoFile := fsPath + "permissions.rego"
 	if fsName != "" {
@@ -65,7 +58,14 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 }
 
 func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interface{} {
+	// always get attributes according to the original file
+	if strings.Contains(fsName, "--") {
+		//a better pattern would be:  *.*--*.*
+		fNameOriginal := fsName[0:strings.LastIndex(fsName, "--")]
+		fsName = fNameOriginal
+	}
 	attrs := make(map[string]interface{})
+
 	// Start parsing attributes with a custom set of values that
 	// get overridden with calculated values
 	customFileName := fsPath + fsName + "--custom.json"
@@ -82,12 +82,6 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 	}
 	// If there is content moderation, then add it in here
 	mods := make(map[string]interface{})
-	if strings.Contains(fsName, "--") {
-		fNameOriginal := fsName[0:strings.LastIndex(fsName, "--")]
-		if fs.IsExist(fsPath + fNameOriginal) {
-			fsName = fNameOriginal
-		}
-	}
 	moderationFileName := fsPath + fsName + "--moderation.json"
 	if fs.IsExist(moderationFileName) {
 		jf, err := fs.ReadFile(moderationFileName)

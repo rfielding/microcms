@@ -137,8 +137,6 @@ function convertTreeState(p: SNode, nodes: Nodes, query: Nodes):Nodes {
   return matchTreeState(nodes,query);
 }
 
-
-
 function LabeledNode(node: Node) : JSX.Element {
     var thumbnail = node.id+"--thumbnail.png";
     var color="white";
