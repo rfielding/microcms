@@ -49,16 +49,15 @@ func postFileHandler(
 	if !strings.HasSuffix(originalFsPath, "/") {
 		log.Printf("!!!! inconsistent originalFsPath ends in slash here! %s", fsPath+fsName)
 	}
-	/*
-		fsPath := parentDir + "/"
-		originalFsPath := originalParentDir + "/"
-	*/
-
-	if !privileged && !CanWrite(user, fsPath, fsName) {
-		return http.StatusForbidden, fmt.Errorf("write disallowed")
-	}
 
 	fullName := fsPath + fsName
+
+	if !privileged && !CanWrite(user, fsPath, fsName) {
+		return http.StatusForbidden, fmt.Errorf(
+			"POST disallowed on %s for %s",
+			fullName, UserName(user),
+		)
+	}
 
 	err := fs.MkdirAll(path.Dir(fullName), 0777)
 	if err != nil {
@@ -250,15 +249,10 @@ func postFileHandler(
 }
 
 func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
-	var err error
 	defer r.Body.Close()
 	user := data.GetUser(r)
 
-	if len(pathTokens) < 2 {
-		err := fmt.Errorf("path needs /[command]/[url] for post to %s: %v", r.URL.Path, err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf("ERR: %v", err)))
-		log.Printf("ERR %v", err)
+	if ensureThatHomeDirExists(w, r, user) {
 		return
 	}
 

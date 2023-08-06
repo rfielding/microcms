@@ -46,10 +46,20 @@ func detectNewUser(user string) (io.Reader, error) {
 	return pipeReader, nil
 }
 
+func UserName(user data.User) string {
+	if len(user["email"]) > 0 {
+		return user["email"][0]
+	}
+	return "anonymous"
+}
+
 func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
-	if !CanWrite(data.GetUser(r), path.Dir(r.URL.Path), path.Base(r.URL.Path)) {
+	user := data.GetUser(r)
+	if !CanWrite(user, path.Dir(r.URL.Path), path.Base(r.URL.Path)) {
 		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte(fmt.Sprintf("write disallowed")))
+		w.Write([]byte(fmt.Sprintf(
+			"DELETE disallowed on %s for %s", r.URL.Path, UserName(user),
+		)))
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/files/") {
@@ -204,11 +214,6 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		q = "?" + q
 	}
 
-	if r.URL.Path == "/" {
-		getRootHandler(w, r)
-		return
-	}
-
 	// User hits us with an email link, and we set a cookie
 	if r.URL.Path == "/registration/" {
 		RegistrationHandler(w, r)
@@ -218,6 +223,11 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	user := data.GetUser(r)
 
 	if ensureThatHomeDirExists(w, r, user) {
+		return
+	}
+
+	if r.URL.Path == "/" {
+		getRootHandler(w, r)
 		return
 	}
 
@@ -256,7 +266,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 // top level routing a little ugly.
 func rootRouter(w http.ResponseWriter, r *http.Request) {
 	// XXX: dont use CORS with react:3000...
-	//   use startup's reverse proxy to make this work!
+	//   use startCMS to reverse proxy to make this work!
 	// a config file in certai dirs to allow it?
 	//if strings.HasPrefix("/files/init/ui") {
 	////w.Header().Set("Access-Control-Allow-Origin", "*")

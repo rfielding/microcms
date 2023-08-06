@@ -15,7 +15,6 @@ interface Attributes {
   LabelBg: string;
   Read: boolean;
   Write: boolean;
-  Derived?: boolean;
   Moderation?: boolean;
   ModerationLabel?: string;
 }
@@ -107,7 +106,8 @@ function convertNode(p: SNode, query: Nodes) : Node {
   td.part = p.part;
   td.matchesQuery = false;
   //td.context = p.context;
-  td.derived = a.Derived ? true : false;
+  // XXX hack
+  td.derived = ((td.label.indexOf("--")>0) ? true : false);
   td.moderation = a.Moderation ? true : false;
   td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
   td.matchesQuery = false;
@@ -162,16 +162,18 @@ function LabeledNode(node: Node) : JSX.Element {
       }
     }
     
-    var theImg = 
-    <img 
-      src={thumbnail} 
-      height="20"
-      width="auto" 
-      alt="" 
-      style={{verticalAlign:'center', border: '0px'}}
-      onMouseOver={e => (e.currentTarget.height=200)}
-      onMouseOut={e => (e.currentTarget.height=20)}
-    />;
+    var theImg = <></>;
+    if(node.id.indexOf("--")<0) {
+      theImg = <img 
+        src={thumbnail} 
+        height="20"
+        width="auto" 
+        alt="" 
+        style={{verticalAlign:'center', border: '0px'}}
+        onMouseOver={e => (e.currentTarget.height=200)}
+        onMouseOut={e => (e.currentTarget.height=20)}
+      />;
+    }
 
     var theText = 
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
