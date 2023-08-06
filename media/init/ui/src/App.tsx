@@ -168,7 +168,7 @@ function LabeledNode(node: Node) : JSX.Element {
       height="20"
       width="auto" 
       alt="" 
-      style={{verticalAlign:'center'}}
+      style={{verticalAlign:'center', border: '0px'}}
       onMouseOver={e => (e.currentTarget.height=200)}
       onMouseOut={e => (e.currentTarget.height=20)}
     />;
