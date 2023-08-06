@@ -22,14 +22,14 @@ then
   then
     # pre-upload defaults
     mkdir -p persistent/files/init/ui
-    cp media/init/permissions.rego persistent/files/init
-    cp -R media/init/ui/build/* persistent/files/init/ui
-    cp media/permissions.rego persistent/files
-    cp media/init/styles.css persistent/files/init
-    cp media/init/rootTemplate.html.templ persistent/files/init
-    cp media/init/searchTemplate.html.templ persistent/files/init
-    cp media/init/listingTemplate.html.templ persistent/files/init
-    cp media/init/defaultPermissions.rego.templ persistent/files/init
+    cp       media/permissions.rego                   persistent/files
+    cp       media/init/permissions.rego              persistent/files/init
+    cp       media/init/styles.css                    persistent/files/init
+    cp       media/init/rootTemplate.html.templ       persistent/files/init
+    cp       media/init/searchTemplate.html.templ     persistent/files/init
+    cp       media/init/listingTemplate.html.templ    persistent/files/init
+    cp       media/init/defaultPermissions.rego.templ persistent/files/init
+    cp    -R media/init/ui/build/*                    persistent/files/init/ui
   fi
   ./cmd/microcms/microcms & java -jar ./bin/tika-server-standard.jar
 fi

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+(
+export BROWSER=none
+export PUBLIC_URL="." 
+cd media/init/ui; npm start
+)

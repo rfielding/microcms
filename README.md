@@ -49,13 +49,29 @@ I might start splitting things up and moving to ElasticSearch at some point.
 ./cleanbuild # make the container #ugh! 4 minute build, because of cgo, etc.
 ```
 
-Launch the contaihner
+Launch the services in three terminals, so they can be stopped
+in an orderly way. First is the CMS itself
+
 
 ```
-./startup # launch docker compose
+# Make sure that docker is running first!
+#  ./cleanbuild is a prerequisite so that the imagee exists
+./startCMS
 ```
 
-> note that you have to run `./deployapp` in a different window because of stylesheets and templates that must be uploaded for init.
+Then start npm
+
+```
+./startNPM
+```
+
+Then start the reverse proxy in front of npm
+
+```
+./startProxy
+```
+
+> note that you have to run `./deployapps` in a different window because of stylesheets and templates that must be uploaded for init.
 
 ## API
 
@@ -75,7 +91,7 @@ Install a react app in a tarball, or a simple html app.  Install means to expect
 > All directories are created as a side-effect.  But before or after uploading file, it's a TODO to be able to upload metadata such as permissions.  In that case, upload permissions before files.
 
 ```
-./deployapp # read it to see how it uploads files
+./deployapps # read it to see how it uploads files
 ```
 
 The API is designed to be easily explored from a web browser.  A few things are not completely obvious though.
@@ -87,6 +103,11 @@ GET http://localhost:9321/files/documents/app/react-test/?listing=true   # list 
 GET http://localhost:9321/search?json=true&match=king                    # keyword search
 GET http://localhost:9321/me                                             # my attributes
 ```
+
+Or the React UI hot-loading at root on port 8080
+
+http://localhost:8080
+
 
 Upload a normal file, one by one
 

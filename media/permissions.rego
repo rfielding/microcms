@@ -2,6 +2,6 @@ package microcms
 
 default Read = true
 default Write = false
-default Label = "PUBLIC"
-default LabelBg = "green"
+default Label = "HOME"
+default LabelBg = "darkblue"
 default LabelFg = "white"

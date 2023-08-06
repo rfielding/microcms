@@ -257,6 +257,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
   
   const handleClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
     try {
+      // note: we can delete collapsed nodes to save memory
       if(node.isDir && node.id.endsWith("/")) {
         const response = await fetch(
           endpoint + node.id + "?json=true&listing=true",
@@ -330,13 +331,12 @@ function App() {
         background: 'black', 
         alignContent: 'left', 
         textAlign: 'left', 
-        width: 660, 
+        width: 660+400, 
         height: 1000, 
         flexGrow: 0, 
         overflow: 'auto' 
       }}   
     >
-
       <SearchableTreeView/>
     </div>
   );
