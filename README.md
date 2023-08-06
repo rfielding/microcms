@@ -20,6 +20,9 @@ This is an experiment in quickly creating a Content Management System (CMS), by 
 - large media files, such as multi-GB mp4s work well and efficiently
 - install tarballs of entire static apps (ie: React apps, html pages)
 - simple GET/POST to urls to alter content
+- perform filtered keyword searches
+
+![images/filteredSearch.png](images/filteredSearch.png)
 
 Note:
 
