@@ -25,11 +25,11 @@ func TestAttrs(t *testing.T) {
 		user := data.TheConfig.Users[k]
 		email := user["email"][0]
 		attrs1 := handler.GetAttrs(user, "/files/init/", "defaultPermissions.rego")
-		if attrs1["Read"] != true {
-			t.Errorf("Expected read to be true for %s, got %v", email, attrs1["Read"])
+		if attrs1.Read != true {
+			t.Errorf("Expected read to be true for %s, got %v", email, attrs1.Read)
 		}
-		if attrs1["Write"] == true && email == "danica777@gmail.com" {
-			t.Errorf("Expected write to be false for %s, got %v", email, attrs1["Write"])
+		if attrs1.Write == true && email == "danica777@gmail.com" {
+			t.Errorf("Expected write to be false for %s, got %v", email, attrs1.Write)
 		}
 		if email == "rob.fielding@gmail.com" {
 			userRob = user

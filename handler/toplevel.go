@@ -126,15 +126,13 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 		attrs := GetAttrs(user, fsPath, fsName)
 
 		// Set headers - we assume that these fields exist
-		w.Header().Add("Label", attrs["Label"].(string))
-		w.Header().Add("LabelFg", attrs["LabelFg"].(string))
-		w.Header().Add("LabelBg", attrs["LabelBg"].(string))
-		w.Header().Add("CanRead", ToBoolString(attrs["Read"].(bool)))
-		w.Header().Add("CanWrite", ToBoolString(attrs["Write"].(bool)))
+		w.Header().Add("Label", attrs.Label)
+		w.Header().Add("LabelFg", attrs.LabelFg)
+		w.Header().Add("LabelBg", attrs.LabelBg)
+		w.Header().Add("CanRead", ToBoolString(attrs.Read))
+		w.Header().Add("CanWrite", ToBoolString(attrs.Write))
 		// These are optional
-		if v, ok := attrs["ModerationLabel"].(string); ok {
-			w.Header().Add("ModerationLabel", v)
-		}
+		w.Header().Add("ModerationLabel", attrs.ModerationLabel)
 
 		if fs.IsDir(r.URL.Path) {
 			isListing := r.URL.Query().Get("listing") == "true"

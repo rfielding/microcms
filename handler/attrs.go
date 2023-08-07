@@ -2,14 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"path"
 	"strings"
 
 	"github.com/rfielding/microcms/data"
 	"github.com/rfielding/microcms/fs"
-	"github.com/rfielding/microcms/utils"
 )
 
 // Permission attributes are dynamic, and can come from parent directories.
@@ -57,7 +55,7 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 	}
 }
 
-func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interface{} {
+func GetAttrs(claims data.User, fsPath string, fsName string) *data.Attrs {
 	// always get attributes according to the original file
 	if strings.Contains(fsName, "--") {
 		//a better pattern would be:  *.*--*.*
@@ -68,21 +66,9 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 	// get overridden with calculated values
 	attrs := loadCustomAttrs(fsPath, fsName)
 	// If there is content moderation, then add it in here
-	loadModerationAttrs(fsPath, fsName, attrs)
+	attrs = loadModerationAttrs(fsPath, fsName, attrs)
 	// overwrite with calculated values
-	rattrs := getAttrsPermission(claims, fsPath, fsName, attrs)
-
-	{
-		// This is here to limit the spread of refactoring
-		// to contain the new work in this file for now.
-		j := utils.AsJsonPretty(rattrs)
-		newAttrs := make(map[string]interface{})
-		err := json.Unmarshal([]byte(j), &newAttrs)
-		if err != nil {
-			panic(fmt.Sprintf("cannot unmarshal attrs: %v", err))
-		}
-		return newAttrs
-	}
+	return getAttrsPermission(claims, fsPath, fsName, attrs)
 }
 
 type Moderation struct {
@@ -93,14 +79,14 @@ type ModerationData struct {
 	ModerationLabels []Moderation `json:"ModerationLabels"`
 }
 
-func loadModerationAttrs(fsPath string, fsName string, attrs *data.Attrs) {
+func loadModerationAttrs(fsPath string, fsName string, attrs *data.Attrs) *data.Attrs {
 	mods := ModerationData{}
 	moderationFileName := fsPath + fsName + "--moderation.json"
 	if fs.IsExist(moderationFileName) {
 		jf, err := fs.ReadFile(moderationFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", moderationFileName, err)
-			return
+			return attrs
 		}
 		err = json.Unmarshal(jf, &mods)
 		if err != nil {
@@ -111,6 +97,7 @@ func loadModerationAttrs(fsPath string, fsName string, attrs *data.Attrs) {
 			attrs.ModerationLabel = mods.ModerationLabels[0].Name
 		}
 	}
+	return attrs
 }
 
 func loadCustomAttrs(fsPath string, fsName string) *data.Attrs {

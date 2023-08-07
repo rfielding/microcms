@@ -72,8 +72,8 @@ func CanWrite(user data.User, fsPath string, fsName string) bool {
 	if user != nil {
 		attrs := GetAttrs(user, fsPath, fsName)
 		if attrs != nil {
-			canWrite, ok := attrs["Write"].(bool)
-			if ok && canWrite {
+			canWrite := attrs.Write
+			if canWrite {
 				return true
 			}
 		}
@@ -85,8 +85,8 @@ func CanRead(user data.User, fsPath string, fsName string) bool {
 	if user != nil {
 		attrs := GetAttrs(user, fsPath, fsName)
 		if attrs != nil {
-			canRead, ok := attrs["Read"].(bool)
-			if ok && canRead {
+			canRead := attrs.Read
+			if canRead {
 				return true
 			}
 		}

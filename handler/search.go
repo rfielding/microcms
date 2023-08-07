@@ -46,8 +46,8 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 			highlighted = ""
 		}
 		attrs := GetAttrs(user, path, name)
-		canRead, ok := attrs["Read"].(bool)
-		if ok && canRead {
+		canRead := attrs.Read
+		if canRead {
 			listing.Children = append(listing.Children, data.Node{
 				Path:       path,
 				Name:       name,
