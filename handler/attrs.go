@@ -2,18 +2,20 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"path"
 	"strings"
 
 	"github.com/rfielding/microcms/data"
 	"github.com/rfielding/microcms/fs"
+	"github.com/rfielding/microcms/utils"
 )
 
 // Permission attributes are dynamic, and can come from parent directories.
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
-func getAttrsPermission(claims data.User, fsPath string, fsName string, initial map[string]interface{}) map[string]interface{} {
+func getAttrsPermission(claims data.User, fsPath string, fsName string, initial *data.Attrs) *data.Attrs {
 	// Try exact file if fName is not blank
 	regoFile := fsPath + "permissions.rego"
 	if fsName != "" {
@@ -32,9 +34,11 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 			if err != nil {
 				log.Printf("Failed to parse rego %s!: %v\n%s", regoFile, err, regoString)
 			}
-			for k, v := range calculation {
-				initial[k] = v
-			}
+			initial.Read = calculation.Read
+			initial.Write = calculation.Write
+			initial.Label = calculation.Label
+			initial.LabelFg = calculation.LabelFg
+			initial.LabelBg = calculation.LabelBg
 		}
 		return initial
 	} else {
@@ -66,7 +70,19 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 	// If there is content moderation, then add it in here
 	loadModerationAttrs(fsPath, fsName, attrs)
 	// overwrite with calculated values
-	return getAttrsPermission(claims, fsPath, fsName, attrs)
+	rattrs := getAttrsPermission(claims, fsPath, fsName, attrs)
+
+	{
+		// This is here to limit the spread of refactoring
+		// to contain the new work in this file for now.
+		j := utils.AsJsonPretty(rattrs)
+		newAttrs := make(map[string]interface{})
+		err := json.Unmarshal([]byte(j), &newAttrs)
+		if err != nil {
+			panic(fmt.Sprintf("cannot unmarshal attrs: %v", err))
+		}
+		return newAttrs
+	}
 }
 
 type Moderation struct {
@@ -77,7 +93,7 @@ type ModerationData struct {
 	ModerationLabels []Moderation `json:"ModerationLabels"`
 }
 
-func loadModerationAttrs(fsPath string, fsName string, attrs map[string]interface{}) {
+func loadModerationAttrs(fsPath string, fsName string, attrs *data.Attrs) {
 	mods := ModerationData{}
 	moderationFileName := fsPath + fsName + "--moderation.json"
 	if fs.IsExist(moderationFileName) {
@@ -91,15 +107,14 @@ func loadModerationAttrs(fsPath string, fsName string, attrs map[string]interfac
 			log.Printf("Failed to parse json %s!: %v", moderationFileName, err)
 		}
 		if len(mods.ModerationLabels) > 0 {
-			attrs["Moderation"] = true
-			attrs["ModerationLabel"] = mods.ModerationLabels[0].Name
+			attrs.Moderation = true
+			attrs.ModerationLabel = mods.ModerationLabels[0].Name
 		}
 	}
 }
 
-func loadCustomAttrs(fsPath string, fsName string) map[string]interface{} {
-	attrs := make(map[string]interface{})
-
+func loadCustomAttrs(fsPath string, fsName string) *data.Attrs {
+	attrs := data.Attrs{}
 	customFileName := fsPath + fsName + "--custom.json"
 	if fs.IsExist(customFileName) {
 		jf, err := fs.ReadFile(customFileName)
@@ -112,5 +127,5 @@ func loadCustomAttrs(fsPath string, fsName string) map[string]interface{} {
 			}
 		}
 	}
-	return attrs
+	return &attrs
 }

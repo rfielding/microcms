@@ -37,3 +37,14 @@ func GetUser(r *http.Request) User {
 	}
 	return TheConfig.Users[UserSecret(cookie.Value)]
 }
+
+type Attrs struct {
+	Read            bool        `json:"Read"`
+	Write           bool        `json:"Write"`
+	Label           string      `json:"Label"`
+	LabelFg         string      `json:"LabelFg"`
+	LabelBg         string      `json:"LabelBg"`
+	ModerationLabel string      `json:"ModerationLabel"`
+	Moderation      bool        `json:"Moderation"`
+	Custom          interface{} `json:"custom,omitempty"`
+}

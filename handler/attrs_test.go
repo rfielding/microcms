@@ -1,11 +1,14 @@
 package handler_test
 
 import (
+	"log"
+	"os"
 	"testing"
 
 	"github.com/rfielding/microcms/data"
 	"github.com/rfielding/microcms/fs"
 	"github.com/rfielding/microcms/handler"
+	"github.com/rfielding/microcms/utils"
 )
 
 func TestAttrs(t *testing.T) {
@@ -16,6 +19,8 @@ func TestAttrs(t *testing.T) {
 	handler.TemplatesInit()
 
 	// Test basic attribute calculations
+	var userRob data.User
+	var userDanica data.User
 	for k := range data.TheConfig.Users {
 		user := data.TheConfig.Users[k]
 		email := user["email"][0]
@@ -26,5 +31,34 @@ func TestAttrs(t *testing.T) {
 		if attrs1["Write"] == true && email == "danica777@gmail.com" {
 			t.Errorf("Expected write to be false for %s, got %v", email, attrs1["Write"])
 		}
+		if email == "rob.fielding@gmail.com" {
+			userRob = user
+		}
+		if email == "danica777@gmail.com" {
+			userDanica = user
+		}
 	}
+	_ = userDanica
+	attrsCat := handler.GetAttrs(
+		userRob,
+		"/files/rob.fielding@gmail.com/documents/",
+		"ktt.jpg",
+	)
+	log.Printf("attrsCat: %s", utils.AsJson(attrsCat))
+
+	a1 := handler.GetAttrs(
+		userRob,
+		"/files/rob.fielding@gmail.com/documents/",
+		"nm.jpg",
+	)
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
+		log.Printf("a1: %s", utils.AsJson(a1))
+		a2 := handler.GetAttrs(
+			userRob,
+			"/files/rob.fielding@gmail.com/documents/",
+			"nm.jpg--thumbnail.jpg",
+		)
+		log.Printf("a2: %s", utils.AsJson(a2))
+	}
+
 }
