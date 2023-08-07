@@ -69,29 +69,30 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 	return getAttrsPermission(claims, fsPath, fsName, attrs)
 }
 
+type Moderation struct {
+	Name string `json:"Name"`
+}
+
+type ModerationData struct {
+	ModerationLabels []Moderation `json:"ModerationLabels"`
+}
+
 func loadModerationAttrs(fsPath string, fsName string, attrs map[string]interface{}) {
-	mods := make(map[string]interface{})
+	mods := ModerationData{}
 	moderationFileName := fsPath + fsName + "--moderation.json"
 	if fs.IsExist(moderationFileName) {
 		jf, err := fs.ReadFile(moderationFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", moderationFileName, err)
-		} else {
-			err := json.Unmarshal(jf, &mods)
-			if err != nil {
-				log.Printf("Failed to parse json %s!: %v", moderationFileName, err)
-			}
-			modsList, ok := mods["ModerationLabels"].([]interface{})
-			if ok && len(modsList) > 0 {
-				attrs["Moderation"] = true
-				modsObj, ok := modsList[0].(map[string]interface{})
-				if ok {
-					val, ok := modsObj["Name"].(string)
-					if ok {
-						attrs["ModerationLabel"] = val
-					}
-				}
-			}
+			return
+		}
+		err = json.Unmarshal(jf, &mods)
+		if err != nil {
+			log.Printf("Failed to parse json %s!: %v", moderationFileName, err)
+		}
+		if len(mods.ModerationLabels) > 0 {
+			attrs["Moderation"] = true
+			attrs["ModerationLabel"] = mods.ModerationLabels[0].Name
 		}
 	}
 }

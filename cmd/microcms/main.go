@@ -3,7 +3,7 @@ package main
 import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rfielding/microcms/db"
-	handler "github.com/rfielding/microcms/handler"
+	"github.com/rfielding/microcms/handler"
 	"github.com/rfielding/microcms/utils"
 )
 
@@ -20,6 +20,6 @@ func main() {
 	dbCleanup := db.Setup()
 	defer dbCleanup()
 
-	// this hangs unti the server dies
+	// this hangs until the server dies
 	handler.Setup()
 }
