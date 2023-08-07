@@ -11,7 +11,8 @@ import (
 
 func main() {
 	// In particular, load up the users and config
-	handler.LoadConfig()
+	handler.LoadConfig("./config.json")
+	handler.TemplatesInit()
 
 	handler.DocExtractor = utils.Getenv("DOC_EXTRACTOR", "http://localhost:9998/tika")
 

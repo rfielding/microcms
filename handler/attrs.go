@@ -60,33 +60,26 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 		fNameOriginal := fsName[0:strings.LastIndex(fsName, "--")]
 		fsName = fNameOriginal
 	}
-	attrs := make(map[string]interface{})
-
 	// Start parsing attributes with a custom set of values that
 	// get overridden with calculated values
-	customFileName := fsPath + fsName + "--custom.json"
-	if fs.IsExist(customFileName) {
-		jf, err := fs.ReadFile(customFileName)
-		if err != nil {
-			log.Printf("Failed to open %s!: %v", customFileName, err)
-		} else {
-			err := json.Unmarshal(jf, &attrs)
-			if err != nil {
-				log.Printf("Failed to parse json %s!: %v", customFileName, err)
-			}
-		}
-	}
+	attrs := loadCustomAttrs(fsPath, fsName)
 	// If there is content moderation, then add it in here
+	loadModerationAttrs(fsPath, fsName, attrs)
+	// overwrite with calculated values
+	return getAttrsPermission(claims, fsPath, fsName, attrs)
+}
+
+func loadModerationAttrs(fsPath string, fsName string, attrs map[string]interface{}) {
 	mods := make(map[string]interface{})
 	moderationFileName := fsPath + fsName + "--moderation.json"
 	if fs.IsExist(moderationFileName) {
 		jf, err := fs.ReadFile(moderationFileName)
 		if err != nil {
-			log.Printf("Failed to open %s!: %v", customFileName, err)
+			log.Printf("Failed to open %s!: %v", moderationFileName, err)
 		} else {
 			err := json.Unmarshal(jf, &mods)
 			if err != nil {
-				log.Printf("Failed to parse json %s!: %v", customFileName, err)
+				log.Printf("Failed to parse json %s!: %v", moderationFileName, err)
 			}
 			modsList, ok := mods["ModerationLabels"].([]interface{})
 			if ok && len(modsList) > 0 {
@@ -101,6 +94,22 @@ func GetAttrs(claims data.User, fsPath string, fsName string) map[string]interfa
 			}
 		}
 	}
-	// overwrite with calculated values
-	return getAttrsPermission(claims, fsPath, fsName, attrs)
+}
+
+func loadCustomAttrs(fsPath string, fsName string) map[string]interface{} {
+	attrs := make(map[string]interface{})
+
+	customFileName := fsPath + fsName + "--custom.json"
+	if fs.IsExist(customFileName) {
+		jf, err := fs.ReadFile(customFileName)
+		if err != nil {
+			log.Printf("Failed to open %s!: %v", customFileName, err)
+		} else {
+			err := json.Unmarshal(jf, &attrs)
+			if err != nil {
+				log.Printf("Failed to parse json %s!: %v", customFileName, err)
+			}
+		}
+	}
+	return attrs
 }

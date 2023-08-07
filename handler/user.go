@@ -50,8 +50,8 @@ func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "..", http.StatusTemporaryRedirect)
 }
 
-func LoadConfig() {
-	f, err := os.ReadFile("./config.json")
+func LoadConfig(cfg string) {
+	f, err := os.ReadFile(cfg)
 	utils.CheckErr(err, "Could not open config file")
 	err = json.Unmarshal(f, &data.TheConfig)
 	utils.CheckErr(err, "Could not parse config file")
