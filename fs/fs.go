@@ -12,7 +12,7 @@ import (
  and to remove all the raw stat calls.
 */
 
-const At = "./persistent"
+var At = "./persistent"
 
 func Open(name string) (*os.File, error) {
 	f, err := os.Open(At + name)
