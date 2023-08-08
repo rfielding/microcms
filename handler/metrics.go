@@ -114,7 +114,9 @@ func (m Metric) End() {
 func (c MetricsCollector) Stats() MetricStats {
 	r := make(chan MetricStats)
 	c.read <- r
-	return <-r
+	v := <-r
+	close(r)
+	return v
 }
 
 func GetMetricsHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) bool {
