@@ -64,6 +64,9 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) 
 	}
 	if strings.HasPrefix(r.URL.Path, "/files/") {
 		if fs.IsExist(r.URL.Path) {
+			t := MetricsDelete.Task()
+			t.BytesWrite += fs.Size(r.URL.Path)
+			defer t.End()
 			err := fs.Remove(r.URL.Path)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -194,6 +197,12 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 			return true
 		}
 
+		if fs.IsExist(r.URL.Path) {
+			t := MetricsGet.Task()
+			t.BytesWrite += fs.Size(r.URL.Path)
+			defer t.End()
+		}
+
 		// Serve the file we were looking for, possibly with modified URL,
 		// set mime types, etc. Special headers could have been set too
 		FileServer.ServeHTTP(w, r)
@@ -257,6 +266,11 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		}
 	}
 
+	if strings.HasPrefix(r.URL.Path, "/metrics") {
+		GetMetricsHandler(w, r, pathTokens)
+		return
+	}
+
 	if handleFiles(w, r, user) {
 		return
 	}
@@ -267,21 +281,21 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 // Note that all http handling MUST be tail calls. That makes
 // top level routing a little ugly.
 func rootRouter(w http.ResponseWriter, r *http.Request) {
-	// XXX: dont use CORS with react:3000...
-	//   use startCMS to reverse proxy to make this work!
-	// a config file in certai dirs to allow it?
-	//if strings.HasPrefix("/files/init/ui") {
-	////w.Header().Set("Access-Control-Allow-Origin", "*")
-	//}
 	pathTokens := strings.Split(r.URL.Path, "/")
 	switch r.Method {
 	case http.MethodGet:
+		task := MetricsGet.Task()
+		defer task.End()
 		getHandler(w, r, pathTokens)
 		return
 	case http.MethodPost:
+		task := MetricsPost.Task()
+		defer task.End()
 		postHandler(w, r, pathTokens)
 		return
 	case http.MethodDelete:
+		task := MetricsDelete.Task()
+		defer task.End()
 		deleteHandler(w, r, pathTokens)
 		return
 	}

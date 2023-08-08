@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/rfielding/microcms/data"
@@ -254,6 +255,17 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 
 	if ensureThatHomeDirExists(w, r, user) {
 		return
+	}
+
+	if cl := r.Header.Get("Content-Length"); cl != "" {
+		if fs.IsExist(r.URL.Path) {
+			n, err := strconv.Atoi(cl)
+			if err == nil {
+				t := MetricsGet.Task()
+				t.BytesRead += int64(n)
+				defer t.End()
+			}
+		}
 	}
 
 	q := r.URL.Query()

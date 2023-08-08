@@ -18,6 +18,17 @@ services:
     volumes:
       - ./persistent:/root/persistent   # persistent data, which you can wipe before startup
       - ./config.json:/root/config.json # the user database
+
+  prometheus:
+    container_name: prometheus
+    hostname: prometheus
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090  
+
+
 networks:
   mesh: {}
     

@@ -10,5 +10,5 @@ export GSGID=1000
   )
   go mod tidy
   go mod vendor
-  docker-compose build
+  docker build -t microcms:latest .
 )

@@ -11,6 +11,18 @@ import (
 	"github.com/rfielding/microcms/utils"
 )
 
+func TestMetrics(t *testing.T) {
+	c := handler.NewMetricsCollector("test")
+	m := c.Task()
+	m.BytesRead += 20
+	m.BytesWrite += 33
+	m.End()
+	s := c.Stats()
+	t.Logf("Stats: %s", utils.AsJson(s))
+
+	handler.GetMetricsWriter(os.Stdout)
+}
+
 func TestAttrs(t *testing.T) {
 	// Use the persistent mount as the test fixture
 	// We assume that the app was brought up and ./deployapps
