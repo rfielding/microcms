@@ -2,10 +2,6 @@ version: '3.2'
 
 services:
   microcms:
-    networks:
-      mesh:
-        aliases:
-          - microcms
     image: microcms:latest
     user: 1000:1000
     ports:
@@ -18,15 +14,18 @@ services:
     volumes:
       - ./persistent:/root/persistent   # persistent data, which you can wipe before startup
       - ./config.json:/root/config.json # the user database
+    networks:
+      - mesh
 
   prometheus:
-    container_name: prometheus
-    hostname: prometheus
     image: prom/prometheus
+    command: --config.file=/etc/prometheus/prometheus.yml --log.level=debug
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - 9090:9090  
+    networks:
+      - mesh
 
 
 networks:

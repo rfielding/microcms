@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/rfielding/microcms/data"
 	"github.com/rfielding/microcms/fs"
@@ -15,12 +16,13 @@ func TestMetrics(t *testing.T) {
 	c := handler.NewMetricsCollector("test")
 	m := c.Task()
 	m.BytesRead += 20
+	time.Sleep(1)
 	m.BytesWrite += 33
 	m.End()
 	s := c.Stats()
 	t.Logf("Stats: %s", utils.AsJson(s))
 
-	handler.GetMetricsWriter(os.Stdout)
+	handler.GetMetricsWriter(os.Stdout, c)
 }
 
 func TestAttrs(t *testing.T) {

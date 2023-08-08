@@ -116,7 +116,9 @@ func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.U
 			}
 		}
 	} else {
-		log.Printf("Welcome anonymous user")
+		if !strings.HasPrefix(r.URL.Path, "/metrics") {
+			log.Printf("Welcome anonymous user")
+		}
 	}
 	return false
 }
