@@ -76,6 +76,9 @@ func NewMetricsCollector(name string) MetricsCollector {
 				}
 			}
 		}
+		close(load1)
+		close(read)
+		close(end)
 	}()
 	return MetricsCollector{
 		Name:  name,
