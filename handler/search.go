@@ -22,7 +22,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		msg := fmt.Sprintf("query %s: %v", match, err)
 		log.Printf("ERR %s", msg)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(msg))
+		writeTimed(w, []byte(msg))
 		return
 	}
 
@@ -61,7 +61,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 
 	if inJson {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(utils.AsJsonPretty(listing)))
+		writeTimed(w, []byte(utils.AsJsonPretty(listing)))
 	} else {
 		w.Header().Set("Content-Type", "text/html")
 		err := compiledSearchTemplate.Execute(w, listing)
@@ -69,7 +69,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 			msg := fmt.Sprintf("Unable to execute searchTemplate: %v", err)
 			log.Printf("ERR %s", msg)
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
+			writeTimed(w, []byte(msg))
 			return
 		}
 	}

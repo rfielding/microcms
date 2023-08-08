@@ -195,7 +195,7 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 		if strings.HasSuffix(r.URL.Path, "--attributes.json") {
 			fsPath := path.Dir(r.URL.Path) + "/"
 			fsName := path.Base(r.URL.Path)
-			w.Write([]byte(utils.AsJson(GetAttrs(user, fsPath, fsName))))
+			writeTimed(w, []byte(utils.AsJson(GetAttrs(user, fsPath, fsName))))
 			return true
 		}
 
@@ -211,6 +211,13 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 		return true
 	}
 	return false
+}
+
+func writeTimed(w http.ResponseWriter, j []byte) {
+	t := MetricsGet.Task()
+	t.BytesWrite += int64(len(j))
+	defer t.End()
+	w.Write(j)
 }
 
 // Use the standard file serving of Go, because media behavior

@@ -22,7 +22,7 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 				{Name: "files", IsDir: true},
 			},
 		}
-		w.Write([]byte(utils.AsJsonPretty(listing)))
+		writeTimed(w, []byte(utils.AsJsonPretty(listing)))
 	} else {
 		w.Header().Set("Content-Type", "text/html")
 		err := compiledRootTemplate.Execute(w, nil)
@@ -30,7 +30,7 @@ func getRootHandler(w http.ResponseWriter, r *http.Request) {
 			msg := fmt.Sprintf("unable to execute rootTemplate: %v", err)
 			log.Printf("ERR %s", msg)
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(msg))
+			writeTimed(w, []byte(msg))
 			return
 		}
 	}
@@ -45,7 +45,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 		msg := fmt.Sprintf("readdir %s: %v", fsPath, err)
 		log.Printf("ERR %s", msg)
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(msg))
+		writeTimed(w, []byte(msg))
 		return
 	}
 	sort.Slice(names, func(i, j int) bool {
@@ -83,7 +83,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 	inJson := q.Get("json") == "true"
 	if inJson {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(utils.AsJsonPretty(listing)))
+		writeTimed(w, []byte(utils.AsJsonPretty(listing)))
 		return
 	} else {
 		w.Header().Set("Content-Type", "text/html")

@@ -258,13 +258,11 @@ func postFilesHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	}
 
 	if cl := r.Header.Get("Content-Length"); cl != "" {
-		if fs.IsExist(r.URL.Path) {
-			n, err := strconv.Atoi(cl)
-			if err == nil {
-				t := MetricsGet.Task()
-				t.BytesRead += int64(n)
-				defer t.End()
-			}
+		n, err := strconv.Atoi(cl)
+		if err == nil {
+			t := MetricsGet.Task()
+			t.BytesRead += int64(n)
+			defer t.End()
 		}
 	}
 
