@@ -65,7 +65,7 @@ type Hits = {
 
 type HideableNodes = {
   nodes : Nodes;
-  hidden : boolean;
+  filtered : boolean;
 };
 
 type Endpoints = {
@@ -260,10 +260,10 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
 
 function SearchableTreeView() : JSX.Element {
   const [expanded, setExpanded] = useState<string[]>([]);
-  const [hideData, setHideData] = useState<boolean>(false);
+  const [filteredData, setFilteredData] = useState<boolean>(false);
   const [searchData, setSearchData] = useState<Hits>({});
   const [hideableData, setHideableData] = useState<HideableNodes>({
-    hidden: false,
+    filtered: false,
     nodes: {
       "/files/": {
         id:"/files/",
@@ -302,7 +302,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       var newSearchData = convertSearchState(p, existingSearchData);
       setSearchData({...newSearchData});
       matchTreeState(hideableData.nodes,newSearchData);
-      setHideableData({...{nodes: (hideableData.nodes), hidden: hideData}});
+      setHideableData({...{nodes: (hideableData.nodes), filtered: filteredData}});
     }
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -320,7 +320,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
         const p = await response.json() as SNode;
         var newTreeData = convertTreeState(p, hideableData.nodes);
         matchTreeState(newTreeData,searchData);
-        var newHideableData = {nodes: newTreeData, hidden: hideData};
+        var newHideableData = {nodes: newTreeData, filtered: filteredData};
         setHideableData({...newHideableData});
       }
     } catch (error) {
@@ -339,9 +339,9 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
   const detectSelect = async (e: React.SyntheticEvent<Element,Event>) => {
     try {
       console.log("select");
-      var newHideData = !hideData;
-      setHideData(newHideData);
-      var newHideableData = {nodes: hideableData.nodes, hidden: !hideData};
+      var newHideData = !filteredData;
+      setFilteredData(newHideData);
+      var newHideableData = {nodes: hideableData.nodes, filtered: !filteredData};
       setHideableData({...newHideableData});
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -350,7 +350,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
   var renderTree = function(nodes : Nodes, id:string) : JSX.Element {
     var matches = nodes[id].matchesQuery? true : false;;
-    var hidden = !matches && hideData;
+    var hidden = !matches && filteredData;
     return (
       <TreeItem 
         key={id}
