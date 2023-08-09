@@ -41,7 +41,7 @@ interface Node {
   canWrite: boolean;
   matchesQuery: boolean;
   part?: number;
-  //context?: string;
+  context?: string;
   derived?: boolean;
   moderation?: boolean;
   moderationLabel?: string;
@@ -51,6 +51,17 @@ interface Node {
 type Nodes = {
   [id: string]: Node;
 };
+
+
+interface Hit {
+  id: string;
+  children: string[];
+}
+
+type Hits = {
+  [id: string]: Hit;
+}
+
 
 type HideableNodes = {
   nodes : Nodes;
@@ -68,7 +79,7 @@ var endpoint = "";
 
 
 
-function doesMatchQuery(node: Node, query: Nodes) : boolean {
+function doesMatchQuery(node: Node, query: Hits) : boolean {
   // cant match empty
   if(Object.keys(query).length === 0) {
     return false;
@@ -115,7 +126,7 @@ function convertNode(p: SNode) : Node {
   return td;
 }
 
-function matchTreeState(nodes: Nodes, query: Nodes) {
+function matchTreeState(nodes: Nodes, query: Hits) {
   Object.keys(nodes).forEach(function(k) {
     nodes[k].matchesQuery = doesMatchQuery(nodes[k],query);
   });
@@ -128,6 +139,21 @@ function convertTreeState(p: SNode, nodes: Nodes):Nodes {
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
       var c = convertNode(p.children[i])
+      nodes[c.id] = c;
+      nodes[n.id].children.push(c.id);
+    }
+  }
+  return nodes;
+}
+
+function convertSearchState(p: SNode, nodes: Hits):Hits {
+  var n = convertNode(p);
+  nodes[n.id] = n;
+  if(p.isDir && p.children) {
+    for(var i=0; i<p.children.length; i++) {
+      var c = {
+        id: p.children[i].path + p.children[i].name,
+      } as Hit;
       nodes[c.id] = c;
       nodes[n.id].children.push(c.id);
     }
@@ -212,7 +238,7 @@ function LabeledNode(node: Node) : JSX.Element {
 
 function SearchableTreeView() : JSX.Element {
   const [hideData, setHideData] = useState<boolean>(false);
-  const [searchData, setSearchData] = useState<Nodes>({});
+  const [searchData, setSearchData] = useState<Hits>({});
   const [hideableData, setHideableData] = useState<HideableNodes>({
     hidden: false,
     nodes: {
@@ -249,8 +275,8 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
         {"credentials": "same-origin"},
       );
       const p = await response.json() as SNode;
-      var existingSearchData = {} as Nodes;
-      var newSearchData = convertTreeState(p, existingSearchData);
+      var existingSearchData = {} as Hits;
+      var newSearchData = convertSearchState(p, existingSearchData);
       setSearchData({...newSearchData});
       matchTreeState(hideableData.nodes,newSearchData);
       setHideableData({...{nodes: (hideableData.nodes), hidden: hideData}});
