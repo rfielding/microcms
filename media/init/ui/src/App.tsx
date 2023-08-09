@@ -326,6 +326,14 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       console.error('Error fetching data:', error);
     }
   };
+
+  const handleIconClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
+    handleClick(e,node);
+  };
+
+  const handleLabelClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
+    handleClick(e,node);
+  };
   
   const detectSelect = async (e: React.SyntheticEvent<Element,Event>) => {
     try {
@@ -344,11 +352,12 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
     var hidden = !matches && hideData;
     return (
       <TreeItem 
+        key={id}
         nodeId={id}
         hidden={hidden} 
         label={LabeledNode(nodes, nodes[id])}
-        onIconClick={e => handleClick(e,nodes[id])}
-        onLabelClick={e => handleClick(e,nodes[id])}
+        onIconClick={e => handleIconClick(e,nodes[id])}
+        onLabelClick={e => handleLabelClick(e,nodes[id])}
       >
         {Array.isArray(nodes[id].children) ? nodes[id].children.map((v) => renderTree(nodes,v)) : null}
       </TreeItem>
