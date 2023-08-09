@@ -98,6 +98,13 @@ function doesMatchQuery(node: Node, query: Hits) : boolean {
   return answer;
 }
 
+function convertHit(p: SNode) : Hit {
+  var td = {} as Hit;
+  td.id = p.path + p.name;
+  td.children = [];
+  return td;
+}
+
 // Maybe make our json match Material UI's TreeView
 function convertNode(p: SNode) : Node {
   var td = {} as Node;
@@ -147,13 +154,11 @@ function convertTreeState(p: SNode, nodes: Nodes):Nodes {
 }
 
 function convertSearchState(p: SNode, nodes: Hits):Hits {
-  var n = convertNode(p);
+  var n = convertHit(p);
   nodes[n.id] = n;
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
-      var c = {
-        id: p.children[i].path + p.children[i].name,
-      } as Hit;
+      var c = convertHit(p.children[i]);
       nodes[c.id] = c;
       nodes[n.id].children.push(c.id);
     }
