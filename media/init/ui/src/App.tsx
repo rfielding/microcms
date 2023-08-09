@@ -40,6 +40,7 @@ interface Node {
   canRead: boolean;
   canWrite: boolean;
   matchesQuery: boolean;
+  size?: number;
   part?: number;
   context?: string;
   derived?: boolean;
@@ -62,22 +63,21 @@ type Hits = {
   [id: string]: Hit;
 }
 
-
 type HideableNodes = {
   nodes : Nodes;
   hidden : boolean;
 };
 
+type Endpoints = {
+  [id: string]: string;
+}
+
+var endpoints : Endpoints;
 
 
-
-// this works when we can overlay over our service.
-// should be configurable with a file actually written 
-// into this directory
-var endpoint = "";
-
-
-
+function getEndpoint(name: string) : string {
+  return endpoints[name];
+}
 
 function doesMatchQuery(node: Node, query: Hits) : boolean {
   // cant match empty
@@ -122,6 +122,7 @@ function convertNode(p: SNode) : Node {
   td.canRead = a.Read;
   td.canWrite = a.Write;
   td.part = p.part;
+  td.size = p.size;
   td.matchesQuery = false;
   //td.context = p.context;
   // XXX hack
@@ -166,6 +167,17 @@ function convertSearchState(p: SNode, nodes: Hits):Hits {
   return nodes;
 }
 
+function asSize(size: number) : string {
+  var s = size;
+  var units = ["B","KB","MB","GB","TB","PB","EB","ZB","YB"];
+  var i = 0;
+  while(s>1024) {
+    s = s/1024;
+    i++;
+  }
+  return s.toFixed(2) + " " + units[i];
+}
+
 function LabeledNode(node: Node) : JSX.Element {
     var thumbnail = node.id+"--thumbnail.png";
     var color="white";
@@ -202,10 +214,15 @@ function LabeledNode(node: Node) : JSX.Element {
       />;
     }
 
+    var nodeSize = asSize(node.size ? node.size : 0);
+    
     var theText = 
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
       {node.label}&nbsp;
       {note}
+      &nbsp;
+      ({nodeSize})
+      &nbsp;
       {theImg}
     </a>
 
@@ -276,7 +293,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       }
       // Clean the tree before the query
       const response = await fetch(
-        endpoint + "/search"+searchAt+"?json=true&hideContent&match="+keywords,
+        getEndpoint("microcms") + "/search"+searchAt+"?json=true&hideContent&match="+keywords,
         {"credentials": "same-origin"},
       );
       const p = await response.json() as SNode;
@@ -296,7 +313,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       // note: we can delete collapsed nodes to save memory
       if(node.isDir && node.id.endsWith("/")) {
         const response = await fetch(
-          endpoint + node.id + "?json=true&listing=true",
+          getEndpoint("microcms") + node.id + "?json=true&listing=true",
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
@@ -357,6 +374,14 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
 
 function App() {
+  const fetchIt = async () => {
+    const response = await fetch(
+      "./endpoints.json",
+      {"credentials": "same-origin"},
+    );      
+    endpoints = await response.json() as Endpoints;
+  };
+  fetchIt();  
   return (
     <div 
       className="App" 
