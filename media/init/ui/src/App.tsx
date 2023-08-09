@@ -251,7 +251,6 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       const p = await response.json() as SNode;
       var existingSearchData = {} as Nodes;
       var newSearchData = convertTreeState(p, existingSearchData);
-      matchTreeState(newSearchData,{});
       matchTreeState(hideableData.nodes,newSearchData);
       setSearchData({...newSearchData});
       setHideableData({...{nodes: (hideableData.nodes), hidden: hideData}});
