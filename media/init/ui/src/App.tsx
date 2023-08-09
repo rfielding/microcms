@@ -259,6 +259,7 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
 
 
 function SearchableTreeView() : JSX.Element {
+  const [expanded, setExpanded] = useState<string[]>([]);
   const [hideData, setHideData] = useState<boolean>(false);
   const [searchData, setSearchData] = useState<Hits>({});
   const [hideableData, setHideableData] = useState<HideableNodes>({
@@ -268,9 +269,9 @@ function SearchableTreeView() : JSX.Element {
         id:"/files/",
         label:"files/",
         isDir:true,
-        securityLabel:"PUBLIC",
+        securityLabel:"HOME",
         securityFg:"white",
-        securityBg:"green",
+        securityBg:"darkblue",
         matchesQuery: false, 
         canRead:true,
         canWrite:false,
@@ -308,7 +309,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
   }
   };
   
-  const handleClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
+  const loadTreeItem = async (node: Node) => {
     try {
       // note: we can delete collapsed nodes to save memory
       if(node.isDir && node.id.endsWith("/")) {
@@ -328,11 +329,11 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
   };
 
   const handleIconClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
-    handleClick(e,node);
+    loadTreeItem(node);
   };
 
   const handleLabelClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
-    handleClick(e,node);
+    loadTreeItem(node);
   };
   
   const detectSelect = async (e: React.SyntheticEvent<Element,Event>) => {
