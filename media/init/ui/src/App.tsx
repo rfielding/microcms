@@ -116,7 +116,6 @@ function convertNode(p: SNode) : Node {
 }
 
 function matchTreeState(nodes: Nodes, query: Nodes):Nodes {
-  var newTreeData = Object.assign({}, nodes) as Nodes;
   Object.keys(nodes).forEach(function(k) {
     nodes[k].matchesQuery = doesMatchQuery(nodes[k],query);
   });
