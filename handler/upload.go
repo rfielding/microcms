@@ -2,9 +2,11 @@ package handler
 
 import (
 	"archive/tar"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -58,6 +60,31 @@ func postFileHandler(
 			"POST disallowed on %s for %s",
 			fullName, UserName(user),
 		)
+	}
+
+	// reject requests that would get this user stuck in fixing it
+	if fsName == "permissions.rego" || strings.HasSuffix(fsName, "--permissions.rego") {
+		proposedUpload, err := ioutil.ReadAll(stream)
+		if err != nil {
+			return http.StatusForbidden, fmt.Errorf(
+				"Could not read proposed permissions.rego: %v",
+				err,
+			)
+		}
+		proposedAttrs, err := CalculateRego(user, string(proposedUpload))
+		if err != nil {
+			return http.StatusForbidden, fmt.Errorf(
+				"Could not calculate proposed permissions.rego: %v",
+				err,
+			)
+		}
+		if !proposedAttrs.Write || !proposedAttrs.Read {
+			return http.StatusForbidden, fmt.Errorf(
+				"Proposed permissions.rego does not allow write and read: %v",
+				proposedAttrs,
+			)
+		}
+		stream = bytes.NewReader(proposedUpload)
 	}
 
 	err := fs.MkdirAll(path.Dir(fullName), 0777)
