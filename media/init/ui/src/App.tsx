@@ -115,11 +115,10 @@ function convertNode(p: SNode) : Node {
   return td;
 }
 
-function matchTreeState(nodes: Nodes, query: Nodes):Nodes {
+function matchTreeState(nodes: Nodes, query: Nodes) {
   Object.keys(nodes).forEach(function(k) {
     nodes[k].matchesQuery = doesMatchQuery(nodes[k],query);
   });
-  return nodes;
 }
 
 // Update the tree state
@@ -251,10 +250,11 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       );
       const p = await response.json() as SNode;
       var existingSearchData = {} as Nodes;
-      var newSearchData = matchTreeState(convertTreeState(p, existingSearchData),{});
-      var newTreeData = matchTreeState(hideableData.nodes,newSearchData);
+      var newSearchData = convertTreeState(p, existingSearchData);
+      matchTreeState(newSearchData,{});
+      matchTreeState(hideableData.nodes,newSearchData);
       setSearchData({...newSearchData});
-      setHideableData({...{nodes: newTreeData, hidden: hideData}});
+      setHideableData({...{nodes: (hideableData.nodes), hidden: hideData}});
     }
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -270,8 +270,8 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
-        var newTreeData = 
-          matchTreeState(convertTreeState(p, hideableData.nodes),searchData);
+        var newTreeData = convertTreeState(p, hideableData.nodes);
+        matchTreeState(newTreeData,searchData);
         var newHideableData = {nodes: newTreeData, hidden: hideData};
         setHideableData({...newHideableData});
       }
