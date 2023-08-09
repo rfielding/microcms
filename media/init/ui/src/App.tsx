@@ -178,7 +178,7 @@ function asSize(size: number) : string {
   return s.toFixed(2) + " " + units[i];
 }
 
-function LabeledNode(node: Node) : JSX.Element {
+function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
     var thumbnail = node.id+"--thumbnail.png";
     var color="white";
     var textNotMatched = "#a0a0a0";
@@ -202,7 +202,7 @@ function LabeledNode(node: Node) : JSX.Element {
     }
     
     var theImg = <></>;
-    if(node.id.indexOf("--")<0) {
+    if(nodes[node.id+"--thumbnail.png"]) {
       theImg = <img 
         src={thumbnail} 
         height="20"
@@ -215,7 +215,7 @@ function LabeledNode(node: Node) : JSX.Element {
     }
 
     var nodeSize = asSize(node.size ? node.size : 0);
-    
+
     var theText = 
     <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
       {node.label}&nbsp;
@@ -346,7 +346,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       <TreeItem 
         nodeId={id}
         hidden={hidden} 
-        label={LabeledNode(nodes[id])}
+        label={LabeledNode(nodes, nodes[id])}
         onIconClick={e => handleClick(e,nodes[id])}
         onLabelClick={e => handleClick(e,nodes[id])}
       >
