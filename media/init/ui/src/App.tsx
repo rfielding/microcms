@@ -88,7 +88,7 @@ function doesMatchQuery(node: Node, query: Nodes) : boolean {
 }
 
 // Maybe make our json match Material UI's TreeView
-function convertNode(p: SNode, query: Nodes) : Node {
+function convertNode(p: SNode) : Node {
   var td = {} as Node;
   td.id = p.path + p.name;
   td.label = p.name;
@@ -124,17 +124,17 @@ function matchTreeState(nodes: Nodes, query: Nodes):Nodes {
 }
 
 // Update the tree state
-function convertTreeState(p: SNode, nodes: Nodes, query: Nodes):Nodes {
-  var n = convertNode(p,query);
+function convertTreeState(p: SNode, nodes: Nodes):Nodes {
+  var n = convertNode(p);
   nodes[n.id] = n;
   if(p.isDir && p.children) {
     for(var i=0; i<p.children.length; i++) {
-      var c = convertNode(p.children[i], query)
+      var c = convertNode(p.children[i])
       nodes[c.id] = c;
       nodes[n.id].children.push(c.id);
     }
   }
-  return matchTreeState(nodes,query);
+  return nodes;
 }
 
 function LabeledNode(node: Node) : JSX.Element {
@@ -252,11 +252,10 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       );
       const p = await response.json() as SNode;
       var existingSearchData = {} as Nodes;
-      var newSearchData = convertTreeState(p, existingSearchData, {});
+      var newSearchData = matchTreeState(convertTreeState(p, existingSearchData),{});
       var newTreeData = matchTreeState(hideableData.nodes,newSearchData);
-      var newHideableData = {nodes: newTreeData, hidden: hideData};
       setSearchData({...newSearchData});
-      setHideableData({...newHideableData});
+      setHideableData({...{nodes: newTreeData, hidden: hideData}});
     }
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -273,7 +272,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
         );
         const p = await response.json() as SNode;
         var newTreeData = matchTreeState(
-          convertTreeState(p, hideableData.nodes,searchData),
+          matchTreeState(convertTreeState(p, hideableData.nodes),searchData),
           searchData
         );
         var newHideableData = {nodes: newTreeData, hidden: hideData};
