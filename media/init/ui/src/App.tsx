@@ -271,10 +271,8 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
           {"credentials": "same-origin"},
         );
         const p = await response.json() as SNode;
-        var newTreeData = matchTreeState(
-          matchTreeState(convertTreeState(p, hideableData.nodes),searchData),
-          searchData
-        );
+        var newTreeData = 
+          matchTreeState(convertTreeState(p, hideableData.nodes),searchData);
         var newHideableData = {nodes: newTreeData, hidden: hideData};
         setHideableData({...newHideableData});
       }
