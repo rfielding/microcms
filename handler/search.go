@@ -16,7 +16,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 	rows, err := db.TheDB.Query(`
 		SELECT original_path,original_name,part,highlight(filesearch,7,'<b style="background-color:gray">','</b>') highlighted 
 		from filesearch
-		where filesearch match ? and original_path like ?
+		where filesearch match ? and (original_path || original_name) like ?
 	`, match, lookInside+"%")
 	if err != nil {
 		msg := fmt.Sprintf("query %s: %v", match, err)
@@ -28,6 +28,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 
 	q := r.URL.Query()
 	inJson := q.Get("json") == "true"
+	hideContent := q.Get("hideContent") == "true"
 	listing := data.Listing{
 		Node: data.Node{
 			Path:       "/",
@@ -42,7 +43,7 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 		var path, name, highlighted string
 		var part int
 		rows.Scan(&path, &name, &part, &highlighted)
-		if IsImage(path+name) || IsVideo(path+name) {
+		if hideContent || IsImage(path+name) || IsVideo(path+name) {
 			highlighted = ""
 		}
 		attrs := GetAttrs(user, path, name)
