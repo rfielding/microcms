@@ -1,3 +1,6 @@
 {
-  "microcms": ""
+  "prefixes": {
+    "microcms": "",
+    "prometheus": ""  
+  }
 }

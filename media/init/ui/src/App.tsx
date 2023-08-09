@@ -69,14 +69,16 @@ type HideableNodes = {
 };
 
 type Endpoints = {
-  [id: string]: string;
-}
+  prefixes: { 
+    [id: string]: string 
+  }
+};
 
 var endpoints : Endpoints;
 
 
 function getEndpoint(name: string) : string {
-  return endpoints[name];
+  return endpoints["prefixes"][name];
 }
 
 function doesMatchQuery(node: Node, query: Hits) : boolean {
@@ -259,7 +261,6 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
 
 
 function SearchableTreeView() : JSX.Element {
-  const [expanded, setExpanded] = useState<string[]>([]);
   const [filteredData, setFilteredData] = useState<boolean>(false);
   const [searchData, setSearchData] = useState<Hits>({});
   const [hideableData, setHideableData] = useState<HideableNodes>({
@@ -384,7 +385,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
 
 function App() {
-  
+
   const loadEndpoints = async () => {
     const response = await fetch(
       "./endpoints.json",
