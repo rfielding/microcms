@@ -384,14 +384,16 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
 
 function App() {
-  const fetchIt = async () => {
+  
+  const loadEndpoints = async () => {
     const response = await fetch(
       "./endpoints.json",
       {"credentials": "same-origin"},
     );      
     endpoints = await response.json() as Endpoints;
   };
-  fetchIt();  
+  loadEndpoints();
+
   return (
     <div 
       className="App" 
