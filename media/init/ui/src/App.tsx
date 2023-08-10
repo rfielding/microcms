@@ -264,7 +264,7 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
       {node.securityLabel}&nbsp;
       {node.canRead ? 'R' : ''}
       {node.canWrite ? 'W' : ''}
-      {node.moderation ? '!!' : ''}
+      {node.moderation ? ' !!' : ''}
     </span>
     &nbsp;
     <span>{theText}</span>

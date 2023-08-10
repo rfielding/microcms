@@ -13,6 +13,8 @@ import (
 
 // Handling At() implies that the local conversion programs may move into here,
 // because they use `name`
+// This probably means a way of alloc/free temp files for the duraction of
+// operations that must operate with the actual filesystem.
 
 type VFS interface {
 	At() string // hmm. still have filesystem dependencies due to ImageMagick, etc.
@@ -28,7 +30,7 @@ type VFS interface {
 	ReadFile(name string) ([]byte, error)
 }
 
-// allow for impl substitutions
+// allow for impl substitutions. ie: env vars to use S3, disk otherwise.
 var F = &Volume{
 	FileAt: "./persistent",
 }
