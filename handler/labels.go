@@ -16,7 +16,7 @@ import (
 func detectLabels(file string) (io.Reader, error) {
 	svc := rekognition.New(session.New())
 
-	imageBytes, err := fs.ReadFile(file)
+	imageBytes, err := fs.F.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func detectLabels(file string) (io.Reader, error) {
 func detectCeleb(file string) (io.Reader, error) {
 	svc := rekognition.New(session.New())
 
-	imageBytes, err := fs.ReadFile(file)
+	imageBytes, err := fs.F.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func detectCeleb(file string) (io.Reader, error) {
 func detectModeration(file string) (io.Reader, error) {
 	svc := rekognition.New(session.New())
 
-	imageBytes, err := fs.ReadFile(file)
+	imageBytes, err := fs.F.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

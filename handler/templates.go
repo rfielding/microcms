@@ -8,7 +8,7 @@ import (
 )
 
 func compileTemplate(name string) *template.Template {
-	templateText, err := fs.ReadFile(name)
+	templateText, err := fs.F.ReadFile(name)
 	if err != nil {
 		panic(fmt.Sprintf("Cannot find template: %s", name))
 	}

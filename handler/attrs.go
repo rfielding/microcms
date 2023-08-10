@@ -22,8 +22,8 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 			regoFile = fsPath + fsName + "/permissions.rego"
 		}
 	}
-	if fs.IsExist(regoFile) {
-		jf, err := fs.ReadFile(regoFile)
+	if fs.F.IsExist(regoFile) {
+		jf, err := fs.F.ReadFile(regoFile)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", regoFile, err)
 		} else {
@@ -82,8 +82,8 @@ type ModerationData struct {
 func loadModerationAttrs(fsPath string, fsName string, attrs *data.Attrs) *data.Attrs {
 	mods := ModerationData{}
 	moderationFileName := fsPath + fsName + "--moderation.json"
-	if fs.IsExist(moderationFileName) {
-		jf, err := fs.ReadFile(moderationFileName)
+	if fs.F.IsExist(moderationFileName) {
+		jf, err := fs.F.ReadFile(moderationFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", moderationFileName, err)
 			return attrs
@@ -103,8 +103,8 @@ func loadModerationAttrs(fsPath string, fsName string, attrs *data.Attrs) *data.
 func loadCustomAttrs(fsPath string, fsName string) *data.Attrs {
 	attrs := data.Attrs{}
 	customFileName := fsPath + fsName + "--custom.json"
-	if fs.IsExist(customFileName) {
-		jf, err := fs.ReadFile(customFileName)
+	if fs.F.IsExist(customFileName) {
+		jf, err := fs.F.ReadFile(customFileName)
 		if err != nil {
 			log.Printf("Failed to open %s!: %v", customFileName, err)
 		} else {

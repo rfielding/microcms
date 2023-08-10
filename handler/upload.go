@@ -87,14 +87,9 @@ func postFileHandler(
 		stream = bytes.NewReader(proposedUpload)
 	}
 
-	err := fs.MkdirAll(path.Dir(fullName), 0777)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("Could not create path for %s: %v", fsPath, err)
-	}
-
 	// Ensure that the file in question exists on disk.
 	if true {
-		f, err := fs.Create(fullName)
+		f, err := fs.F.Create(fullName)
 		if err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("Could not create file %s: %v", fullName, err)
 		}
@@ -127,7 +122,7 @@ func postFileHandler(
 
 	if IsDoc(fullName) && cascade {
 		// Open the file we wrote
-		f, err := fs.Open(fullName)
+		f, err := fs.F.Open(fullName)
 		if err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("Could not open file for indexing %s: %v", fullName, err)
 		}
@@ -202,7 +197,7 @@ func postFileHandler(
 				}
 				// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it
 				labelFile := fullName + "--labels.json"
-				jf, err := fs.ReadFile(labelFile)
+				jf, err := fs.F.ReadFile(labelFile)
 				if err != nil {
 					return http.StatusInternalServerError, fmt.Errorf("Could not find file: %s %v", labelFile, err)
 				}
@@ -250,7 +245,7 @@ func postFileHandler(
 
 	if IsTextFile(fullName) && cascade {
 		// open the file that we saved, and index it in the database.
-		f, err := fs.Open(fullName)
+		f, err := fs.F.Open(fullName)
 		if err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("Could not open file for indexing %s: %v", fullName, err)
 		}

@@ -78,11 +78,11 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) 
 			}
 		}
 
-		if fs.IsExist(r.URL.Path) {
+		if fs.F.IsExist(r.URL.Path) {
 			t := MetricsDelete.Task()
-			t.BytesWrite += fs.Size(r.URL.Path)
+			t.BytesWrite += fs.F.Size(r.URL.Path)
 			defer t.End()
-			err := fs.Remove(r.URL.Path)
+			err := fs.F.Remove(r.URL.Path)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte(fmt.Sprintf("unable to delete file: %v", err)))
@@ -109,7 +109,7 @@ func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.U
 		parentDir := "/files/" + userName // i can't make it end in slash, seems inconsistent
 		fsPath := parentDir + "/"
 		fsName := "permissions.rego"
-		if !fs.IsExist(fsPath + fsName) {
+		if !fs.F.IsExist(fsPath + fsName) {
 			log.Printf("Welcome to %s", fsPath)
 			rdr, err := detectNewUser(userName)
 			if err != nil {
@@ -157,8 +157,8 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 		if fs.IsDir(r.URL.Path) {
 			isListing := r.URL.Query().Get("listing") == "true"
 			fsIndex := r.URL.Path + "index.html"
-			if fs.IsExist(fsIndex) && !fs.IsDir(fsIndex) && !isListing {
-				fs.ServeFile(w, r, fsIndex)
+			if fs.F.IsExist(fsIndex) && !fs.IsDir(fsIndex) && !isListing {
+				fs.F.ServeFile(w, r, fsIndex)
 				return true
 			} else {
 				dirHandler(w, r)
@@ -186,17 +186,17 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 		// It won't show up directly in listings, but should come back
 		// with what it finds
 		if strings.HasSuffix(r.URL.Path, "--permissions.rego") {
-			if fs.IsNotExist(r.URL.Path) {
+			if fs.F.IsNotExist(r.URL.Path) {
 				r.URL.Path = path.Dir(r.URL.Path) + "/permissions.rego"
 			}
 		}
 
 		// Walk up the tree until we find what we want
 		if path.Base(r.URL.Path) == "permissions.rego" {
-			if fs.IsNotExist(r.URL.Path) {
+			if fs.F.IsNotExist(r.URL.Path) {
 				for true {
 					r.URL.Path = path.Dir(path.Dir(r.URL.Path)) + "/permissions.rego"
-					if fs.IsExist(r.URL.Path) {
+					if fs.F.IsExist(r.URL.Path) {
 						break // found it!
 					}
 					if r.URL.Path == "/files/permissions.rego" {
@@ -214,9 +214,9 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 			return true
 		}
 
-		if fs.IsExist(r.URL.Path) {
+		if fs.F.IsExist(r.URL.Path) {
 			t := MetricsGet.Task()
-			t.BytesWrite += fs.Size(r.URL.Path)
+			t.BytesWrite += fs.F.Size(r.URL.Path)
 			defer t.End()
 		}
 

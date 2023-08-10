@@ -40,7 +40,7 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 	fsPath := r.URL.Path
 	user := data.GetUser(r)
 	// Get directory names
-	names, err := fs.ReadDir(fsPath)
+	names, err := fs.F.ReadDir(fsPath)
 	if err != nil {
 		msg := fmt.Sprintf("readdir %s: %v", fsPath, err)
 		log.Printf("ERR %s", msg)
