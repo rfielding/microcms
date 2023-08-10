@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -45,9 +46,12 @@ func IsDir(name string) bool {
 func (fsi *Volume) Create(name string) (io.WriteCloser, error) {
 	err := os.MkdirAll(path.Base(At+name), 0777)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Whil Create / MkdirAll: %v", err)
 	}
 	f, err := os.Create(At + name)
+	if err != nil {
+		return nil, fmt.Errorf("While Create / os.Create: %v", err)
+	}
 	return f, err
 }
 
