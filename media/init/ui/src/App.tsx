@@ -1,9 +1,9 @@
 import React from 'react';
 //import logo from './logo.svg';
 import './App.css';
+import launch from './launch.svg';
+import logo from './logo.svg';
 
-import 'react-tooltip/dist/react-tooltip.css'
-import { Tooltip } from 'react-tooltip'
 import { useState, useEffect } from 'react';
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
@@ -235,9 +235,17 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
       if(!node.matchesQuery) {
         color = textNotMatched;
       }
+      var launchIcon = logo;
+      if(!nodes[node.id + "index.html"]) {
+        launchIcon = "";
+      }
       theText = 
       <span style={{color:color, textDecoration:'none'}}>
-        {node.label}
+        {node.label} 
+        &nbsp; 
+        <a href={node.id} target="_blank">
+          <img height="20" width="auto" style={{verticalAlign: 'bottom'}} src={launchIcon}/>
+        </a>
       </span>;
 
     }
