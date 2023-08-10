@@ -26,7 +26,5 @@ type Iface interface {
 	ReadFile(name string) ([]byte, error)
 }
 
-type Fs struct{}
-
 // allow for impl substitutions
-var F = Fs{}
+var F = Volume{}
