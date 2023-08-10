@@ -63,6 +63,21 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) 
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/files/") {
+		// If this would break our access, then don't allow it
+		fsName := path.Base(r.URL.Path)
+		if fsName == "permissions.rego" || strings.HasSuffix(fsName, "--permissions.rego") {
+			parent := path.Base(path.Dir(r.URL.Path))
+			grandparent := path.Dir(path.Dir(r.URL.Path)) + "/"
+			attrsAfter := GetAttrs(user, grandparent, parent)
+			if !attrsAfter.Write || !attrsAfter.Read {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(fmt.Sprintf(
+					"DELETE disallowed on %s for %s", r.URL.Path, UserName(user),
+				)))
+				return
+			}
+		}
+
 		if fs.IsExist(r.URL.Path) {
 			t := MetricsDelete.Task()
 			t.BytesWrite += fs.Size(r.URL.Path)

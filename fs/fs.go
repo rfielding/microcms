@@ -2,7 +2,6 @@ package fs
 
 import (
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"os"
 )
@@ -19,8 +18,8 @@ func Open(name string) (*os.File, error) {
 	return f, err
 }
 
-func ReadDir(name string) ([]fs.FileInfo, error) {
-	d, err := ioutil.ReadDir(At + name)
+func ReadDir(name string) ([]fs.DirEntry, error) {
+	d, err := os.ReadDir(At + name)
 	return d, err
 }
 
@@ -68,5 +67,5 @@ func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
 }
 
 func ReadFile(name string) ([]byte, error) {
-	return ioutil.ReadFile(At + name)
+	return os.ReadFile(At + name)
 }

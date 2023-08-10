@@ -69,11 +69,19 @@ func dirHandler(w http.ResponseWriter, r *http.Request) {
 		fName := name.Name()
 		attrs := GetAttrs(user, fsPath, fName)
 		if attrs.Read == true {
+			fi, err := name.Info()
+			if err != nil {
+				msg := fmt.Sprintf("cannot get file size %s: %v", fsPath, err)
+				log.Printf("ERR %s", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				writeTimed(w, []byte(msg))
+				return
+			}
 			listing.Children = append(listing.Children, data.Node{
 				Name:       fName,
 				Path:       fsPath,
 				IsDir:      name.IsDir(),
-				Size:       name.Size(),
+				Size:       fi.Size(),
 				Attributes: attrs,
 			})
 		}
