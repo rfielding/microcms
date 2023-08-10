@@ -28,7 +28,7 @@ func CommandReader(file string, command []string) (io.Reader, error) {
 	return pipeReader, nil
 }
 
-func pdfThumbnail(file string) (io.Reader, error) {
+func PdfThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",

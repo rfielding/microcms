@@ -13,6 +13,7 @@ import (
 	"github.com/rfielding/microcms/utils"
 )
 
+// hmm. a hidden assumption of a real volume mount.
 var FileServer = http.FileServer(http.Dir(fs.F.At()))
 
 // Launch a plain http server

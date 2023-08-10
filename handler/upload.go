@@ -145,7 +145,7 @@ func postFileHandler(
 
 		ext := strings.ToLower(path.Ext(fullName))
 		if ext == ".pdf" {
-			rdr, err := pdfThumbnail(fullName)
+			rdr, err := PdfThumbnail(fullName)
 			if err != nil {
 				return http.StatusInternalServerError, fmt.Errorf("Could not make thumbnail for %s: %v", fullName, err)
 			}
@@ -162,7 +162,7 @@ func postFileHandler(
 	}
 
 	if IsVideo(fullName) && cascade {
-		rdr, err := videoThumbnail(fullName)
+		rdr, err := VideoThumbnail(fullName)
 		if err != nil {
 			return http.StatusInternalServerError, fmt.Errorf("Could not make thumbnail for %s: %v", fullName, err)
 		}

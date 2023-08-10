@@ -6,6 +6,10 @@ import (
 	"github.com/rfielding/microcms/fs"
 )
 
+/*
+These assume real volume mount. And it may be fixable through temp files.
+*/
+
 func MakeThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
@@ -19,7 +23,7 @@ func MakeThumbnail(file string) (io.Reader, error) {
 	return CommandReader(file, command)
 }
 
-func videoThumbnail(file string) (io.Reader, error) {
+func VideoThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
