@@ -10,25 +10,25 @@ import (
 These assume real volume mount. And it may be fixable through temp files.
 */
 
-func MakeThumbnail(file string) (io.Reader, error) {
+func MakeThumbnail(fullName string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-thumbnail", "x100",
 		"-background", "white",
 		"-alpha", "remove",
 		"-format", "png",
-		(fs.F.At() + file),
+		(fs.F.At() + fullName),
 		"-",
 	}
-	return CommandReader(file, command)
+	return CommandReader(fullName, command)
 }
 
-func VideoThumbnail(file string) (io.Reader, error) {
+func VideoThumbnail(fullName string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		(fs.F.At() + file + "[100]"),
+		(fs.F.At() + fullName + "[100]"),
 		"png:-",
 	}
-	return CommandReader(file, command)
+	return CommandReader(fullName, command)
 }

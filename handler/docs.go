@@ -28,18 +28,18 @@ func CommandReader(file string, command []string) (io.Reader, error) {
 	return pipeReader, nil
 }
 
-func PdfThumbnail(file string) (io.Reader, error) {
+func PdfThumbnail(fullName string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		(fs.F.At() + file + "[0]"),
+		(fs.F.At() + fullName + "[0]"),
 		"png:-",
 	}
-	return CommandReader(file, command)
+	return CommandReader(fullName, command)
 }
 
 // Make a request to tika in this case
-func DocExtract(fName string, rdr io.Reader) (io.ReadCloser, error) {
+func DocExtract(fullName string, rdr io.Reader) (io.ReadCloser, error) {
 	cl := http.Client{}
 	req, err := http.NewRequest("PUT", DocExtractor, rdr)
 	if err != nil {
@@ -48,10 +48,10 @@ func DocExtract(fName string, rdr io.Reader) (io.ReadCloser, error) {
 	req.Header.Add("accept", "text/plain")
 	res, err := cl.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to do request to upload file %s: %v", fName, err)
+		return nil, fmt.Errorf("Unable to do request to upload file %s: %v", fullName, err)
 	}
 	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("Unable to upload %s: %d", fName, res.StatusCode)
+		return nil, fmt.Errorf("Unable to upload %s: %d", fullName, res.StatusCode)
 	}
 	return res.Body, nil
 }

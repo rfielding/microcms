@@ -82,8 +82,8 @@ func (v *Volume) ReadFile(fullName string) ([]byte, error) {
 	return os.ReadFile(v.FileAt + fullName)
 }
 
-func (v *Volume) ReadWriteCloser(fullName string) (ReadWriteCloser, error) {
-	file, err := os.CreateTemp(v.FileAt, "tmp")
+func (v *Volume) TempFile(fullName string) (ReadWriteCloser, error) {
+	file, err := os.CreateTemp(v.FileAt, "microcms-*-.tmp")
 	if err != nil {
 		log.Fatal(err)
 	}
