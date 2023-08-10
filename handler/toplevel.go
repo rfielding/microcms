@@ -13,7 +13,7 @@ import (
 	"github.com/rfielding/microcms/utils"
 )
 
-var FileServer = http.FileServer(http.Dir(fs.At))
+var FileServer = http.FileServer(http.Dir(fs.F.At()))
 
 // Launch a plain http server
 func Setup() {
@@ -154,10 +154,10 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 		// These are optional
 		w.Header().Add("ModerationLabel", attrs.ModerationLabel)
 
-		if fs.IsDir(r.URL.Path) {
+		if fs.F.IsDir(r.URL.Path) {
 			isListing := r.URL.Query().Get("listing") == "true"
 			fsIndex := r.URL.Path + "index.html"
-			if fs.F.IsExist(fsIndex) && !fs.IsDir(fsIndex) && !isListing {
+			if fs.F.IsExist(fsIndex) && !fs.F.IsDir(fsIndex) && !isListing {
 				fs.F.ServeFile(w, r, fsIndex)
 				return true
 			} else {
@@ -283,7 +283,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 
-	if strings.HasPrefix(r.URL.Path, "/files/") && fs.IsDir(r.URL.Path) {
+	if strings.HasPrefix(r.URL.Path, "/files/") && fs.F.IsDir(r.URL.Path) {
 		if r.URL.Path[len(r.URL.Path)-1] != '/' {
 			http.Redirect(w, r, r.URL.Path+"/"+q, http.StatusMovedPermanently)
 			return

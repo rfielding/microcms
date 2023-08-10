@@ -11,9 +11,11 @@ import (
  and to remove all the raw stat calls.
 */
 
-var At = "./persistent"
+// Handling At() implies that the local conversion programs may move into here,
+// because they use `name`
 
-type Iface interface {
+type VFS interface {
+	At() string // hmm. still have filesystem dependencies due to ImageMagick, etc.
 	Open(name string) (io.ReadCloser, error)
 	ReadDir(name string) ([]fs.DirEntry, error)
 	Remove(name string) error
@@ -27,4 +29,6 @@ type Iface interface {
 }
 
 // allow for impl substitutions
-var F = Volume{}
+var F = &Volume{
+	FileAt: "./persistent",
+}

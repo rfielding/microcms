@@ -32,7 +32,7 @@ func pdfThumbnail(file string) (io.Reader, error) {
 	command := []string{
 		"convert",
 		"-resize", "x100",
-		(fs.At + file + "[0]"),
+		(fs.F.At() + file + "[0]"),
 		"png:-",
 	}
 	return CommandReader(file, command)

@@ -18,7 +18,7 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 	regoFile := fsPath + "permissions.rego"
 	if fsName != "" {
 		regoFile = fsPath + fsName + "--permissions.rego"
-		if fs.IsDir(fsPath + fsName) {
+		if fs.F.IsDir(fsPath + fsName) {
 			regoFile = fsPath + fsName + "/permissions.rego"
 		}
 	}

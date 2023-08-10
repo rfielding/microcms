@@ -28,7 +28,7 @@ func TestMetrics(t *testing.T) {
 func TestAttrs(t *testing.T) {
 	// Use the persistent mount as the test fixture
 	// We assume that the app was brought up and ./deployapps
-	fs.At = "../persistent"
+	fs.F = &fs.Volume{FileAt: "../persistent"}
 	handler.LoadConfig("../config.json")
 	handler.TemplatesInit()
 
