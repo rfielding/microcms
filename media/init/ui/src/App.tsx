@@ -220,7 +220,11 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
     var nodeSize = asSize(node.size ? node.size : 0);
 
     var theText = 
-    <a href={node.id} target="_blank" style={{color:color, textDecoration:'none'}}>
+    <a 
+      href={node.id} 
+      target="_blank" 
+      style={{color:color, textDecoration:'none'}}
+    >
       {node.label}&nbsp;
       {note}
       &nbsp;
