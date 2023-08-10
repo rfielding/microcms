@@ -207,10 +207,10 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
     if(nodes[node.id+"--thumbnail.png"]) {
       theImg = <img 
         src={thumbnail} 
-        height="20"
+        height="26"
         width="auto" 
         alt="" 
-        style={{verticalAlign:'center', border: '0px'}}
+        style={{verticalAlign:'bottom', border: '0px', objectFit: 'cover'}}
         onMouseOver={e => (e.currentTarget.height=200)}
         onMouseOut={e => (e.currentTarget.height=20)}
       />;
