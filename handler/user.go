@@ -13,7 +13,7 @@ import (
 )
 
 // Evaluate an opa string against some parsed json claims
-func CalculateRego(claims data.User, regoString string) (*data.Attrs, error) {
+func CalculateRego(user data.User, regoString string) (*data.Attrs, error) {
 	ctx := context.TODO()
 	compiler := rego.New(
 		rego.Query("data.microcms"),
@@ -26,7 +26,7 @@ func CalculateRego(claims data.User, regoString string) (*data.Attrs, error) {
 		return nil, err
 	}
 
-	results, err := query.Eval(ctx, rego.EvalInput(claims))
+	results, err := query.Eval(ctx, rego.EvalInput(user))
 	if err != nil {
 		return nil, err
 	}

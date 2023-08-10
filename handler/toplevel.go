@@ -13,7 +13,7 @@ import (
 	"github.com/rfielding/microcms/utils"
 )
 
-// hmm. a hidden assumption of a real volume mount.
+// This may require an override in the case of S3.
 var FileServer = http.FileServer(http.Dir(fs.F.At()))
 
 // Launch a plain http server

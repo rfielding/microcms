@@ -13,7 +13,7 @@ import (
 // Permission attributes are dynamic, and can come from parent directories.
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
-func getAttrsPermission(claims data.User, fsPath string, fsName string, initial *data.Attrs) *data.Attrs {
+func getAttrsPermission(user data.User, fsPath string, fsName string, initial *data.Attrs) *data.Attrs {
 	// Try exact file if fName is not blank
 	regoFile := fsPath + "permissions.rego"
 	if fsName != "" {
@@ -28,7 +28,7 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 			log.Printf("Failed to open %s!: %v", regoFile, err)
 		} else {
 			regoString := string(jf)
-			calculation, err := CalculateRego(claims, regoString)
+			calculation, err := CalculateRego(user, regoString)
 			if err != nil {
 				log.Printf("Failed to parse rego %s!: %v\n%s", regoFile, err, regoString)
 			}
@@ -41,7 +41,7 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 		return initial
 	} else {
 		if fsName != "" {
-			return getAttrsPermission(claims, fsPath, "", initial)
+			return getAttrsPermission(user, fsPath, "", initial)
 		} else {
 			if fsPath == "/files/" {
 				return initial
@@ -49,13 +49,13 @@ func getAttrsPermission(claims data.User, fsPath string, fsName string, initial 
 				// careful! if it ends in slash, then parent is same file, fsName is blank!
 				fsPath := path.Dir(path.Clean(fsPath)) + "/"
 				fsName := ""
-				return getAttrsPermission(claims, fsPath, fsName, initial)
+				return getAttrsPermission(user, fsPath, fsName, initial)
 			}
 		}
 	}
 }
 
-func GetAttrs(claims data.User, fsPath string, fsName string) *data.Attrs {
+func GetAttrs(user data.User, fsPath string, fsName string) *data.Attrs {
 	// always get attributes according to the original file
 	if strings.Contains(fsName, "--") {
 		//a better pattern would be:  *.*--*.*
@@ -68,7 +68,7 @@ func GetAttrs(claims data.User, fsPath string, fsName string) *data.Attrs {
 	// If there is content moderation, then add it in here
 	attrs = loadModerationAttrs(fsPath, fsName, attrs)
 	// overwrite with calculated values
-	return getAttrsPermission(claims, fsPath, fsName, attrs)
+	return getAttrsPermission(user, fsPath, fsName, attrs)
 }
 
 type Moderation struct {
