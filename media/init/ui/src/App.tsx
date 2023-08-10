@@ -417,14 +417,13 @@ function App() {
 
   return (
     <div 
-      className="App" 
       style={{ 
         color: 'white', 
         background: 'black', 
         alignContent: 'left', 
         textAlign: 'left', 
         width: "100%", 
-        height: 1000, 
+        height: 'auto', 
         flexGrow: 1, 
         overflow: 'flex'
       }}   
