@@ -31,6 +31,25 @@ type LabelObject struct {
 // as at the time the error happens, that is when it is best known how to handle it.
 type HttpError int
 
+func RecompileTemplates(fullName string) {
+	if fullName == "/files/init/searchTemplate.html.templ" {
+		log.Printf("Recompiling %s", fullName)
+		compiledSearchTemplate = compileTemplate(fullName)
+	}
+	if fullName == "/files/init/listingTemplate.html.templ" {
+		log.Printf("Recompiling %s", fullName)
+		compiledListingTemplate = compileTemplate(fullName)
+	}
+	if fullName == "/files/init/rootTemplate.html.templ" {
+		log.Printf("Recompiling %s", fullName)
+		compiledRootTemplate = compileTemplate(fullName)
+	}
+	if fullName == "/files/init/defaultPermissions.rego.templ" {
+		log.Printf("Recompiling %s", fullName)
+		compiledDefaultPermissionsTemplate = compileTemplate(fullName)
+	}
+}
+
 func postFileHandler(
 	user data.User,
 	stream io.Reader,
@@ -102,22 +121,7 @@ func postFileHandler(
 		}
 
 		// Make sure that these are re-compiled on upload
-		if fullName == "/files/init/searchTemplate.html.templ" {
-			log.Printf("Recompiling %s", fullName)
-			compiledSearchTemplate = compileTemplate(fullName)
-		}
-		if fullName == "/files/init/listingTemplate.html.templ" {
-			log.Printf("Recompiling %s", fullName)
-			compiledListingTemplate = compileTemplate(fullName)
-		}
-		if fullName == "/files/init/rootTemplate.html.templ" {
-			log.Printf("Recompiling %s", fullName)
-			compiledRootTemplate = compileTemplate(fullName)
-		}
-		if fullName == "/files/init/defaultPermissions.rego.templ" {
-			log.Printf("Recompiling %s", fullName)
-			compiledDefaultPermissionsTemplate = compileTemplate(fullName)
-		}
+		RecompileTemplates(fullName)
 	}
 
 	if IsDoc(fullName) && cascade {
