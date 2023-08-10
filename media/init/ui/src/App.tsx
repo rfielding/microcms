@@ -3,7 +3,6 @@ import React from 'react';
 import './App.css';
 
 import { useState, useEffect } from 'react';
-
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -403,10 +402,10 @@ function App() {
         background: 'black', 
         alignContent: 'left', 
         textAlign: 'left', 
-        width: 660+400, 
+        width: "100%", 
         height: 1000, 
-        flexGrow: 0, 
-        overflow: 'auto' 
+        flexGrow: 1, 
+        overflow: 'flex'
       }}   
     >
       <SearchableTreeView/>
