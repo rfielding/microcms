@@ -372,8 +372,6 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
     <div style={{padding: 10}}>
       <span 
         style={{fontSize: 24}}
-        data-tooltip-id="searchtooltip"
-        data-tooltip-html="hi"
       >
           Search:
       </span>
@@ -382,7 +380,6 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
           type="text" 
           name="match" 
           size={60} 
-          defaultValue={"hi"}
           onKeyUp={e => detectKeys(e)} 
         />
       <div style={{fontSize: 14, color: 'gray'}}>
