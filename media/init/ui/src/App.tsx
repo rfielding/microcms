@@ -2,6 +2,8 @@ import React from 'react';
 //import logo from './logo.svg';
 import './App.css';
 
+import 'react-tooltip/dist/react-tooltip.css'
+import { Tooltip } from 'react-tooltip'
 import { useState, useEffect } from 'react';
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
@@ -367,10 +369,32 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
   return (
     <>
-    <div style={{padding: 20}}>
-    Search like <i>"/files/rob dog OR cat"</i>: &nbsp; <input type="text" name="match" size={40} onKeyUp={e => detectKeys(e)} />
-    &nbsp; <input type="checkbox" name="hidemismatch" value="/files/" onClick={e => detectSelect(e)}/> Hide Mismatch
-    </div>    
+    <div style={{padding: 10}}>
+      <span 
+        style={{fontSize: 24}}
+        data-tooltip-id="searchtooltip"
+        data-tooltip-html="hi"
+      >
+          Search:
+      </span>
+        &nbsp; 
+        <input 
+          type="text" 
+          name="match" 
+          size={60} 
+          defaultValue={"hi"}
+          onKeyUp={e => detectKeys(e)} 
+        />
+      <div style={{fontSize: 14, color: 'gray'}}>
+        &nbsp; 
+        <input 
+          type="checkbox" 
+          name="hidemismatch" 
+          value="/files/" 
+          onClick={e => detectSelect(e)}     
+        /> Hide Mismatch &nbsp; <i>search like: /files/rob cat OR dog</i>
+      </div>  
+    </div>
     <TreeView      
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
