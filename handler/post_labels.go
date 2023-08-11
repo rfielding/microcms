@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/rekognition"
+	"github.com/rfielding/microcms/db"
 	"github.com/rfielding/microcms/fs"
 	"github.com/rfielding/microcms/utils"
 )
@@ -160,4 +161,29 @@ func detectModeration(file string) (io.Reader, error) {
 		pipeWriter.Close()
 	}()
 	return pipeReader, nil
+}
+
+func indexTextFile(
+	path string,
+	name string,
+	part int,
+	originalPath string,
+	originalName string,
+	content []byte,
+) error {
+	// index the file -- if we are appending, we should only incrementally index
+	_, err := db.TheDB.Exec(
+		`INSERT INTO filesearch (cmd, path, name, part, original_path, original_name, content) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		"files",
+		path,
+		name,
+		part,
+		originalPath,
+		originalName,
+		content,
+	)
+	if err != nil {
+		return fmt.Errorf("ERR while indexing files %s%s: %v", path, name, err)
+	}
+	return nil
 }

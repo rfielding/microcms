@@ -10,7 +10,7 @@ import (
 	"github.com/rfielding/microcms/utils"
 )
 
-func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+func getSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	lookInside := r.URL.Path[len("/search"):]
 	match := r.URL.Query().Get("match")
 	rows, err := db.TheDB.Query(`
@@ -74,29 +74,4 @@ func GetSearchHandler(w http.ResponseWriter, r *http.Request, pathTokens []strin
 			return
 		}
 	}
-}
-
-func indexTextFile(
-	path string,
-	name string,
-	part int,
-	originalPath string,
-	originalName string,
-	content []byte,
-) error {
-	// index the file -- if we are appending, we should only incrementally index
-	_, err := db.TheDB.Exec(
-		`INSERT INTO filesearch (cmd, path, name, part, original_path, original_name, content) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		"files",
-		path,
-		name,
-		part,
-		originalPath,
-		originalName,
-		content,
-	)
-	if err != nil {
-		return fmt.Errorf("ERR while indexing files %s%s: %v", path, name, err)
-	}
-	return nil
 }

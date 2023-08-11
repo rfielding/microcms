@@ -6,6 +6,14 @@ import (
 	"net/http"
 )
 
+func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
+	if len(pathTokens) > 2 && pathTokens[1] == "files" {
+		postFilesHandler(w, r, pathTokens)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}
+
 var DocExtractor string
 
 // Make a request to tika in this case

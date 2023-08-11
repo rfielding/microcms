@@ -12,30 +12,6 @@ import (
 	"github.com/rfielding/microcms/utils"
 )
 
-func getRootHandler(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	inJson := q.Get("json") == "true"
-	if inJson {
-		w.Header().Set("Content-Type", "application/json")
-		listing := data.Listing{
-			Children: []data.Node{
-				{Name: "files", IsDir: true},
-			},
-		}
-		writeTimed(w, []byte(utils.AsJsonPretty(listing)))
-	} else {
-		w.Header().Set("Content-Type", "text/html")
-		err := compiledRootTemplate.Execute(w, nil)
-		if err != nil {
-			msg := fmt.Sprintf("unable to execute rootTemplate: %v", err)
-			log.Printf("ERR %s", msg)
-			w.WriteHeader(http.StatusInternalServerError)
-			writeTimed(w, []byte(msg))
-			return
-		}
-	}
-}
-
 func dirHandler(w http.ResponseWriter, r *http.Request) {
 	fsPath := r.URL.Path
 	user := data.GetUser(r)
