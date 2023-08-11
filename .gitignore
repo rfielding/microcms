@@ -5,5 +5,5 @@ media/react-test
 ./files
 persistent
 vendor
-media/init/ui/node_modules
-media/init/ui/build
+react/init/ui/node_modules
+react/init/ui/build

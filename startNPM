@@ -3,5 +3,5 @@
 (
 export BROWSER=none
 export PUBLIC_URL="." 
-cd media/init/ui; npm start
+cd react/init/ui; npm start
 )
