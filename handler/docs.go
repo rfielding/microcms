@@ -4,39 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os/exec"
-
-	"github.com/rfielding/microcms/fs"
-	"github.com/rfielding/microcms/utils"
 )
 
 var DocExtractor string
-
-func CommandReader(file string, command []string) (io.Reader, error) {
-	cmd := exec.Command(command[0], command[1:]...)
-	// This returns an io.ReadCloser, and I don't know if it is mandatory for client to close it
-	stdout, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to run command: %v\n%s", err, utils.AsJson(command))
-	}
-	// Give back a pipe that closes itself when it's read.
-	pipeReader, pipeWriter := io.Pipe()
-	go func() {
-		pipeWriter.Write(stdout)
-		pipeWriter.Close()
-	}()
-	return pipeReader, nil
-}
-
-func PdfThumbnail(fullName string) (io.Reader, error) {
-	command := []string{
-		"convert",
-		"-resize", "x100",
-		(fs.F.At() + fullName + "[0]"),
-		"png:-",
-	}
-	return CommandReader(fullName, command)
-}
 
 // Make a request to tika in this case
 func DocExtract(fullName string, rdr io.Reader) (io.ReadCloser, error) {

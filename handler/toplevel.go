@@ -13,9 +13,6 @@ import (
 	"github.com/rfielding/microcms/utils"
 )
 
-// This may require an override in the case of S3.
-var FileServer = http.FileServer(http.Dir(fs.F.At()))
-
 // Launch a plain http server
 func Setup() {
 	bindAddr := utils.Getenv("BIND", "0.0.0.0:9321")
@@ -223,7 +220,7 @@ func handleFiles(w http.ResponseWriter, r *http.Request, user data.User) bool {
 
 		// Serve the file we were looking for, possibly with modified URL,
 		// set mime types, etc. Special headers could have been set too
-		FileServer.ServeHTTP(w, r)
+		fs.F.FileServer().ServeHTTP(w, r)
 		return true
 	}
 	return false
