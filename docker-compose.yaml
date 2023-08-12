@@ -13,7 +13,7 @@ services:
       - AWS_SECRET_ACCESS_KEY
     volumes:
       - ./persistent:/root/persistent   # persistent data, which you can wipe before startup
-      - ./config.json:/root/config.json # the user database
+      - ./config.json:/root/config.json # the user database, which hot-reloads
     networks:
       - mesh
 

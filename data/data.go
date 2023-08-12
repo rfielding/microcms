@@ -27,7 +27,7 @@ type Config struct {
 	Users map[UserSecret]User `json:"users"`
 }
 
-var TheConfig Config
+var TheConfig *Config
 
 func GetUser(r *http.Request) User {
 	// Get the user from the cookie

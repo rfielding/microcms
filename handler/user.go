@@ -58,14 +58,17 @@ func RegistrationHandler(w http.ResponseWriter, r *http.Request) {
 
 func LoadConfig(cfg string) {
 	f, err := os.ReadFile(cfg)
+	c := &data.Config{}
 	utils.CheckErr(err, "Could not open config file")
-	err = json.Unmarshal(f, &data.TheConfig)
+	err = json.Unmarshal(f, &c)
+
 	utils.CheckErr(err, "Could not parse config file")
 	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
 		log.Printf("using AWS key: %s", os.Getenv("AWS_ACCESS_KEY_ID"))
 	} else {
 		log.Printf("please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to creds that can use AWSRekognition")
 	}
+	data.TheConfig = c
 }
 
 func CanWrite(user data.User, fsPath string, fsName string) bool {
