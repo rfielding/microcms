@@ -421,6 +421,8 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
           size={60} 
           onKeyUp={e => detectKeys(e)} 
         />
+      <br/>
+      <i style={{fontSize: 14, color: 'gray'}}>search like: /files/rob cat OR dog. Press 'Enter' or 'Return' to run query.</i>
       <div style={{fontSize: 14, color: 'gray'}}>
         &nbsp; 
         <input 
@@ -429,7 +431,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
           value="/files/" 
           checked={hideMismatchedData}
           onClick={e => clickHideMismatch(e)}     
-        /> Hide Mismatch &nbsp; <i>search like: /files/rob cat OR dog</i>
+        /> Hide Mismatch &nbsp; 
       </div>  
       <div style={{fontSize: 14, color: 'gray'}}>
         &nbsp; 
