@@ -66,7 +66,8 @@ type Hits = {
 
 type HideableNodes = {
   nodes : Nodes;
-  filtered : boolean;
+  hideMismatches : boolean;
+  hideDerived : boolean;
 };
 
 type Endpoints = {
@@ -274,10 +275,12 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
 
 
 function SearchableTreeView() : JSX.Element {
-  const [filteredData, setFilteredData] = useState<boolean>(false);
+  const [hideMismatchedData, setHideMismatchedData] = useState<boolean>(false);
+  const [hideDerivedData, setHideDerivedData] = useState<boolean>(true);
   const [searchData, setSearchData] = useState<Hits>({});
   const [hideableData, setHideableData] = useState<HideableNodes>({
-    filtered: false,
+    hideMismatches: false,
+    hideDerived: true,
     nodes: {
       "/files/": {
         id:"/files/",
@@ -316,7 +319,11 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
       var newSearchData = convertSearchState(p, existingSearchData);
       setSearchData({...newSearchData});
       matchTreeState(hideableData.nodes,newSearchData);
-      setHideableData({...{nodes: (hideableData.nodes), filtered: filteredData}});
+      setHideableData({...{
+        nodes: hideableData.nodes, 
+        hideMismatches: hideMismatchedData,
+        hideDerived: hideDerivedData
+      }});
     }
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -334,8 +341,11 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
         const p = await response.json() as SNode;
         var newTreeData = convertTreeState(p, hideableData.nodes);
         matchTreeState(newTreeData,searchData);
-        var newHideableData = {nodes: newTreeData, filtered: filteredData};
-        setHideableData({...newHideableData});
+        setHideableData({...{
+          nodes: newTreeData, 
+          hideMismatches: hideMismatchedData,
+          hideDerived: hideDerivedData
+        }});
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -350,13 +360,27 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
     loadTreeItem(node);
   };
   
-  const detectSelect = async (e: React.SyntheticEvent<Element,Event>) => {
+  const clickHideMismatch = async (e: React.SyntheticEvent<Element,Event>) => {
     try {
-      console.log("select");
-      var newHideData = !filteredData;
-      setFilteredData(newHideData);
-      var newHideableData = {nodes: hideableData.nodes, filtered: !filteredData};
-      setHideableData({...newHideableData});
+      setHideMismatchedData(!hideMismatchedData);
+      setHideableData({...{
+        nodes: hideableData.nodes, 
+        hideMismatches: !hideMismatchedData,
+        hideDerived: hideDerivedData
+      }});
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const clickHideDerived = async (e: React.SyntheticEvent<Element,Event>) => {
+    try {
+      setHideDerivedData(!hideDerivedData);
+      setHideableData({...{
+        nodes: hideableData.nodes, 
+        hideMismatches: hideMismatchedData,
+        hideDerived: !hideDerivedData
+      }});
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -364,7 +388,10 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
   var renderTree = function(nodes : Nodes, id:string) : JSX.Element {
     var matches = nodes[id].matchesQuery? true : false;;
-    var hidden = !matches && filteredData;
+    var hidden = (!matches && hideMismatchedData) || 
+      (nodes[id].derived && hideDerivedData) ||
+      (id.endsWith("/permissions.rego") && hideDerivedData)
+    ;
     return (
       <TreeItem 
         key={id}
@@ -400,8 +427,19 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
           type="checkbox" 
           name="hidemismatch" 
           value="/files/" 
-          onClick={e => detectSelect(e)}     
+          checked={hideMismatchedData}
+          onClick={e => clickHideMismatch(e)}     
         /> Hide Mismatch &nbsp; <i>search like: /files/rob cat OR dog</i>
+      </div>  
+      <div style={{fontSize: 14, color: 'gray'}}>
+        &nbsp; 
+        <input 
+          type="checkbox" 
+          name="hidederived" 
+          value="/files/" 
+          checked={hideDerivedData}
+          onClick={e => clickHideDerived(e)}     
+        /> Hide Metadata &nbsp;
       </div>  
     </div>
     <TreeView      
