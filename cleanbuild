@@ -5,6 +5,10 @@ export GSGID=1000
 (
   cd `dirname $0`
   (
+    cd tika
+    docker build . -t tika
+  )
+  (
     cd react/init/ui
     npm run build
   )

@@ -7,7 +7,6 @@ RUN apt-get install -y wget
 RUN apt-get install -y sqlite3
 RUN apt-get install -y git
 RUN apt-get install -y gcc
-RUN apt-get install -y default-jre
 RUN apt-get install -y ffmpeg
 RUN apt-get install -y imagemagick
 RUN apt-get install -y time
@@ -20,10 +19,9 @@ RUN cd / ; tar zxf /go1.20.6.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
 COPY . /root
 # You are here after each code change - it is so very slow because of cgo, because of sqlite
-RUN cd /root/cmd/microcms && GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./microcms *.go
+RUN cd /root/cmd/microcms && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./microcms *.go
 # writable volume mount... make sure we have permissions to write it and for host to delete contents
 RUN chown -R 1000:1000 /root
-RUN chmod 755 /root/bin/tika-server-standard.jar
 WORKDIR /root
 USER 1000:1000
 CMD ./bin/containerinit

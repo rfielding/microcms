@@ -31,5 +31,5 @@ then
     cp       media/init/defaultPermissions.rego.templ persistent/files/init
     cp    -R react/init/ui/build/*                    persistent/files/init/ui
   fi
-  ./cmd/microcms/microcms & java -jar ./bin/tika-server-standard.jar
+  ./cmd/microcms/microcms
 fi

@@ -44,43 +44,44 @@ Note:
   
 # Running it
 
-It only builds in a Docker container, with go1.20 under Linux amd64 architecture.
-I might start splitting things up and moving to ElasticSearch at some point.
+Launch tika on port 9998
 
 ```
-# runs on http://localhost:9321
-./cleanbuild # make the container #ugh! 4 minute build, because of cgo, etc.
+docker-compose up tika 
 ```
 
-Launch the services in three terminals, so they can be stopped
-in an orderly way. First is the CMS itself
-
+Launch the cms on 9321, if you installed `sqlite3` and `go1.20`  locally. If you instead use `./cleanbuild`, that takes 4 minutes to build.
 
 ```
-# Make sure that docker is running first!
-#  ./cleanbuild is a prerequisite so that the imagee exists
-#  also, these env vars need to be set to legitimate keys
-#  if you want the AI pipeline to work. I have full
 #  AWSRekognition access on my keys here.
 #      - AWS_ACCESS_KEY_ID
 #      - AWS_REGION
 #      - AWS_SECRET_ACCESS_KEY
-./startCMS
+./startLocalCMS
 ```
 
-Then start npm
+> Instead of launching `./startLocalCMS`, you can `./cleanbuild`, except it is WAY too slow in normal dev to build the whole container.
+
+Then start npm on 3000
 
 ```
 ./startNPM
 ```
 
-Then start the reverse proxy in front of npm
+Then start the reverse proxy in front of npm on 8080
 
 ```
 ./startProxy
 ```
 
-> note that you have to run `./deployapps` in a different window because of stylesheets and templates that must be uploaded for init.
+Actually populate it
+
+```
+./deployapps
+```
+
+This is long-winded, but building with `./cleanbuild` is just very very slow, and should only be done infrequently.
+
 
 ## API
 

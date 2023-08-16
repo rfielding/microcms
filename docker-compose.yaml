@@ -6,17 +6,28 @@ services:
     user: 1000:1000
     ports:
       - '9321:9321'
-    build: .
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_REGION
       - AWS_SECRET_ACCESS_KEY
+      - DOC_EXTRACTOR=http://tika:9998/tika
     volumes:
       - ./persistent:/root/persistent   # persistent data, which you can wipe before startup
       - ./config.json:/root/config.json # the user database, which hot-reloads
+    depends_on:
+      - tika
     networks:
       - mesh
 
+  tika:
+    image: tika
+    environment:
+      - host=0.0.0.0
+    ports:
+      - 9998:9998
+    networks:
+      - mesh
+ 
   prometheus:
     image: prom/prometheus
     command: --config.file=/etc/prometheus/prometheus.yml --log.level=debug
