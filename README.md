@@ -18,6 +18,7 @@ Requirements:
 - jq
 - npx
 - npm
+- ffmpeg (for local), imagemagick (for local)
 
 This is an experiment in quickly creating a Content Management System (CMS), by which I mean
 
