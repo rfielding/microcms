@@ -18,7 +18,7 @@ Requirements:
 - jq
 - npx
 - npm
-- ffmpeg (for local), imagemagick (for local)
+- for local build `./startLocalCMS`: ffmpeg, imagemagick, go1.20, sqlite3
 
 This is an experiment in quickly creating a Content Management System (CMS), by which I mean
 
