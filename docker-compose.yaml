@@ -3,7 +3,7 @@ version: '3.2'
 services:
   microcms:
     image: microcms:latest
-    user: 1000:1000
+    user: 0:0 # oh no. temp hack using user 1000 is not portable, even when it matches user on host in Linux
     ports:
       - '9321:9321'
     environment:
@@ -21,6 +21,7 @@ services:
 
   tika:
     image: tika
+    user: 0:0
     environment:
       - host=0.0.0.0
     ports:
@@ -30,6 +31,7 @@ services:
  
   prometheus:
     image: prom/prometheus
+    user: 0:0
     command: --config.file=/etc/prometheus/prometheus.yml --log.level=debug
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml

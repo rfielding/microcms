@@ -1,6 +1,7 @@
 FROM --platform=linux/amd64 ubuntu:22.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
+
 RUN apt-get update
 RUN apt-get install -y curl
 RUN apt-get install -y wget
@@ -10,6 +11,13 @@ RUN apt-get install -y gcc
 RUN apt-get install -y ffmpeg
 RUN apt-get install -y imagemagick
 RUN apt-get install -y time
+RUN apt-get install -y npm
+
+SHELL ["/bin/bash", "--login", "-i", "-c"]
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash
+RUN source /root/.bashrc && nvm install 14.21.2
+SHELL ["/bin/bash", "--login", "-c"]
+
 # UGH! dealing with imagemagick bug
 RUN mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.bak
 RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/policy.xml
@@ -24,4 +32,5 @@ RUN cd /root/cmd/microcms && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tag
 RUN chown -R 1000:1000 /root
 WORKDIR /root
 USER 1000:1000
+RUN cd react/init/ui; npm run build; cd build 
 CMD ./bin/containerinit
