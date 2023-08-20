@@ -5,6 +5,9 @@ export GSGID=1000
 (
   cd `dirname $0`
   (
+    docker build . -f rproxy/Dockerfile -t rfielding/rproxy
+  )
+  (
     cd tika
     docker build . -t rfielding/tika
   )

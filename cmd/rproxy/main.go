@@ -68,6 +68,15 @@ func main() {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("Not found"))
 	})
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	bindAddr := os.Getenv("BIND")
+	if bindAddr == "" {
+		bindAddr = ":8080"
+	}
+	if os.Getenv("X509_CERT") == "" {
+		log.Fatal(http.ListenAndServe(bindAddr, nil))
+	} else {
+		certFile := os.Getenv("X509_CERT")
+		keyFile := os.Getenv("X509_KEY")
+		log.Fatal(http.ListenAndServeTLS(bindAddr, certFile, keyFile, nil))
+	}
 }

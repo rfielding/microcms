@@ -134,9 +134,13 @@ func postFileHandler(
 		return returnValue4, returnValue5
 	}
 
-	shouldReturn3, returnValue6, returnValue7 := extractVideo(fullName, cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
-	if shouldReturn3 {
-		return returnValue6, returnValue7
+	// it could easily fail on account of size, so just ignore it if it fails
+	// so, ignore it until I have a better solution.
+	if false {
+		shouldReturn3, returnValue6, returnValue7 := extractVideo(fullName, cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
+		if shouldReturn3 {
+			return returnValue6, returnValue7
+		}
 	}
 
 	// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it

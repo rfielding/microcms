@@ -40,6 +40,23 @@ services:
     networks:
       - mesh
 
+  rproxy:
+    image: rfielding/rproxy
+    user: 0:0
+    ports:
+      - 443:443
+    environment:
+      - RPROXY0=/@http://microcms:9321
+      - X509_CERT=/root/rproxy/cert.pem
+      - X509_KEY=/root/rproxy/key.pem
+      - BIND=0.0.0.0:443
+    depends_on:
+      - microcms
+    volumes:
+      - ./certs/cert.pem:/root/rproxy/cert.pem
+      - ./certs/key.pem:/root/rproxy/key.pem
+    networks:
+      - mesh
 
 networks:
   mesh: {}
