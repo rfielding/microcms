@@ -8,9 +8,66 @@ import (
 	"strings"
 
 	"github.com/rfielding/microcms/data"
+	"github.com/rfielding/microcms/db"
 	"github.com/rfielding/microcms/fs"
 	"github.com/rfielding/microcms/utils"
 )
+
+// pre-order DFS walk of all files
+func reindexWalk(w http.ResponseWriter, from string) {
+	d, err := fs.F.ReadDir(from)
+	if err != nil {
+		msg := fmt.Sprintf("ERR while cleaning index: %v", err)
+		log.Printf("%s\n", msg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(msg))
+		return
+	}
+	for _, f := range d {
+		if f.IsDir() {
+			reindexWalk(w, from+f.Name()+"/")
+		} else {
+			originalName := f.Name()
+			name := originalName
+			if IsTextFile(name) {
+				if strings.Contains(name, "--") {
+					originalName = name[0:strings.LastIndex(name, "--")]
+				}
+				didIndex, httpErr, err := extractText(
+					true,
+					from, name,
+					from, originalName,
+				)
+				if err != nil {
+					msg := fmt.Sprintf("ERR while indexing %s: %v", from+name, err)
+					log.Printf("%s\n", msg)
+					w.WriteHeader(int(httpErr))
+					w.Write([]byte(msg))
+					return
+				}
+				if didIndex {
+					log.Printf("reindex: %s for %s", from+name, from+originalName)
+				}
+			}
+		}
+	}
+}
+
+func GetReIndex(w http.ResponseWriter, r *http.Request) {
+	// wipe search clean (TODO: limit re-indexing to paths later)
+	_, err := db.TheDB.Exec(
+		`DELETE FROM filesearch`,
+	)
+	if err != nil {
+		msg := fmt.Sprintf("ERR while cleaning index: %v", err)
+		log.Printf("%s", msg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(msg))
+		return
+	}
+	log.Printf("wiped the index clean")
+	reindexWalk(w, "/files/")
+}
 
 // Use the standard file serving of Go, because media behavior
 // is really really complicated; and you do not want to serve it manually
@@ -69,6 +126,11 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 
 	if strings.HasPrefix(r.URL.Path, "/metrics") {
 		GetMetricsHandler(w, r, pathTokens)
+		return
+	}
+
+	if strings.HasPrefix(r.URL.Path, "/reindex/") {
+		GetReIndex(w, r)
 		return
 	}
 
