@@ -129,7 +129,7 @@ func postFileHandler(
 	// Write the doc extract stream like an upload
 	// Only png works.  bug in imageMagick.  don't cascade on thumbnails
 	// open the file that we saved, and index it in the database.
-	shouldReturn2, returnValue4, returnValue5 := extractDoc(fullName, cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
+	shouldReturn2, returnValue4, returnValue5 := extractDoc(cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
 	if shouldReturn2 {
 		return returnValue4, returnValue5
 	}
@@ -137,28 +137,29 @@ func postFileHandler(
 	// it could easily fail on account of size, so just ignore it if it fails
 	// so, ignore it until I have a better solution.
 	if false {
-		shouldReturn3, returnValue6, returnValue7 := extractVideo(fullName, cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
+		shouldReturn3, returnValue6, returnValue7 := extractVideo(cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
 		if shouldReturn3 {
 			return returnValue6, returnValue7
 		}
 	}
 
 	// re-read full file off of disk. TODO: maybe better to parse and pass json to avoid it
-	shouldReturn4, returnValue8, returnValue9 := extractImage(fullName, cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
+	shouldReturn4, returnValue8, returnValue9 := extractImage(cascade, fsName, user, fsPath, originalFsPath, originalFsName, privileged)
 	if shouldReturn4 {
 		return returnValue8, returnValue9
 	}
 
 	// open the file that we saved, and index it in the database.
 	// chunk sizes for making search results
-	shouldReturn5, returnValue10, returnValue11 := extractText(fullName, cascade, fsPath, fsName, originalFsPath, originalFsName)
+	shouldReturn5, returnValue10, returnValue11 := extractText(cascade, fsPath, fsName, originalFsPath, originalFsName)
 	if shouldReturn5 {
 		return returnValue10, returnValue11
 	}
 	return http.StatusOK, nil
 }
 
-func extractText(fullName string, cascade bool, fsPath string, fsName string, originalFsPath string, originalFsName string) (bool, HttpError, error) {
+func extractText(cascade bool, fsPath string, fsName string, originalFsPath string, originalFsName string) (bool, HttpError, error) {
+	fullName := fsPath + fsName
 	if IsTextFile(fullName) && cascade {
 
 		f, err := fs.F.Open(fullName)
@@ -187,7 +188,8 @@ func extractText(fullName string, cascade bool, fsPath string, fsName string, or
 	return false, 0, nil
 }
 
-func extractImage(fullName string, cascade bool, fsName string, user data.User, fsPath string, originalFsPath string, originalFsName string, privileged bool) (bool, HttpError, error) {
+func extractImage(cascade bool, fsName string, user data.User, fsPath string, originalFsPath string, originalFsName string, privileged bool) (bool, HttpError, error) {
+	fullName := fsPath + fsName
 	if IsImage(fullName) && cascade {
 		if true {
 			rdr, err := fs.F.MakeThumbnail(fullName)
@@ -263,7 +265,8 @@ func extractImage(fullName string, cascade bool, fsName string, user data.User, 
 	return false, 0, nil
 }
 
-func extractVideo(fullName string, cascade bool, fsName string, user data.User, fsPath string, originalFsPath string, originalFsName string, privileged bool) (bool, HttpError, error) {
+func extractVideo(cascade bool, fsName string, user data.User, fsPath string, originalFsPath string, originalFsName string, privileged bool) (bool, HttpError, error) {
+	fullName := fsPath + fsName
 	if IsVideo(fullName) && cascade {
 		rdr, err := fs.F.VideoThumbnail(fullName)
 		if err != nil {
@@ -279,7 +282,8 @@ func extractVideo(fullName string, cascade bool, fsName string, user data.User, 
 	return false, 0, nil
 }
 
-func extractDoc(fullName string, cascade bool, fsName string, user data.User, fsPath string, originalFsPath string, originalFsName string, privileged bool) (bool, HttpError, error) {
+func extractDoc(cascade bool, fsName string, user data.User, fsPath string, originalFsPath string, originalFsName string, privileged bool) (bool, HttpError, error) {
+	fullName := fsPath + fsName
 	if IsDoc(fullName) && cascade {
 
 		f, err := fs.F.Open(fullName)
