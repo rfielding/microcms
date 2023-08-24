@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unicode"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -189,6 +190,32 @@ func indexTextFile(
 	return nil
 }
 
+func splitByCaseChanges(s string) string {
+	var result []string
+	var wordStart int
+
+	for i, r := range s {
+		if i == 0 {
+			continue
+		}
+
+		// Detect changes between uppercase, lowercase, and digits
+		prevRune := rune(s[i-1])
+		changeDetected := (unicode.IsUpper(r) && !unicode.IsUpper(prevRune)) ||
+			(unicode.IsDigit(r) != unicode.IsDigit(prevRune))
+
+		if changeDetected {
+			result = append(result, s[wordStart:i])
+			wordStart = i
+		}
+	}
+
+	// Add the remaining part
+	result = append(result, s[wordStart:])
+
+	return strings.Join(result, " ")
+}
+
 func generateNameMeta(path string, name string) []byte {
 	// put in name in a way that works with keyword searches
 	var words []string
@@ -197,6 +224,7 @@ func generateNameMeta(path string, name string) []byte {
 	name2 = strings.ReplaceAll(name2, ".", " ")
 	name2 = strings.ReplaceAll(name2, "-", " ")
 	words = append(words, name2)
+	words = append(words, splitByCaseChanges(name2))
 	return []byte(strings.ToLower(strings.Join(words, " ")))
 }
 
