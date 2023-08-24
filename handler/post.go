@@ -124,6 +124,11 @@ func postFileHandler(
 		return returnValue2, returnValue3
 	}
 
+	shouldReturn, returnValue, err := IndexFileName(cascade, fsPath, fsName)
+	if shouldReturn {
+		return returnValue, err
+	}
+
 	// Open the file we wrote
 	// Get a doc extract stream
 	// Write the doc extract stream like an upload
@@ -151,14 +156,25 @@ func postFileHandler(
 
 	// open the file that we saved, and index it in the database.
 	// chunk sizes for making search results
-	shouldReturn5, returnValue10, returnValue11 := extractText(cascade, fsPath, fsName, originalFsPath, originalFsName)
+	shouldReturn5, returnValue10, returnValue11 := indexPlaintext(cascade, fsPath, fsName, originalFsPath, originalFsName)
 	if shouldReturn5 {
 		return returnValue10, returnValue11
 	}
 	return http.StatusOK, nil
 }
 
-func extractText(cascade bool, fsPath string, fsName string, originalFsPath string, originalFsName string) (bool, HttpError, error) {
+func IndexFileName(cascade bool, fsPath string, fsName string) (bool, HttpError, error) {
+	// part 0 is trying to index the filename
+	if cascade && !strings.Contains(fsName, "--") {
+		err := indexFileName(fsPath, fsName)
+		if err != nil {
+			return true, http.StatusInternalServerError, fmt.Errorf("failed indexing: %v", err)
+		}
+	}
+	return false, 0, nil
+}
+
+func indexPlaintext(cascade bool, fsPath string, fsName string, originalFsPath string, originalFsName string) (bool, HttpError, error) {
 	fullName := fsPath + fsName
 	if IsTextFile(fullName) && cascade {
 
@@ -168,10 +184,10 @@ func extractText(cascade bool, fsPath string, fsName string, originalFsPath stri
 		}
 		defer f.Close()
 
+		// parts 1 and up index the binary data
 		var rdr io.Reader = f
-
 		buffer := make([]byte, 16*1024)
-		part := 0
+		part := 1
 		for {
 			sz, err := rdr.Read(buffer)
 			if err == io.EOF {

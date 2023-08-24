@@ -14,14 +14,14 @@ import (
 )
 
 // pre-order DFS walk of all files
-func reindexWalk(w http.ResponseWriter, from string) {
+func reindexWalk(w http.ResponseWriter, from string) bool {
 	d, err := fs.F.ReadDir(from)
 	if err != nil {
 		msg := fmt.Sprintf("ERR while cleaning index: %v", err)
 		log.Printf("%s\n", msg)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(msg))
-		return
+		return true
 	}
 	for _, f := range d {
 		if f.IsDir() {
@@ -29,11 +29,19 @@ func reindexWalk(w http.ResponseWriter, from string) {
 		} else {
 			originalName := f.Name()
 			name := originalName
+			shouldReturn, _, err := IndexFileName(true, from, name)
+			if shouldReturn {
+				msg := fmt.Sprintf("ERR while indexing name %s: %v", from+name, err)
+				log.Printf("%s\n", msg)
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(msg))
+				return true
+			}
 			if IsTextFile(name) {
 				if strings.Contains(name, "--") {
 					originalName = name[0:strings.LastIndex(name, "--")]
 				}
-				didIndex, httpErr, err := extractText(
+				didIndex, httpErr, err := indexPlaintext(
 					true,
 					from, name,
 					from, originalName,
@@ -43,7 +51,7 @@ func reindexWalk(w http.ResponseWriter, from string) {
 					log.Printf("%s\n", msg)
 					w.WriteHeader(int(httpErr))
 					w.Write([]byte(msg))
-					return
+					return true
 				}
 				if didIndex {
 					log.Printf("reindex: %s for %s", from+name, from+originalName)
@@ -51,11 +59,42 @@ func reindexWalk(w http.ResponseWriter, from string) {
 			}
 		}
 	}
+	return false
 }
 
+const canReindexPermission = `
+package microcms
+default Label = "ADMIN"
+default LabelBg = "blue"
+default LabelFg = "white"	
+default Read = true
+default Write = false
+Write {
+	input["role"][_] == "admin"
+}
+`
+
 func GetReIndex(w http.ResponseWriter, r *http.Request) {
+	user := data.GetUser(r)
+	// See if we are allowed to re-index
+	attrs, err := CalculateRego(user, canReindexPermission)
+	if err != nil {
+		msg := fmt.Sprintf("ERR cannot reindex: %v", err)
+		log.Printf("%s\n", msg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(msg))
+		return
+	}
+	if !attrs.Write {
+		msg := fmt.Sprintf("ERR %s not allowed to reindex: %v", user["email"][0], err)
+		log.Printf("%s\n", msg)
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(msg))
+		return
+	}
+
 	// wipe search clean (TODO: limit re-indexing to paths later)
-	_, err := db.TheDB.Exec(
+	_, err = db.TheDB.Exec(
 		`DELETE FROM filesearch`,
 	)
 	if err != nil {
@@ -66,7 +105,12 @@ func GetReIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("wiped the index clean")
-	reindexWalk(w, "/files/")
+	if reindexWalk(w, "/files/") {
+		return
+	}
+	// note to the user that it was reindexed
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("reindexed"))
 }
 
 // Use the standard file serving of Go, because media behavior

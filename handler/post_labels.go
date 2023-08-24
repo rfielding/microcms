@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -181,6 +182,40 @@ func indexTextFile(
 		originalPath,
 		originalName,
 		content,
+	)
+	if err != nil {
+		return fmt.Errorf("ERR while indexing files %s%s: %v", path, name, err)
+	}
+	return nil
+}
+
+func generateNameMeta(path string, name string) []byte {
+	// put in name in a way that works with keyword searches
+	var words []string
+	words = append(words, name)
+	name2 := strings.ReplaceAll(name, "_", " ")
+	name2 = strings.ReplaceAll(name2, ".", " ")
+	name2 = strings.ReplaceAll(name2, "-", " ")
+	words = append(words, name2)
+	return []byte(strings.ToLower(strings.Join(words, " ")))
+}
+
+func indexFileName(
+	path string,
+	name string,
+) error {
+	// index the file -- if we are appending, we should only incrementally index
+	md := generateNameMeta(path, name)
+	//log.Printf("index %s with: %s", name, string(md))
+	_, err := db.TheDB.Exec(
+		`INSERT INTO filesearch (cmd, path, name, part, original_path, original_name, content) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		"files",
+		path,
+		name,
+		0,
+		path,
+		name,
+		md,
 	)
 	if err != nil {
 		return fmt.Errorf("ERR while indexing files %s%s: %v", path, name, err)
