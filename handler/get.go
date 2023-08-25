@@ -86,7 +86,7 @@ func GetReIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !attrs.Write {
-		msg := fmt.Sprintf("ERR %s not allowed to reindex: %v", user["email"][0], err)
+		msg := fmt.Sprintf("ERR %s not allowed to reindex: %v", user.Identity(), err)
 		log.Printf("%s\n", msg)
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(msg))

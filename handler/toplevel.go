@@ -35,13 +35,6 @@ func detectNewUser(user string) (io.Reader, error) {
 	return pipeReader, nil
 }
 
-func UserName(user data.User) string {
-	if len(user["email"]) > 0 {
-		return user["email"][0]
-	}
-	return "anonymous"
-}
-
 func ToBoolString(b bool) string {
 	if b {
 		return "true"
@@ -58,8 +51,8 @@ func writeTimed(w http.ResponseWriter, j []byte) {
 
 func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.User) bool {
 	// Make home directories exist on first visit
-	if len(user["email"]) > 0 {
-		userName := user["email"][0]
+	if user.Identity() != "anonymous" {
+		userName := user.Identity()
 		parentDir := "/files/" + userName // i can't make it end in slash, seems inconsistent
 		fsPath := parentDir + "/"
 		fsName := "permissions.rego"

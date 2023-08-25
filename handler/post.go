@@ -105,7 +105,7 @@ func postFileHandler(
 	if !privileged && !CanWrite(user, fsPath, fsName) {
 		return http.StatusForbidden, fmt.Errorf(
 			"POST disallowed on %s for %s",
-			fullName, UserName(user),
+			fullName, user.Identity(),
 		)
 	}
 

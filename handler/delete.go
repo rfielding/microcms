@@ -15,7 +15,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) 
 	if !CanWrite(user, path.Dir(r.URL.Path), path.Base(r.URL.Path)) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte(fmt.Sprintf(
-			"DELETE disallowed on %s for %s", r.URL.Path, UserName(user),
+			"DELETE disallowed on %s for %s", r.URL.Path, user.Identity(),
 		)))
 		return
 	}
@@ -29,7 +29,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) 
 			if !attrsAfter.Write || !attrsAfter.Read {
 				w.WriteHeader(http.StatusForbidden)
 				w.Write([]byte(fmt.Sprintf(
-					"DELETE disallowed on %s for %s", r.URL.Path, UserName(user),
+					"DELETE disallowed on %s for %s", r.URL.Path, user.Identity(),
 				)))
 				return
 			}

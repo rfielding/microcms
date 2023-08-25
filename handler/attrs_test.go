@@ -37,7 +37,7 @@ func TestAttrs(t *testing.T) {
 	var userDanica data.User
 	for k := range data.TheConfig.Users {
 		user := data.TheConfig.Users[k]
-		email := user["email"][0]
+		email := user.Identity()
 		attrs1 := handler.GetAttrs(user, "/files/init/", "defaultPermissions.rego")
 		if attrs1.Read != true {
 			t.Errorf("Expected read to be true for %s, got %v", email, attrs1.Read)

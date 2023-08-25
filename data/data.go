@@ -29,6 +29,14 @@ type Config struct {
 
 var TheConfig *Config
 
+func (u User) Identity() string {
+	emails, ok := u["email"]
+	if ok && len(emails) > 0 {
+		return u["email"][0]
+	}
+	return "anonymous"
+}
+
 func GetUser(r *http.Request) User {
 	// Get the user from the cookie
 	cookie, err := r.Cookie("account")
