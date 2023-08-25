@@ -61,7 +61,7 @@ Launch the cms on 9321, if you installed `sqlite3` and `go1.20`  locally. If you
 ./startLocalCMS
 ```
 
-> Instead of launching `./startLocalCMS`, you can `./cleanbuild`, except it is WAY too slow in normal dev to build the whole container.
+> Instead of launching `./startLocalCMS`, you can `./cleanbuild`, except it is WAY too slow in normal dev to build the whole container. After a `./cleanbuild`, you can `docker push rfielding/microcms; docker push rfielding/tika; docker push rfielding/rproxy` to push out your changes. From there, you can bring up docker-compose in an EC2 to keep up to date with the latest images.
 
 Then start npm on 3000
 
@@ -92,10 +92,11 @@ Currently, there are just GET and POST, where certain prefixes are special.
 - POST or GET to `/files/${URL}` means to write the file blob to the given URL.  Not having any kind of oid means that URLs must uniquely identify files (where oids, which I don't want to support) would complicate this.
 - a POST to `/files/${URL}` with a parameter `installed=true` means to expect a tarball, and the url is specifying the directory in which it goes.
 - GET `/search/files/${URL}?match=${term}` with a term that you are looking for will render a simple html page of hits.
+- Adding "--custom.json" on the end of a file name, like `cat.jpg` and `cat.jpg--custom.json` mixes in the json into `cat.jpg--attributes.json`, so that you can cause keywords to hit. For example: `cat.jpg--custom.json` with a value of `{"breed":"manx"}` will cause keyword search on "manx" to hit. You should use this to annotate mp4 movies with the names of people in the movies, or things in the image that an AI won't reliably find, etc.
 
 Install a react app in a tarball, or a simple html app.  Install means to expect a tarball, and unpack it into the named directory.
 
-> in package.json, `homepage="."` so that the react app can be mounted anywhere in the tree.
+> Use the environment var `PUBLIC_URL="."` during `npm build`  so that the react app can be mounted anywhere in the tree.
 
 ## Examples
 
