@@ -115,6 +115,14 @@ GET http://localhost:9321/search?json=true&match=king                    # keywo
 GET http://localhost:9321/me                                             # my attributes
 ```
 
+If you are in role admin, you can re-index all of the data. This way, updates can provide
+improvements to indexing; and you just need to have it re-done without knowing the details.
+This lets you migrate the data forward without having to re-upload anything.
+
+```
+GET http://localhost:9321/reindex/
+```
+
 Or the React UI hot-loading at root on port 8080
 
 http://localhost:8080
