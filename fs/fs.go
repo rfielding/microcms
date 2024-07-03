@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"os"
 	"fmt"
 	"io"
 	"io/fs"
@@ -18,6 +19,17 @@ import (
 type ReadWriteCloser interface {
 	io.ReadCloser
 	io.WriteCloser
+}
+
+func ChooseMount() VFS {
+	if len(os.Getenv("AWS_BUCKET")) > 0 {
+		v, err := NewS3VFS("")
+		if err != nil {
+			panic(fmt.Sprintf("Cannot setup an S3VFS: %v", err))
+		}
+		return v
+	}
+	return NewVolume("./persistent")
 }
 
 // allow for impl substitutions. ie: env vars to use S3, disk otherwise.
