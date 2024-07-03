@@ -22,8 +22,8 @@ SHELL ["/bin/bash", "--login", "-c"]
 RUN mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.bak
 RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/policy.xml
 RUN pwd
-RUN cd / && wget https://go.dev/dl/go1.20.6.linux-amd64.tar.gz
-RUN cd / ; tar zxf /go1.20.6.linux-amd64.tar.gz
+RUN cd / && wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
+RUN cd / ; tar zxf /go1.22.5.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
 COPY . /root
 # You are here after each code change - it is so very slow because of cgo, because of sqlite
