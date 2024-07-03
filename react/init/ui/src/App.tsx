@@ -1,10 +1,10 @@
 import React from 'react';
 //import logo from './logo.svg';
 import './App.css';
-import launch from './launch.svg';
+//import launch from './launch.svg';
 import logo from './logo.svg';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -223,7 +223,8 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
     var theText = 
     <a 
       href={node.id} 
-      target="_blank" 
+      target="_blank"
+      rel="noreferrer" 
       style={{color:color, textDecoration:'none'}}
     >
       {node.label}&nbsp;
@@ -248,8 +249,8 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
       <span style={{color:color, textDecoration:'none'}}>
         {node.label} 
         &nbsp; 
-        <a href={node.id} target="_blank">
-          <img height="20" width="auto" style={{verticalAlign: 'bottom'}} src={launchIcon}/>
+        <a href={node.id} target="_blank" rel="noreferrer">
+          <img height="20" alt="tbd" width="auto" style={{verticalAlign: 'bottom'}} src={launchIcon}/>
         </a>
       </span>;
 

@@ -4,6 +4,7 @@ export GSUID=1000
 export GSGID=1000
 (
   cd `dirname $0`
+  mkdir persistent 2>&1 > /dev/null
   (
     docker build . -f rproxy/Dockerfile -t rfielding/rproxy
   )
