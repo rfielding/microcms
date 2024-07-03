@@ -17,5 +17,14 @@ export GSGID=1000
   )
   go mod tidy
   go mod vendor
+  (
+    # this can take a long, long time
+    # but on a clean checkout, this dir may  not exist
+    cd react/init/ui
+    if [ -d build ]
+    then
+	    npm install
+    fi
+  )
   docker build -t rfielding/microcms:latest .
 )

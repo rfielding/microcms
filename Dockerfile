@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:22.10
+FROM --platform=linux/amd64 ubuntu:24.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 
