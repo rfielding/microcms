@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -131,14 +132,26 @@ func NewS3VFS(subdir string) (*S3VFS, error) {
 }
 
 func (v *S3VFS) fullPath(key string) string {
-	const prefix = "/files/"
-	if !strings.HasPrefix(key, prefix) {
-		key = path.Join(prefix, key)
+	// we need to strip off the prefix, because
+	// inside the actual bucket, the data starts
+	// after /files/
+	//
+	// in the volume, it's like:
+	// ./persistent/files/
+	// ./persistent/schema.db
+	//
+	// and volumes start at ./persistent
+	//
+	// but with S3, the schema.db is persistent locally
+	// and /files/ is effectively replaced with s3://
+	// if you were using the cli.
+	if key == "/files/" || key == "/files" {
+		return "/"
 	}
-	if v.subdir == "" {
-		return key
+	if key == "/files" {
+		return "/"
 	}
-	return path.Join(v.subdir, key)
+	return key[len("/files/"):]
 }
 
 func (v *S3VFS) Open(fullName string) (io.ReadCloser, error) {
@@ -157,6 +170,11 @@ func (v *S3VFS) ReadDir(fullName string) ([]fs.DirEntry, error) {
 	fullPath := v.fullPath(fullName)
 	if !strings.HasSuffix(fullPath, "/") {
 		fullPath += "/"
+	}
+	// if it does not have a trailing slash, then add one
+	// except use blank for the root
+	if fullPath == "/" {
+		fullPath = ""
 	}
 	input := &s3.ListObjectsV2Input{
 		Bucket:    aws.String(v.bucket),
@@ -199,12 +217,30 @@ func (v *S3VFS) Remove(fullName string) error {
 }
 
 func (v *S3VFS) IsExist(fullName string) bool {
+	if fullName == "/" {
+		return true
+	}
+	// if it ends with a slash, it might not exist, but it's a dir path
 	fullPath := v.fullPath(fullName)
-	_, err := v.client.HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String(v.bucket),
-		Key:    aws.String(fullPath),
-	})
-	return err == nil
+	if strings.HasSuffix(fullPath, "/") {
+		fullPath = fullPath[:len(fullPath)-1]
+	}
+	input := &s3.ListObjectsV2Input{
+		Bucket:    aws.String(v.bucket),
+		Prefix:    aws.String(fullPath),
+		Delimiter: aws.String("/"),
+	}
+	//fullPath is guaranteed to end with a slash
+	result, err := v.client.ListObjectsV2(input)
+	if err != nil {
+		fmt.Printf("IsExist %s problem: %v\n", fullPath, err)
+		return false
+	}
+	//fmt.Printf("IsExist %s result: %+v\n", fullPath, result)
+	if *result.KeyCount > 0 {
+		return true
+	}
+	return false
 }
 
 func (v *S3VFS) IsNotExist(fullName string) bool {
@@ -212,24 +248,31 @@ func (v *S3VFS) IsNotExist(fullName string) bool {
 }
 
 func (v *S3VFS) IsDir(fullName string) bool {
+	// if it ends with a slash, it might not exist, but it's a dir path
 	fullPath := v.fullPath(fullName)
-	if !strings.HasSuffix(fullPath, "/") {
-		fullPath += "/"
+	if strings.HasSuffix(fullPath, "/") {
+		return true
 	}
+	// now we have to check, because this is ambiguous
+	fullPath += "/"
 	input := &s3.ListObjectsV2Input{
 		Bucket:    aws.String(v.bucket),
 		Prefix:    aws.String(fullPath),
 		Delimiter: aws.String("/"),
 	}
+	//fullPath is guaranteed to end with a slash
 	result, err := v.client.ListObjectsV2(input)
 	if err != nil {
 		fmt.Printf("IsDir %s problem: %v\n", fullPath, err)
 		return false
 	}
-
-	fmt.Printf("IsDir %s result: %+v\n", fullPath, result) // Debugging output
-
-	return len(result.CommonPrefixes) > 0 || len(result.Contents) > 0
+	//fmt.Printf("IsDir %s result: %+v\n", fullPath, result)
+	if len(result.Contents) > 0 {
+		if len(fullPath) < len(*result.Contents[0].Key) {
+			return true
+		}
+	}
+	return false
 }
 
 func (v *S3VFS) Create(fullName string) (io.WriteCloser, error) {
@@ -253,6 +296,7 @@ func (v *S3VFS) Size(fullName string) int64 {
 		Key:    aws.String(fullPath),
 	})
 	if err != nil {
+		log.Printf("Size %s problem: %v\n", fullPath, err)
 		return -1
 	}
 	return *head.ContentLength
@@ -358,4 +402,3 @@ func (f s3FileInfo) IsDir() bool {
 func (f s3FileInfo) Sys() interface{} {
 	return nil
 }
-

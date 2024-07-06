@@ -1,58 +1,125 @@
 package fs_test
 
 import (
- "os"
- "io"
- "testing"
- "github.com/rfielding/microcms/fs"
+	"io"
+	"os"
+	"testing"
+
+	"github.com/rfielding/microcms/fs"
 )
 
-func TestVFS(t *testing.T) {
+func TestVFSSize(t *testing.T) {
 	v := fs.NewVolume("../persistent")
-	genericVFS(t,v)
+	genericSize(t, v)
 }
 
-func xTestS3VFS(t *testing.T) {
+func TestS3VFSSize(t *testing.T) {
 	v, err := fs.NewS3VFS("")
 	if err != nil {
 		t.Logf("could not construct S3 VFS: %v", err)
 		t.Fail()
 	}
-	genericVFS(t,v)
+	genericSize(t, v)
 }
 
-func xTestIsDirS3(t *testing.T) {
-    vfs, err := fs.NewS3VFS("")
-    if err != nil {
-        t.Fatalf("Failed to create S3VFS: %v", err)
-    }
-    isDirVolume(t, vfs)
+func genericSize(t *testing.T, v fs.VFS) {
+	tests := []struct {
+		path     string
+		expected int64
+	}{
+		{"/files/init/defaultPermissions.rego.templ", 181},
+		{"/files/init/listingTemplate.html.templ", 484},
+		{"/files/init/permissions.rego", 174},
+	}
+
+	for _, test := range tests {
+		result := v.Size(test.path)
+		if result != test.expected {
+			t.Errorf("Size(%s) = %v; want %v", test.path, result, test.expected)
+		}
+	}
+}
+
+func TestVFS(t *testing.T) {
+	v := fs.NewVolume("../persistent")
+	genericVFS(t, v)
+}
+
+func TestS3VFS(t *testing.T) {
+	v, err := fs.NewS3VFS("")
+	if err != nil {
+		t.Logf("could not construct S3 VFS: %v", err)
+		t.Fail()
+	}
+	genericVFS(t, v)
+}
+
+func TestIsDirS3(t *testing.T) {
+	vfs, err := fs.NewS3VFS("")
+	if err != nil {
+		t.Fatalf("Failed to create S3VFS: %v", err)
+	}
+	isDirVolume(t, vfs)
 }
 
 func TestIsDirVolume(t *testing.T) {
 	v := fs.NewVolume("../persistent")
-	isDirVolume(t,v)
+	isDirVolume(t, v)
 }
 
 func isDirVolume(t *testing.T, vfs fs.VFS) {
-    tests := []struct {
-        path     string
-        expected bool
-    }{
-        {"/files/", true},
-        {"/files/init/", true},
-        {"/files/init", true}, // This might depend on your bucket structure
-        {"/files/nonexistent", false},
-    }
+	tests := []struct {
+		path     string
+		expected bool
+	}{
+		{"/files", true},
+		{"/files/", true},
+		{"/files/init/", true},
+		{"/files/init", true},
+		{"/files/nonexistent", false}, // We don't require paths to exist
+	}
 
-    for _, test := range tests {
-        result := vfs.IsDir(test.path)
-        if result != test.expected {
-            t.Errorf("IsDir(%s) = %v; want %v", test.path, result, test.expected)
-        }
-    }
+	for _, test := range tests {
+		result := vfs.IsDir(test.path)
+		if result != test.expected {
+			t.Errorf("IsDir(%s) = %v; want %v", test.path, result, test.expected)
+		}
+	}
 }
 
+func TestIsExistS3(t *testing.T) {
+	vfs, err := fs.NewS3VFS("")
+	if err != nil {
+		t.Fatalf("Failed to create S3VFS: %v", err)
+	}
+	isExist(t, vfs)
+}
+
+func TestIsExistVolume(t *testing.T) {
+	v := fs.NewVolume("../persistent")
+	isExist(t, v)
+}
+
+func isExist(t *testing.T, vfs fs.VFS) {
+	tests := []struct {
+		path     string
+		expected bool
+	}{
+		{"/files", true},
+		{"/files/", true},
+		{"/files/init/", true},
+		{"/files/init", true},
+		{"/files/init0", false},
+		{"/files/nonexistent", false},
+	}
+
+	for _, test := range tests {
+		result := vfs.IsExist(test.path)
+		if result != test.expected {
+			t.Errorf("IsExist(%s) = %v; want %v", test.path, result, test.expected)
+		}
+	}
+}
 
 func genericVFS(t *testing.T, v fs.VFS) {
 	// ASSUME that these are initialized
@@ -72,7 +139,6 @@ func genericVFS(t *testing.T, v fs.VFS) {
 		t.Logf("/files/permissions.rego should be a file")
 		t.Fail()
 	}
-
 	d, err := v.ReadDir("/files/")
 	if err != nil {
 		t.Logf("could read dir: %v", err)
@@ -99,13 +165,11 @@ func genericVFS(t *testing.T, v fs.VFS) {
 		}
 		t.Logf("  %s %s", dirMark, d[i].Name())
 	}
-
 	indexhtml, err := v.Open("/files/init/rootTemplate.html.templ")
 	if err != nil {
 		t.Logf("could read /files/init/rootTemplate.html.templ: %v", err)
 		t.Fail()
 	}
 	defer indexhtml.Close()
-	io.Copy(os.Stdout,indexhtml)	
+	io.Copy(os.Stdout, indexhtml)
 }
-
