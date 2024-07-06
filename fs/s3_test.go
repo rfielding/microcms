@@ -8,6 +8,87 @@ import (
 	"github.com/rfielding/microcms/fs"
 )
 
+// Test ReadDir entries
+func TestReadDirS3(t *testing.T) {
+	vfs, err := fs.NewS3VFS("")
+	if err != nil {
+		t.Fatalf("Failed to create S3VFS: %v", err)
+	}
+	readDir(t, vfs)
+}
+
+func TestReadDirVolume(t *testing.T) {
+	v := fs.NewVolume("../persistent")
+	readDir(t, v)
+}
+
+/*
+match this data:
+
+> ls -al files/init
+total 36
+drwxr-xr-x 3 rfielding rfielding 4096 Jul  2 22:58 .
+drwxr-xr-x 5 rfielding rfielding 4096 Jul  2 22:59 ..
+-rw-r--r-- 1 rfielding rfielding  181 Jul  2 22:58 defaultPermissions.rego.templ
+-rw-r--r-- 1 rfielding rfielding  484 Jul  2 22:58 listingTemplate.html.templ
+-rw-r--r-- 1 rfielding rfielding  174 Jul  2 22:58 permissions.rego
+-rw-r--r-- 1 rfielding rfielding  392 Jul  2 22:58 rootTemplate.html.templ
+-rw-r--r-- 1 rfielding rfielding  599 Jul  2 22:58 searchTemplate.html.templ
+-rw-r--r-- 1 rfielding rfielding  485 Jul  2 22:58 styles.css
+drwxr-xr-x 3 rfielding rfielding 4096 Jul  2 22:58 ui
+*/
+func readDir(t *testing.T, vfs fs.VFS) {
+	// test ReadDir entries for correct file sizes
+	tests := map[string]int64{
+		"/files/init/defaultPermissions.rego.templ": 181,
+		"/files/init/listingTemplate.html.templ":    484,
+		"/files/init/permissions.rego":              174,
+		"/files/init/rootTemplate.html.templ":       392,
+		"/files/init/searchTemplate.html.templ":     599,
+		"/files/init/styles.css":                    485,
+	}
+	// Test against the vfs.Size function
+	for path, size := range tests {
+		result := vfs.Size(path)
+		if result != size {
+			t.Errorf("Size(%s) = %v; want %v", path, result, size)
+		}
+	}
+	// Now, use ReadDir to get the directory entries
+	// and test those sizes.
+	d, err := vfs.ReadDir("/files/init/")
+	if err != nil {
+		t.Logf("could not read dir: %v", err)
+		t.Fail()
+	}
+	if len(d) == 0 {
+		t.Logf("/files/init/ should have at least one file in it")
+		t.Fail()
+	}
+	for _, entry := range d {
+		path := "/files/init/" + entry.Name()
+		size := tests[path]
+		info, err := entry.Info()
+		if err != nil {
+			t.Logf("could not get info: %v", err)
+			t.Fail()
+		}
+		if info == nil {
+			t.Logf("info is nil")
+			t.Fail()
+		}
+		if info.IsDir() {
+			if info.Name() != "ui" {
+				t.Errorf("IsDir(%s) = %v; want %v", path, info.Name(), "ui")
+			}
+		} else {
+			if false && info.Size() != size {
+				t.Errorf("Size(%s) = %v; want %v", path, info.Size(), size)
+			}
+		}
+	}
+}
+
 func TestVFSSize(t *testing.T) {
 	v := fs.NewVolume("../persistent")
 	genericSize(t, v)

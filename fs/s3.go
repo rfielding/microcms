@@ -187,17 +187,36 @@ func (v *S3VFS) ReadDir(fullName string) ([]fs.DirEntry, error) {
 		return nil, err
 	}
 
-	fmt.Printf("ReadDir %s result: %+v\n", fullPath, result) // Debugging output
+	//fmt.Printf("ReadDir %s result: %+v\n", fullPath, result) // Debugging output
 
+	// CommonPrefixes is a euphemism for a list of directories,
+	// though they only exist as a side-effect of where the file is.
 	var entries []fs.DirEntry
 	for _, item := range result.CommonPrefixes {
-		entries = append(entries, s3DirEntry{obj: s3.Object{Key: item.Prefix}})
+		entries = append(
+			entries,
+			S3DirEntry{
+				fullPath: *item.Prefix,
+				obj: s3.Object{
+					Key: item.Prefix,
+				},
+				vfs: v,
+			})
 	}
+	// And these are the files in the directory
 	for _, item := range result.Contents {
 		if *item.Key != fullPath {
-			entries = append(entries, s3DirEntry{*item})
+			entries = append(
+				entries,
+				S3DirEntry{
+					fullPath: *item.Key,
+					obj:      *item,
+					vfs:      v,
+				},
+			)
 		}
 	}
+	//fmt.Printf("ReadDir %s entries: %+v\n", fullPath, entries)
 	return entries, nil
 }
 
@@ -222,9 +241,7 @@ func (v *S3VFS) IsExist(fullName string) bool {
 	}
 	// if it ends with a slash, it might not exist, but it's a dir path
 	fullPath := v.fullPath(fullName)
-	if strings.HasSuffix(fullPath, "/") {
-		fullPath = fullPath[:len(fullPath)-1]
-	}
+	fullPath = strings.TrimSuffix(fullPath, "/")
 	input := &s3.ListObjectsV2Input{
 		Bucket:    aws.String(v.bucket),
 		Prefix:    aws.String(fullPath),
@@ -349,56 +366,68 @@ func (v *S3VFS) FileServer() http.Handler {
 	return http.StripPrefix("/", http.FileServer(http.Dir("/")))
 }
 
-type s3DirEntry struct {
-	obj s3.Object
+type S3DirEntry struct {
+	fullPath string
+	obj      s3.Object
+	vfs      *S3VFS
 }
 
-func (d s3DirEntry) Name() string {
+func (d S3DirEntry) Name() string {
 	return path.Base(*d.obj.Key)
 }
 
-func (d s3DirEntry) IsDir() bool {
+func (d S3DirEntry) IsDir() bool {
 	return strings.HasSuffix(*d.obj.Key, "/")
 }
 
-func (d s3DirEntry) Type() fs.FileMode {
+func (d S3DirEntry) Type() fs.FileMode {
 	if d.IsDir() {
 		return fs.ModeDir
 	}
 	return 0
 }
 
-func (d s3DirEntry) Info() (fs.FileInfo, error) {
-	return s3FileInfo{d.obj}, nil
+func (d S3DirEntry) Info() (fs.FileInfo, error) {
+	return NewS3FileInfo(d.fullPath, d.obj, d.vfs), nil
 }
 
-type s3FileInfo struct {
-	obj s3.Object
+type S3FileInfo struct {
+	fullPath string
+	obj      s3.Object
+	vfs      *S3VFS
 }
 
-func (f s3FileInfo) Name() string {
+func NewS3FileInfo(fullPath string, obj s3.Object, vfs *S3VFS) S3FileInfo {
+	return S3FileInfo{
+		fullPath: fullPath,
+		obj:      obj,
+		vfs:      vfs,
+	}
+}
+
+func (f S3FileInfo) Name() string {
 	return path.Base(*f.obj.Key)
 }
 
-func (f s3FileInfo) Size() int64 {
-	return *f.obj.Size
+func (f S3FileInfo) Size() int64 {
+	return f.vfs.Size("/files" + f.fullPath)
 }
 
-func (f s3FileInfo) Mode() fs.FileMode {
+func (f S3FileInfo) Mode() fs.FileMode {
 	if strings.HasSuffix(*f.obj.Key, "/") {
 		return fs.ModeDir
 	}
 	return 0
 }
 
-func (f s3FileInfo) ModTime() time.Time {
+func (f S3FileInfo) ModTime() time.Time {
 	return *f.obj.LastModified
 }
 
-func (f s3FileInfo) IsDir() bool {
+func (f S3FileInfo) IsDir() bool {
 	return strings.HasSuffix(*f.obj.Key, "/")
 }
 
-func (f s3FileInfo) Sys() interface{} {
+func (f S3FileInfo) Sys() interface{} {
 	return nil
 }
