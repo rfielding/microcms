@@ -1,6 +1,7 @@
 package fs
 
 import (
+	//"log"
 	"os"
 	"fmt"
 	"io"
@@ -27,13 +28,16 @@ func ChooseMount() VFS {
 		if err != nil {
 			panic(fmt.Sprintf("Cannot setup an S3VFS: %v", err))
 		}
+		//log.Printf("Chose AWS filesystem implementation for /files/")	
 		return v
 	}
+	//log.Printf("Chose persistent volume implementation for /files/")	
 	return NewVolume("./persistent")
 }
 
 // allow for impl substitutions. ie: env vars to use S3, disk otherwise.
-var F VFS = NewVolume("./persistent")
+//var F VFS = NewVolume("./persistent")
+var F VFS = ChooseMount()
 
 type VFS interface {
 	Open(fullName string) (io.ReadCloser, error)

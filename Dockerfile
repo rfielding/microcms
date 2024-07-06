@@ -25,7 +25,17 @@ RUN pwd
 RUN cd / && wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
 RUN cd / ; tar zxf /go1.22.5.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
+RUN mkdir -p /persistent/files/init/ui
 COPY . /root
+COPY media/permissions.rego                   /persistent/files
+COPY media/init/permissions.rego              /persistent/files/init
+COPY media/init/styles.css                    /persistent/files/init
+COPY media/init/rootTemplate.html.templ       /persistent/files/init
+COPY media/init/searchTemplate.html.templ     /persistent/files/init
+COPY media/init/listingTemplate.html.templ    /persistent/files/init
+COPY media/init/defaultPermissions.rego.templ /persistent/files/init
+ADD  react/init/ui/build                      /persistent/files/init/ui
+ 
 # You are here after each code change - it is so very slow because of cgo, because of sqlite
 RUN cd /root/cmd/microcms && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./microcms *.go
 # writable volume mount... make sure we have permissions to write it and for host to delete contents

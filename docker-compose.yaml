@@ -47,15 +47,23 @@ services:
     ports:
       - 443:443
     environment:
-      - RPROXY0=/@http://microcms:9321
-      - X509_CERT=/root/rproxy/cert.pem
-      - X509_KEY=/root/rproxy/key.pem
+      # demonstrate live development on mounted UI, over https
+      #- RPROXY0=/registration@http://microcms:9321/registration
+      #- RPROXY1=/files@http://microcms:9321/files
+      #- RPROXY2=/search@http://microcms:9321/search
+      #- RPROXY3=/me@http://microcms:9321/me
+      #- RPROXY4=/@http://localhost:3000/
+      - RPROXY0=/@http://microcms:9321/
+      - X509_CERT=/root/certs/cert.pem
+      - X509_KEY=/root/certs/key.pem
       - BIND=0.0.0.0:443
     depends_on:
       - microcms
-    volumes:
-      - ./certs/cert.pem:/root/rproxy/cert.pem
-      - ./certs/key.pem:/root/rproxy/key.pem
+    #volumes:
+    #  - ./react/init/ui:/react/init/ui #hot reloaded root app
+    #volumes: # this is how you put in your own certs
+    #  - ./certs/cert.pem:/root/rproxy/cert.pem
+    #  - ./certs/key.pem:/root/rproxy/key.pem
     networks:
       - mesh
 

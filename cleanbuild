@@ -4,7 +4,7 @@ export GSUID=1000
 export GSGID=1000
 (
   cd `dirname $0`
-  mkdir persistent 2>&1 > /dev/null
+  mkdir persistent > /dev/null 2>&1
   (
     docker build . -f rproxy/Dockerfile -t rfielding/rproxy
   )
@@ -22,10 +22,7 @@ export GSGID=1000
     # this can take a long, long time
     # but on a clean checkout, this dir may  not exist
     cd react/init/ui
-    if [ -d build ]
-    then
-	    npm install
-    fi
+    npm install --legacy-peer-deps
   )
   docker build -t rfielding/microcms:latest .
 )

@@ -18,6 +18,7 @@ Requirements:
 - jq
 - npx
 - npm
+- node
 - for local build `./startLocalCMS`: ffmpeg, imagemagick, go1.20, sqlite3
 
 This is an experiment in quickly creating a Content Management System (CMS), by which I mean
@@ -42,8 +43,20 @@ Note:
 - The point of this is to not only allow for anonymous or strongly controlled
   read, but pseudononymous writes as well. ie: GDPR cases, such as directory
   open to adults living in certain countries.
-  
-# Running it
+ 
+# Running it the SIMPLE way
+
+```
+./cleanbuild
+docker-compose stop
+docker-compose rm -f
+docker-compose up -d
+./deployapps
+```
+
+And it runs at https://localhost/registration/?account=5ee5de77d0c566d2b8c170a03894ff2d
+ 
+# Running it the more complicated, but faster to iterate way
 
 Launch tika on port 9998
 
