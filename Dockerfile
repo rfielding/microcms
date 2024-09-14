@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:24.10
+FROM ubuntu:24.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 
@@ -32,5 +32,5 @@ RUN cd /root/cmd/microcms && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tag
 RUN chown -R 1000:1000 /root
 WORKDIR /root
 USER 1000:1000
-RUN cd react/init/ui; npm run build; cd build 
-CMD ./bin/containerinit
+#RUN cd react/init/ui; npm run build; cd build 
+CMD ["./bin/containerinit"]

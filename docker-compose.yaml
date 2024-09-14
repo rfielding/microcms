@@ -16,6 +16,7 @@ services:
       - ./config.json:/root/config.json # the user database, which hot-reloads
     depends_on:
       - tika
+      - prometheus
     networks:
       - mesh
 

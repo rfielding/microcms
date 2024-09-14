@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:24.10
+FROM ubuntu:24.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 
@@ -14,9 +14,9 @@ RUN cd / ; tar zxf /go1.20.6.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
 COPY . /root
 # You are here after each code change - it is so very slow because of cgo, because of sqlite
-RUN cd /root/cmd/rproxy && GOOS=linux GOARCH=amd64 go build -o ./rproxy *.go
+RUN cd /root/cmd/rproxy && go build -o ./rproxy *.go
 # writable volume mount... make sure we have permissions to write it and for host to delete contents
 RUN chown -R 1000:1000 /root
 WORKDIR /root
 USER 1000:1000
-CMD ./cmd/rproxy/rproxy
+CMD ["./cmd/rproxy/rproxy"]

@@ -4,6 +4,12 @@ export GSUID=1000
 export GSGID=1000
 (
   cd `dirname $0`
+  (
+    cd react/init/ui
+    npm install --peer-legacy-deps
+    npm audit fix --force
+    npm run build
+  )
   mkdir persistent 2>&1 > /dev/null
   (
     docker build . -f rproxy/Dockerfile -t rfielding/rproxy
@@ -12,20 +18,7 @@ export GSGID=1000
     cd tika
     docker build . -t rfielding/tika
   )
-  (
-    cd react/init/ui
-    npm run build
-  )
   go mod tidy
   go mod vendor
-  (
-    # this can take a long, long time
-    # but on a clean checkout, this dir may  not exist
-    cd react/init/ui
-    if [ -d build ]
-    then
-	    npm install
-    fi
-  )
   docker build -t rfielding/microcms:latest .
 )

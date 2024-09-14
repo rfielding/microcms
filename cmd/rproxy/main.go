@@ -77,6 +77,7 @@ func main() {
 	} else {
 		certFile := os.Getenv("X509_CERT")
 		keyFile := os.Getenv("X509_KEY")
+		log.Printf("%s, %s, at %s", certFile, keyFile, bindAddr)
 		log.Fatal(http.ListenAndServeTLS(bindAddr, certFile, keyFile, nil))
 	}
 }

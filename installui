@@ -1,3 +1,0 @@
-#!/bin/bash
-
-(cd react/init/ui; npm run build; cd build ; cp -R . ../../../../persistent/files/init/ui)
