@@ -1,30 +1,69 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
-  
-<head>
-    <meta charset="utf-8">
+<!-- saved from url=(0039)https://rfielding.github.io/editor.html -->
+<html lang="en" dir="ltr"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
     <title>8-dot Braille Typewriter</title>
     <style>
-        body {
-          font-family: monospace;
-        }
-
         @font-face {
-          font-family: "orbitreader2";
-          src: url("orbitreader2.woff") format('woff');
+          font-family: "regular";
+          src: url("AtkinsonHyperlegible-Regular.ttf");
+        }
+        body {
+          font-family: "regular";
+          font-size: 8pt;
+        }
+        button {
+          color: white;
+          background-color: black;
+        }
+        a:link {
+          color: blue;
+          text-decoration: none;
+        }
+        a:visited {
+          color: blue;
+          text-decoration: none;
+        }
+        a:hover {
+          color: #8888FFFF;
+          text-decoration: none;
+        }
+        a:active {
+          color: #8888FFFF;
+          text-decoration: none;
+        }
+        
+        @font-face {
+          font-family: "asciibraille";
+          src: url("asciibraille.woff") format('woff');
         }
 
-        .textarea1 {
+        textarea {
             background-color: #000000;
-            color: #ffffff;
-            white-space: pre-wrap;
-            border: none;
-            outline: none;
-            spellcheck: false;
-            padding: 1%;
-            font-size: 24pt;
-            line-height: 1.0;
-            font-family: orbitreader2;
+            color: white;
+            font-family: asciibraille;
+            font-size: 40pt;
+            width: 100%;
+        }
+
+       .textarea1 {
+            box-sizing: border-box;
+            resize: both;
+            overflow: auto;
+            width: 100%;
+       }
+
+        .textareaHidden {
+            background-color: black;
+            color: #00FF00FF;
+            box-sizing: border-box;
+            resize: both;
+            overflow: auto;
+            font-size: 20pt;
+            width=100%;
+            display: block;
+            word-wrap: break-word;
+            white-space: normal;
         }
 
 	.mode {
@@ -34,43 +73,26 @@
 
         .help {
             font-size: 10pt;
-            font-style: italic;
-        }
-
-        .textarea2 {
-            color: white;
-            background-color: black;
-            white-space: pre;
-            padding: 1%;
-            font-size: 24pt;
-            font-family: monospace;
-            line-height: 1.0;
         }
 
         .dotoff {
           font-size: 8px;
           color: white;
-          padding: 6px;
+          padding: 4px;
           background-color: black;
         }
 
         .doton {
           font-size: 8px;
           color: white;
-          padding: 6px;
+          padding: 4px;
           background-color: green;
         }
 
-        .textareaHidden {
-            color: grey;
-            background-color: black;
-            white-space: pre;
-            font-size: 20pt;
-//            font-style: oblique 0deg;
-        }
 
     </style>
     <script>
+
       var perkinsMode = false;
       var dotsPressed = {};
       var dotsReleased = {};
@@ -140,6 +162,10 @@
         for(i = 0x40; i < 0x60; i++) {
           byteMap[i] += 64;
         }
+        // swap underscore and del so that "_" needs no dot 7
+        var t = byteMap[0x5F];
+        byteMap[0x5F] = byteMap[0x7F];
+        byteMap[0x7F] = t; 
         // Copy whole map to top and set dot 8
         for(i = 0x00; i < 0x80; i++) {
           byteMap[i+0x80] = byteMap[i] + 128;
@@ -156,7 +182,6 @@
             pages[pageNumber] = "";
           }
           document.getElementById("pageNumber").innerText = "Page " + pageNumber;
-          document.getElementById("textarea2").innerText = pages[pageNumber];
           document.getElementById("textarea1").value = pages[pageNumber];
           document.getElementById("textarea1").selectionStart = 0;
           document.getElementById("textarea1").selectionEnd = 0;
@@ -166,6 +191,7 @@
       function doPageUp() {
           pageNumber++;
           setTimeout(setPageNumber,0);
+          return false;
       }
 
       function doPageDown() {
@@ -174,26 +200,41 @@
           }
           pageNumber--;
           setTimeout(setPageNumber,0);
+          return false;
       }
 
-      // I give up on this for now. The permissions model makes it too hard.
-      function setClipboard(text) {
-        if(!navigator.hasOwnProperty('clipboard')) {
-          var hidden = document.getElementById("textareaHidden");
-          console.log("enable clipboard access, or download this file and the images and fonts to run locally.");
-        } else {
-          const type = "text/plain";
-          const blob = new Blob([text], { type });
-          const data = [new ClipboardItem({ [type]: blob })];
-          navigator.clipboard.write(data).then(
-            () => {
-              console.log("wrote braille to clipboard");
-            },
-            () => {
-              console.log("failed to write braille to clipboard");
-            }
-          );
-        }
+      function doEsc() {
+          perkinsMode = !perkinsMode;
+          var escmode = document.getElementById("escmode");
+          var help = document.getElementById("help");
+          if(perkinsMode) {
+            escmode.innerText = "-- Perkins";
+            help.innerText = "Chord keys to make braille dots. ESC for QWERTY.";
+          } else {
+            escmode.innerText = "-- QWERTY";
+            help.innerText = "Use the QWERTY keyboard normally. ESC for Perkins.";
+          }
+          return false;
+      }
+
+      function copyToClipboard() {
+          // Get the text content of the hidden span
+          var textToCopy = document.getElementById("textareaHidden").textContent;
+
+          // Create a temporary textarea element to select the text
+          var tempTextarea = document.createElement("textarea");
+          tempTextarea.value = textToCopy;
+          document.body.appendChild(tempTextarea);
+
+          // Select the content
+          tempTextarea.select();
+          tempTextarea.setSelectionRange(0, 99999); // For mobile devices
+
+          // Copy the content to the clipboard
+          document.execCommand("copy");
+
+          // Remove the temporary textarea
+          document.body.removeChild(tempTextarea);
       }
 
       function brlCopy() {
@@ -210,8 +251,9 @@
           }
         }
         unicodeOutput = unicodeStrs.join("");
-        //setClipboard(unicodeOutput);
         hidden.innerText = unicodeOutput;
+
+        // copy value into the clipboard
       }
 
       document.onkeydown = function(e) {
@@ -220,11 +262,6 @@
           byteMapInit();
         }
         
-        //if(e.ctrlKey && e.code == "KeyB") {
-        //  brlCopy();
-        //  return false;
-        //}
-
         if(e.key == "PageUp") {
           doPageUp();
           return false;
@@ -237,16 +274,7 @@
 
         // If ESC goes down, toggle QWERTY/PERKINS mode.
         if(e.code == "Escape"){
-          perkinsMode = !perkinsMode;
-          var escmode = document.getElementById("escmode");
-          var help = document.getElementById("help");
-          if(perkinsMode) {
-            escmode.innerText = "ESC - Perkins";
-            help.innerText = "Chord keys to make braille dots. ESC for QWERTY.";
-          } else {
-            escmode.innerText = "ESC -- QWERTY";
-            help.innerText = "Use the QWERTY keyboard normally. ESC for Perkins.";
-          }
+          doEsc();
           return false;
         }
 
@@ -282,6 +310,7 @@
           return false;
         }
         if(e.ctrlKey && e.code == "KeyB") {
+          copyToClipboard();
           return false;
         }
         if(e.key == "PageUp") {
@@ -293,7 +322,6 @@
 
         // Track dots keys
         var t1 = document.getElementById("textarea1");
-        var t2 = document.getElementById("textarea2");
         var dot1 = document.getElementById("dot1");
         var dot2 = document.getElementById("dot2");
         var dot3 = document.getElementById("dot3");
@@ -345,8 +373,7 @@
 
         // If it's some different key, then just emit
         if(!perkinsMode || !isDot) {
-          t2.innerText = textarea1.value;
-          pages[pageNumber] = t2.innerText;
+          pages[pageNumber] = textarea1.value;
           brlCopy();
           return true;
         }
@@ -357,30 +384,33 @@
             textarea1.value.slice(0,at) + c + textarea1.value.slice(at);
           textarea1.selectionStart = at+1;
           textarea1.selectionEnd = at+1;
-          t2.innerText = textarea1.value;
-          pages[pageNumber] = t2.innerText;
+          pages[pageNumber] = textarea1.value;
           brlCopy();
         }
         return false;
       }
+
     </script>
 </head>
 
-<body style="margin:0px; background-color: #222222; color: #ffffff">
-  <table width="100%" cellpadding=0 cellspacing=0>
-    <tr>
-      <td colspan=2 class="mode">
+<body style="margin:0px; background-color: #000000; color: #ffffff">
+
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tbody><tr>
+      <td class="mode">
             <table>
-              <tr>
+              <tbody><tr>
                 <td class="dotoff" id="dot1">F</td>
                 <td class="dotoff" id="dot4">J</td>
-                <td rowspan=4>
-                  <div style="font-size:50px">
-                  <img halign=center src="orbitreader20.png" width="60px">
+                <td rowspan="4">
+                  <div style="font-size:20px">
                   8-dot Computer Braille Typewriter
                   </div>
-                  [<span id="escmode">ESC -- QWERTY</span>]
-                  [<span id="pageup">PGUP</span>/<span id="pagedown">PGDN</span> - <span id="pageNumber">Page 1</span>]
+                  <div><img src="./index_files/orbitreader20.png" width="60px"></div>
+                  [<button id="besc" onmousedown="doEsc()">ESC</button><span id="escmode">-- QWERTY</span>]
+                  [<span><button id="bpageup" onmousedown="doPageUp()">PGUP</button></span>/
+                   <span><button id="bpagedown" onmousedown="doPageDown()">PGDN</button></span> - 
+                   <span id="pageNumber">Page 1</span>]
                 </td>
               </tr>
               <tr>
@@ -395,60 +425,24 @@
                 <td class="dotoff" id="dot7">A</td>
                 <td class="dotoff" id="dot8">;</td>
               </tr>
-            </table>
+            </tbody></table>
       </td>
     </tr>
-    <tr>
-      <td colspan=2>
-        <div class="help" id="help">Use the QWERTY keyboard normally. ESC for Perkins.</div>
-      </td>
+  </tbody></table>
 
-    </tr>
-    <tr>
-      <td width=50% valign="top" halign="left">
-        <textarea id="textarea1"
-          spellcheck="false"
-          class="textarea1" 
-          name="name" 
-          cols="42"
-          rows="26"
-          autofocus
-          width="100%"></textarea>
-      </td>
-      <td width=50% valign="top" halign="left">
-        Plaintext<br>
-        <div id="textarea2"
-          class="textarea2" 
-          width="42em">
-        </div>
-        <br>Unicode Braille<br>
-        <div class="textareaHidden" id="textareaHidden"></div>
-      </td>
-    </tr>
-    <tr>
-      <td colspan=2>
-        Notes about the iPhone case braille mechanical keyboard:
-        <ul>
-          <li>It is based on a 4x4 grid of keys, where you type with fingers wrapped around to the <i>back</i> of the iPhone case.
-          <li>The extra keys follow patterns of the vim text editor.
-          <li>h+dot8 - left arrow
-          <li>j+dot8 - down arrow
-          <li>k+dot8 - up arrow
-          <li>l+dot8 - right arrow
-          <li>h+dot7+dot8 - home arrow
-          <li>j+dot7+dot8 - pageDown arrow
-          <li>k+dot7+dot8 - pageUp arrow
-          <li>l+dot7+dot8 - end arrow
-          <li>space - dot8
-          <li>backspace - dot7
-          <li>return - dot7+dot8
-          <li>There are dedicated keys to chord with: tab, shift, alt, ctrl, win, fn, repeat
-        </ul> 
-        Other than these overrides, these braille dots are everything else:
-        <a href="https://github.com/rfielding/teeny/tree/master/cmd/brascii">Main Mapping and code</a>
-      </td>
-    </tr>
-  </table>
-</body>
+  <textarea id="textarea1" autofocus="" class="textarea1" spellcheck="false" rows="4"></textarea>
+
+   <span class="textareaHidden" id="textareaHidden"></span>
   
-</html>
+  <button onclick="copyToClipboard()">Copy To Clipboard [CTRL-B]</button>
+<p>
+Links:
+  </p><ul>
+    <li><a href="https://github.com/rfielding/mf">The fonts, ./ff is this one.</a>
+    </li><li><a href="https://github.com/rfielding">Other code</a>
+    </li><li><a href="https://rfielding.github.io/">Miscellaneous</a>
+  </li></ul>
+
+  
+
+</body></html>
