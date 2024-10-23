@@ -27,7 +27,8 @@ This is an experiment in quickly creating a Content Management System (CMS), by 
 - install tarballs of entire static apps (ie: React apps, html pages)
 - simple GET/POST to urls to alter content
 - perform filtered keyword searches
-
+- use filename conventions to handle derived files
+- a robust permission system so that multi-tenancy is safe
 
 Note:
 
@@ -42,7 +43,21 @@ Note:
 - The point of this is to not only allow for anonymous or strongly controlled
   read, but pseudononymous writes as well. ie: GDPR cases, such as directory
   open to adults living in certain countries.
-  
+ 
+# Architecture
+
+```mermaid
+sequenceDiagram
+  User->rproxyDocker: browser talks to React UI
+  rproxyDocker->localhost3000: React UI served out of npm run start in rproxy container
+  rproxyDocker->microcmsDocker9321: invoke microcms service
+  rproxyDocker->prometheusDocker9090: use prometheus UI to monitor counters
+  microcmsDocker9321->persistentVolume: search indexing and files stored persistently
+  microcmsDocker9321->tika: extract text from documents
+  microcmsDocker9321->imagemagick: extract thumbnails out of images
+  microcmsDocker9321->AWSRekognition: extract labels, moderation, celebs, out of images with AI
+```
+ 
 # Running it
 
 ```
