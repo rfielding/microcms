@@ -50,20 +50,20 @@ Users from a react front-end app are talking to a hot-reloading npm server behin
 
 ```mermaid
 sequenceDiagram
-  User->rproxyDocker: browser talks to React UI
-  rproxyDocker->localhost3000: React UI served out of npm run start in rproxy container
-  rproxyDocker->microcmsDocker9321: invoke microcms service
-  rproxyDocker->prometheusDocker9090: use prometheus UI to monitor counters
+  User->>rproxyDocker: browser talks to React UI
+  rproxyDocker->>localhost3000: React UI served out of npm run start in rproxy container
+  rproxyDocker->>microcmsDocker9321: invoke microcms service
+  rproxyDocker->>prometheusDocker9090: use prometheus UI to monitor counters
 ```
 
 Internally, microcms uses naming conventions to handle different file types:
 
 ```mermaid
 sequenceDiagram
-  microcmsDocker9321->persistentVolume: search indexing and files stored persistently
-  microcmsDocker9321->tika: extract text from documents
-  microcmsDocker9321->imagemagick: extract thumbnails out of images
-  microcmsDocker9321->AWSRekognition: extract labels, moderation, celebs, out of images with AI
+  microcmsDocker9321->>persistentVolume: search indexing and files stored persistently
+  microcmsDocker9321->>tika: extract text from documents
+  microcmsDocker9321->>imagemagick: extract thumbnails out of images
+  microcmsDocker9321->>AWSRekognition: extract labels, moderation, celebs, out of images with AI
 ```
  
 # Running it
