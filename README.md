@@ -59,6 +59,7 @@ sequenceDiagram
 Internally, microcms uses naming conventions to handle different file types:
 
 ```mermaid
+sequenceDiagram
   microcmsDocker9321->persistentVolume: search indexing and files stored persistently
   microcmsDocker9321->tika: extract text from documents
   microcmsDocker9321->imagemagick: extract thumbnails out of images
