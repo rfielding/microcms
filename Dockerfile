@@ -22,15 +22,15 @@ SHELL ["/bin/bash", "--login", "-c"]
 RUN mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.bak
 RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/policy.xml
 RUN pwd
-RUN cd / && wget https://go.dev/dl/go1.20.6.linux-amd64.tar.gz
-RUN cd / ; tar zxf /go1.20.6.linux-amd64.tar.gz
+RUN cd / && wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
+RUN cd / ; tar zxf /go1.22.5.linux-amd64.tar.gz
 RUN ln -s /go/bin/go /usr/local/bin/go
 COPY . /root
 # You are here after each code change - it is so very slow because of cgo, because of sqlite
 RUN cd /root/cmd/microcms && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -tags fts5 -o ./microcms *.go
 # writable volume mount... make sure we have permissions to write it and for host to delete contents
-RUN chown -R 1000:1000 /root
+#RUN chown -R 1000:1000 /root/persistent # just the persistent dir is written
 WORKDIR /root
 USER 1000:1000
-RUN cd react/init/ui; npm run build; cd build 
+#RUN cd react/init/ui; npm install --force; npm run build; cd build 
 CMD ./bin/containerinit

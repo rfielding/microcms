@@ -10,6 +10,7 @@ then
   then
     mkdir persistent
   fi
+  chown -R 1000:1000 persistent
   if [ ! -d persistent/files ]
   then
     mkdir persistent/files
@@ -30,6 +31,7 @@ then
     cp       media/init/listingTemplate.html.templ    persistent/files/init
     cp       media/init/defaultPermissions.rego.templ persistent/files/init
     cp    -R react/init/ui/build/*                    persistent/files/init/ui
+    cp    -R react/init/ui/build/*                    persistent/files/
   fi
   ./cmd/microcms/microcms
 fi

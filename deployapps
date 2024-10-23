@@ -41,7 +41,7 @@ url=http://localhost:9321
   else
     export PUBLIC_URL="."
     npx create-react-app react-test
-    (cd react-test && npm run build)
+    (cd react-test && npm install --force && npm run build)
   fi
   ( cd react-test/build && tar cvf ../../react-test.tar . ) 
   curl -X POST --cookie "account=${auth}" --data-binary @react-test.tar ${url}/files/${owner}/app/react-test?install=true
@@ -100,5 +100,7 @@ url=http://localhost:9321
   f=huskies.jpg
   owner=danica777@gmail.com
   curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/${f}"
+
+  echo https://localhost/registration/?account=${auth}
 )
 
