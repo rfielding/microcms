@@ -45,34 +45,9 @@ Note:
   
 # Running it
 
-Launch tika on port 9998
-
 ```
-docker-compose up tika 
-```
-
-Launch the cms on 9321, if you installed `sqlite3` and `go1.20`  locally. If you instead use `./cleanbuild`, that takes 4 minutes to build.
-
-```
-#  AWSRekognition access on my keys here.
-#      - AWS_ACCESS_KEY_ID
-#      - AWS_REGION
-#      - AWS_SECRET_ACCESS_KEY
-./startLocalCMS
-```
-
-> Instead of launching `./startLocalCMS`, you can `./cleanbuild`, except it is WAY too slow in normal dev to build the whole container. After a `./cleanbuild`, you can `docker push rfielding/microcms; docker push rfielding/tika; docker push rfielding/rproxy` to push out your changes. From there, you can bring up docker-compose in an EC2 to keep up to date with the latest images.
-
-Then start npm on 3000
-
-```
-./startNPM
-```
-
-Then start the reverse proxy in front of npm on 8080
-
-```
-./startProxy
+./cleanbuild
+docker-compose up -d
 ```
 
 Actually populate it
@@ -80,9 +55,13 @@ Actually populate it
 ```
 ./deployapps
 ```
+And find URLs to use it as two default users at the end of ./deployapps
+It runs at:
 
-This is long-winded, but building with `./cleanbuild` is just very very slow, and should only be done infrequently.
+https://localhost 
 
+And the React UI is hot-editable, as the source is mounted
+into an `npm run build` in the reverse proxy.
 
 ## API
 

@@ -250,7 +250,7 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
         {node.label} 
         &nbsp; 
         <a href={node.id} target="_blank" rel="noreferrer">
-          <img height="20" alt="tbd" width="auto" style={{verticalAlign: 'bottom'}} src={launchIcon}/>
+          <img height="20" alt="" width="auto" style={{verticalAlign: 'bottom'}} src={launchIcon}/>
         </a>
       </span>;
 

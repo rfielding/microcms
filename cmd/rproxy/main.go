@@ -60,7 +60,10 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		for _, p := range proxies {
 			if strings.HasPrefix(r.URL.Path, p.prefix) {
-				r.URL.Path = strings.TrimPrefix(r.URL.Path, p.prefix)
+				newPath := strings.TrimPrefix(r.URL.Path, p.prefix)
+				//fmt.Printf("Proxying: %s -> %s\n", r.URL.Path, newPath)
+				//fmt.Printf("args: %v\n", r.URL.Query())
+				r.URL.Path = newPath
 				p.proxy.ServeHTTP(w, r)
 				return
 			}

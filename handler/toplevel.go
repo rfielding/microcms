@@ -88,6 +88,7 @@ func ensureThatHomeDirExists(w http.ResponseWriter, r *http.Request, user data.U
 // Note that all http handling MUST be tail calls. That makes
 // top level routing a little ugly.
 func rootRouter(w http.ResponseWriter, r *http.Request) {
+	//fmt.Printf("URL: %v\n", r.URL)
 	pathTokens := strings.Split(r.URL.Path, "/")
 	switch r.Method {
 	case http.MethodGet:

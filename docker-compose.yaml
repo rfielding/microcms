@@ -46,7 +46,12 @@ services:
     ports:
       - 443:443
     environment:
-      - RPROXY0=/@http://microcms:9321
+      - RPROXY0=/files@http://microcms:9321/files
+      - RPROXY1=/me@http://microcms:9321/me
+      - RPROXY2=/registration@http://microcms:9321/registration
+      - RPROXY3=/search@http://microcms:9321/search
+      - RPROXY4=/prometheus@http://prometheus:9090/
+      - RPROXY5=/@http://localhost:3000/
       - X509_CERT=/root/rproxy/cert.pem
       - X509_KEY=/root/rproxy/key.pem
       - BIND=0.0.0.0:443
@@ -55,6 +60,7 @@ services:
     volumes:
       - ./certs/cert.pem:/root/rproxy/cert.pem
       - ./certs/key.pem:/root/rproxy/key.pem
+      - ./react/init/ui:/root/ui
     networks:
       - mesh
 
