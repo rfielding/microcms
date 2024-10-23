@@ -6,6 +6,7 @@ url=http://localhost:9321
 
   # This is the private cookie for a user
   auth=5ee5de77d0c566d2b8c170a03894ff2d
+  auth1=${auth}
   echo get user email address
   owner=$(curl --cookie "account=${auth}" ${url}/me | jq -r '.email[0]')
 
@@ -97,10 +98,12 @@ url=http://localhost:9321
 
   echo a different user puts up a file
   auth=33b98226f52c0e39e8f94cb565becd7d
+  auth2=${auth}
   f=huskies.jpg
   owner=danica777@gmail.com
   curl -X POST --cookie "account=${auth}" --data-binary "@${f}" "${url}/files/${owner}/${f}"
 
-  echo https://localhost/registration/?account=${auth}
+  echo https://localhost/registration/?account=${auth1}
+  echo https://localhost/registration/?account=${auth2}
 )
 
