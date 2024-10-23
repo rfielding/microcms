@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#
+# This should only be invoked from inside docker container on startup
+#
+
+if [ "x$AWS_BUCKET" == "x" ]
+then
+ echo "using local storage only"
+else
+ aws s3 cp media/permissions.rego                   s3://${AWS_BUCKET}/permissions.rego
+ aws s3 cp media/init/permissions.rego              s3://${AWS_BUCKET}/init/permissions.rego
+ aws s3 cp media/init/styles.css                    s3://${AWS_BUCKET}/init/styles.css
+ aws s3 cp media/init/rootTemplate.html.templ       s3://${AWS_BUCKET}/init/rootTemplate.html.templ
+ aws s3 cp media/init/searchTemplate.html.templ     s3://${AWS_BUCKET}/init/searchTemplate.html.templ
+ aws s3 cp media/init/listingTemplate.html.templ    s3://${AWS_BUCKET}/init/listingTemplate.html.templ
+ aws s3 cp media/init/defaultPermissions.rego.templ s3://${AWS_BUCKET}/init/defaultPermissions.rego.templ
+ for f in $(find react/init/ui/build)
+ do
+   aws s3 cp react/init/ui/build/${f:20:100}                    s3://${AWS_BUCKET}/init/ui/build/${f:20:100}
+ done
+fi
