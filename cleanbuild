@@ -24,7 +24,7 @@ export GSGID=1000
     cd react/init/ui
     if [ -d build ]
     then
-	    npm install
+	    npm install --force
     fi
   )
   docker build -t rfielding/microcms:latest .
