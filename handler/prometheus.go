@@ -131,9 +131,9 @@ func GetMetricsHandler(w http.ResponseWriter, r *http.Request, pathTokens []stri
 
 func GetMetricsWriter(w io.Writer, c MetricsCollector) {
 	writeObject := func(c MetricsCollector, v int64, n string, t string, h string) {
-		w.Write([]byte(fmt.Sprintf("# HELP microms_%s_%s %s\n", c.Name, n, h)))
-		w.Write([]byte(fmt.Sprintf("# TYPE microms_%s_%s %s\n", c.Name, n, t)))
-		w.Write([]byte(fmt.Sprintf("microms_%s_%s %d\n", c.Name, n, v)))
+		w.Write([]byte(fmt.Sprintf("# HELP microms_%s_%s_%s %s\n", c.Name, n, t, h)))
+		w.Write([]byte(fmt.Sprintf("# TYPE microms_%s_%s_%s %s\n", c.Name, n, t, t)))
+		w.Write([]byte(fmt.Sprintf("microms_%s_%s_%s %d\n", c.Name, n, t, v)))
 	}
 	s := c.Stats()
 	writeObject(

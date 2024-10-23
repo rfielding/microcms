@@ -6,12 +6,11 @@ export GSGID=1000
   cd `dirname $0`
   mkdir persistent 2>&1 > /dev/null
   (
-    cd rproxy
-    docker build . -t rfielding/rproxy
+    docker build . --platform linux/amd64 -f rproxy/Dockerfile -t rfielding/rproxy
   )
   (
     cd tika
-    docker build . -t rfielding/tika
+    docker build . --platform linux/amd64 -t rfielding/tika
   )
   (
     cd react/init/ui
@@ -28,5 +27,5 @@ export GSGID=1000
 	    npm install --force
     fi
   )
-  docker build -t rfielding/microcms:latest .
+  docker build --platform linux/amd64 -t rfielding/microcms:latest .
 )

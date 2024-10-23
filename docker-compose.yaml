@@ -32,7 +32,11 @@ services:
   prometheus:
     image: prom/prometheus
     user: 0:0
-    command: --config.file=/etc/prometheus/prometheus.yml --log.level=debug
+    command: 
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--log.level=debug'
+      - '--web.external-url=/prometheus/'
+      - '--web.route-prefix=/prometheus/'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -50,8 +54,9 @@ services:
       - RPROXY1=/me@http://microcms:9321/me
       - RPROXY2=/registration@http://microcms:9321/registration
       - RPROXY3=/search@http://microcms:9321/search
-      - RPROXY4=/prometheus@http://prometheus:9090/
-      - RPROXY5=/@http://localhost:3000/
+      - RPROXY4=/prometheus/@http://prometheus:9090/prometheus/
+      - RPROXY5=/metrics@http://microcms:9321/metrics
+      - RPROXY6=/@http://localhost:3000/
       - X509_CERT=/root/rproxy/cert.pem
       - X509_KEY=/root/rproxy/key.pem
       - BIND=0.0.0.0:443
