@@ -56,7 +56,9 @@ sequenceDiagram
   rproxyDocker->>prometheusDocker9090: use prometheus UI to monitor counters
 ```
 
-Internally, microcms uses naming conventions to handle different file types:
+Internally, microcms uses naming conventions to handle different file types.
+Instead of Elastic and S3, this setup uses sqlite for search, and a persistent volume
+for files.
 
 ```mermaid
 sequenceDiagram
