@@ -108,4 +108,5 @@ func rootRouter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(fmt.Sprintf("could not %s %s", r.Method, r.URL.Path)))
 }

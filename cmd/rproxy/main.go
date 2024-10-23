@@ -1,37 +1,70 @@
 package main
 
-/*
-
-to ChatGPT4 lol, and it worked without changes:
-
-"write a go reverse proxy takes env vars on start
-like "RPROXY0=/files@http://localhost:9321  \
-RPROXY1=/files/init/ui=@ttp://localhost:3000 \
-go run main.go" , to map prefixes to services. \
-This lets me run a simple React server so that \
-it can make reference to its services."
-
-... well, until I ensured that they were sorted.
-*/
-
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
 )
 
-type Proxy struct {
-	prefix string
-	target *url.URL
-	proxy  *httputil.ReverseProxy
+type Redirect struct {
+	Prefix string
+	Target string
 }
 
-func main() {
-	proxies := make([]*Proxy, 0)
+type Handler struct {
+	Redirects []Redirect
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("%s %s\n", r.Method, r.URL.Path)
+	client := &http.Client{}
+	for _, redirect := range h.Redirects {
+		if strings.HasPrefix(r.URL.Path, redirect.Prefix) {
+			// only supporting http redirects for now, no https
+			from := r.URL.Path
+			if r.URL.Query().Encode() != "" {
+				from += "?" + r.URL.Query().Encode()
+			}
+			to := redirect.Target + from[len(redirect.Prefix):]
+			fmt.Printf("%s %s -> %s\n", r.Method, from, to)
+			req, err := http.NewRequest(
+				r.Method,
+				to,
+				r.Body,
+			)
+			if err != nil {
+				fmt.Printf("Error creating request %s: %v\n", to, err)
+				return
+			}
+			for k, v := range r.Header {
+				req.Header[k] = v
+			}
+			res, err := client.Do(req)
+			if err != nil {
+				fmt.Printf("Error doing request %s: %v\n", to, err)
+				return
+			}
+			for k, v := range res.Header {
+				w.Header()[k] = v
+			}
+			w.WriteHeader(res.StatusCode)
+			// POST/PUT requests have a body
+			io.Copy(w, res.Body)
+			return
+		}
+	}
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte("Not found by rproxy"))
+}
+
+func parseRedirects() *Handler {
+	handler := &Handler{
+		Redirects: make([]Redirect, 0),
+	}
 
 	i := 0
 	for {
@@ -41,45 +74,36 @@ func main() {
 			break
 		} else {
 			routeParts := strings.Split(v, "@")
-
-			target, err := url.Parse(routeParts[1])
+			_, err := url.Parse(routeParts[1])
 			if err != nil {
 				log.Panic("Invalid target URL: ", routeParts[1])
 			}
 
 			log.Println("Adding route: ", routeParts[0], " -> ", routeParts[1])
-			proxies = append(proxies, &Proxy{
-				prefix: routeParts[0],
-				target: target,
-				proxy:  httputil.NewSingleHostReverseProxy(target),
-			})
+			handler.Redirects = append(handler.Redirects,
+				Redirect{
+					Prefix: routeParts[0],
+					Target: routeParts[1],
+				},
+			)
 		}
 		i++
 	}
+	return handler
+}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		for _, p := range proxies {
-			if strings.HasPrefix(r.URL.Path, p.prefix) {
-				newPath := strings.TrimPrefix(r.URL.Path, p.prefix)
-				//fmt.Printf("Proxying: %s -> %s\n", r.URL.Path, newPath)
-				//fmt.Printf("args: %v\n", r.URL.Query())
-				r.URL.Path = newPath
-				p.proxy.ServeHTTP(w, r)
-				return
-			}
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Not found"))
-	})
+func main() {
+	handler := parseRedirects()
+
 	bindAddr := os.Getenv("BIND")
 	if bindAddr == "" {
 		bindAddr = ":8080"
 	}
 	if os.Getenv("X509_CERT") == "" {
-		log.Fatal(http.ListenAndServe(bindAddr, nil))
+		log.Fatal(http.ListenAndServe(bindAddr, handler))
 	} else {
 		certFile := os.Getenv("X509_CERT")
 		keyFile := os.Getenv("X509_KEY")
-		log.Fatal(http.ListenAndServeTLS(bindAddr, certFile, keyFile, nil))
+		log.Fatal(http.ListenAndServeTLS(bindAddr, certFile, keyFile, handler))
 	}
 }

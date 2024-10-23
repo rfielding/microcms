@@ -56,9 +56,9 @@ Actually populate it
 ./deployapps
 ```
 And find URLs to use it as two default users at the end of ./deployapps
-It runs at:
+It runs at 8443 to avoid stepping on docker's own reverse proxy, traefik.
 
-https://localhost 
+https://localhost:8443 
 
 And the React UI is hot-editable, as the source is mounted
 into an `npm run build` in the reverse proxy.
@@ -89,10 +89,10 @@ The API is designed to be easily explored from a web browser.  A few things are 
 If you want a json rendition to a directory listing, or a search, then add `json=true` http parameter:
 
 ```
-GET http://localhost:9321/files/documents/?json=true                     # show as json
-GET http://localhost:9321/files/documents/app/react-test/?listing=true   # list instead of run index.html
-GET http://localhost:9321/search?json=true&match=king                    # keyword search
-GET http://localhost:9321/me                                             # my attributes
+GET https://localhost:8443/files/documents/?json=true                     # show as json
+GET https://localhost:8443/files/documents/app/react-test/?listing=true   # list instead of run index.html
+GET https://localhost:8443/search?json=true&match=king                    # keyword search
+GET https://localhost:8443/me                                             # my attributes
 ```
 
 If you are in role admin, you can re-index all of the data. This way, updates can provide
@@ -100,24 +100,19 @@ improvements to indexing; and you just need to have it re-done without knowing t
 This lets you migrate the data forward without having to re-upload anything.
 
 ```
-GET http://localhost:9321/reindex/
+GET https://localhost:8443/reindex/
 ```
-
-Or the React UI hot-loading at root on port 8080
-
-http://localhost:8080
-
 
 Upload a normal file, one by one
 
 ```
-  curl -X POST --data-binary @resume.pdf http://localhost:9321/files/rob.fielding@gmail.com/docs/resume.pdf
+  curl -X POST --data-binary @resume.pdf https://localhost:8443/files/rob.fielding@gmail.com/docs/resume.pdf
 ```
 
 Search by keyword king:
 
 ```
-http://localhost:9321/search?match=dog
+https://localhost:8443/search?match=dog
 ```
 
 ![images/search.png](images/search.png)

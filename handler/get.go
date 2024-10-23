@@ -183,6 +183,7 @@ func getHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 	}
 
 	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(fmt.Sprintf("GET cant find %s", r.URL.Path)))
 }
 
 func getRootHandler(w http.ResponseWriter, r *http.Request) {

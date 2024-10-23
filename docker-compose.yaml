@@ -48,7 +48,7 @@ services:
     image: rfielding/rproxy
     user: 0:0
     ports:
-      - 443:443
+      - 8443:8443
     environment:
       - RPROXY0=/files@http://microcms:9321/files
       - RPROXY1=/me@http://microcms:9321/me
@@ -59,7 +59,7 @@ services:
       - RPROXY6=/@http://localhost:3000/
       - X509_CERT=/root/rproxy/cert.pem
       - X509_KEY=/root/rproxy/key.pem
-      - BIND=0.0.0.0:443
+      - BIND=0.0.0.0:8443
     depends_on:
       - microcms
     volumes:

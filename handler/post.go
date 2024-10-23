@@ -24,6 +24,7 @@ func postHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) {
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(fmt.Sprintf("POST cant find %s", r.URL.Path)))
 }
 
 var DocExtractor string

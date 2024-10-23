@@ -50,4 +50,5 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, pathTokens []string) 
 		return
 	}
 	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(fmt.Sprintf("DELETE cant find %s", r.URL.Path)))
 }
