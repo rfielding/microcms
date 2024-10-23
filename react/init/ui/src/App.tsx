@@ -1,7 +1,5 @@
 import React from 'react';
-//import logo from './logo.svg';
 import './App.css';
-//import launch from './launch.svg';
 import logo from './logo.svg';
 
 import { useState } from 'react';
