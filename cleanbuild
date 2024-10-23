@@ -5,6 +5,7 @@ export GSGID=1000
 (
   cd `dirname $0`
   mkdir persistent 2>&1 > /dev/null
+  mkdir persistent/prometheus 2>&1 > /dev/null
   (
     docker build . --platform linux/amd64 -f rproxy/Dockerfile -t rfielding/rproxy
   )

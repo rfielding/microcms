@@ -39,6 +39,7 @@ services:
       - '--web.route-prefix=/prometheus/'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./persistent/prometheus:/data
     ports:
       - 9090:9090  
     networks:
