@@ -445,6 +445,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
         /> Hide Metadata &nbsp;
       </div>  
     </div>
+    <a href="/me" style={{fontSize: 14, color: 'gray', textDecoration: 'none'}}>As Me</a>
     <TreeView      
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
