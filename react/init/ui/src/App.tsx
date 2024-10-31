@@ -2,11 +2,236 @@ import React from 'react';
 import './App.css';
 import logo from './logo.svg';
 
-import { useState } from 'react';
+import { useState, DragEvent, ChangeEvent } from 'react';
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import { Upload, X } from 'lucide-react';
+
+interface FileUploadProps {
+  onUploadComplete?: (file: File, targetUrl: string) => void;
+  onDeleteComplete?: (targetUrl: string) => void;
+  onError?: (error: Error) => void;
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({
+  onUploadComplete,
+  onDeleteComplete,
+  onError,
+}) => {
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [targetUrl, setTargetUrl] = useState<string>('');
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>): void => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile) {
+      handleFile(droppedFile);
+    }
+  };
+
+  const handleFileInput = (e: ChangeEvent<HTMLInputElement>): void => {
+    if (!e.target.files) return;
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      handleFile(selectedFile);
+    }
+  };
+
+  const handleFile = (newFile: File): void => {
+    setFile(newFile);
+    setUploadProgress(0);
+  };
+
+  const handleTargetUrlChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setTargetUrl(e.target.value);
+  };
+
+  const handleUpload = async (): Promise<void> => {
+    if (!file || !targetUrl) return;
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(targetUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      onUploadComplete?.(file, targetUrl);
+    } catch (error) {
+      onError?.(error as Error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDelete = async (): Promise<void> => {
+    if (!targetUrl) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await fetch(targetUrl, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Delete failed: ${response.statusText}`);
+      }
+
+      onDeleteComplete?.(targetUrl);
+      // Optionally clear the form after successful delete
+      // setFile(null);
+      // setTargetUrl('');
+    } catch (error) {
+      onError?.(error as Error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const removeFile = (): void => {
+    setFile(null);
+    setUploadProgress(0);
+  };
+
+  const isUploadReady = file && targetUrl.trim();
+
+  return (
+    <div className="w-full max-w-md mx-auto p-6">
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Target URL
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={targetUrl}
+            onChange={handleTargetUrlChange}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter target URL"
+            aria-label="Target URL"
+          />
+          {targetUrl && (
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting || isUploading}
+              className={`px-4 py-2 text-white rounded-lg ${
+                isDeleting
+                  ? 'bg-red-400 cursor-not-allowed'
+                  : 'bg-red-500 hover:bg-red-600'
+              }`}
+              aria-label="Delete at target URL"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div
+        className={`border-2 border-dashed rounded-lg p-8 text-center ${
+          isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        role="presentation"
+      >
+        {!file ? (
+          <>
+            <Upload className="mx-auto h-12 w-12 text-gray-400" />
+            <p className="mt-2 text-gray-600">
+              Drag and drop a file here, or
+            </p>
+            <label className="mt-4 inline-block">
+              <span className="px-4 py-2 bg-blue-500 text-white rounded-lg cursor-pointer hover:bg-blue-600">
+                Browse Files
+              </span>
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleFileInput}
+                aria-label="File upload"
+              />
+            </label>
+          </>
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg flex items-center">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                {isUploading && (
+                  <div className="mt-1 h-2 w-full bg-gray-200 rounded-full">
+                    <div
+                      className="h-2 bg-blue-500 rounded-full transition-all duration-500"
+                      style={{ width: `${uploadProgress}%` }}
+                      role="progressbar"
+                      aria-valuenow={uploadProgress}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                    />
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={removeFile}
+                className="ml-4 text-gray-400 hover:text-gray-500"
+                aria-label="Remove file"
+                disabled={isUploading}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {isUploadReady && (
+        <button
+          onClick={handleUpload}
+          disabled={isUploading || isDeleting}
+          className={`mt-4 w-full px-4 py-2 text-white rounded-lg ${
+            isUploading
+              ? 'bg-blue-400 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600'
+          }`}
+        >
+          {isUploading ? 'Uploading...' : 'Upload File'}
+        </button>
+      )}
+
+      {file && !targetUrl && (
+        <p className="mt-2 text-sm text-red-500">
+          Please enter a target URL to enable upload
+        </p>
+      )}
+    </div>
+  );
+};
 
 interface Attributes {
   Label: string;
@@ -76,6 +301,15 @@ type Endpoints = {
 
 var endpoints : Endpoints;
 
+type Me = {
+  id: string[];
+  name: string[];
+  email: string[];
+  roles: string[];
+  permissions: string[];
+};
+
+var me : Me;
 
 function getEndpoint(name: string) : string {
   return endpoints["prefixes"][name];
@@ -405,11 +639,28 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
     );
   };
 
+  const loadMe = async () => {
+    const response = await fetch(
+      "./me",
+      {"credentials": "same-origin"},
+    );
+    me = await response.json() as Me;
+    var who = "anonymous";
+    if(me.email && me.email.length>0) {
+      who = me.email[0];
+    }
+    document.getElementById('mespan')!.innerHTML = who;
+  };
+  loadMe();
+
   return (
     <>
+    <a href="/me" style={{fontSize: 14, color: 'gray', textDecoration: 'none'}}>As </a>
+    <span id='mespan'></span>
+
     <div style={{padding: 10}}>
       <span 
-        style={{fontSize: 24}}
+        style={{fontSize: 16}}
       >
           Search:
       </span>
@@ -443,7 +694,6 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
         /> Hide Metadata &nbsp;
       </div>  
     </div>
-    <a href="/me" style={{fontSize: 14, color: 'gray', textDecoration: 'none'}}>As Me</a>
     <TreeView      
       aria-label="file system navigator"
       defaultCollapseIcon={<ExpandMoreIcon />}
@@ -481,6 +731,8 @@ function App() {
       }}   
     >
       <SearchableTreeView/>
+      <hr/>
+      <FileUpload/>
     </div>
   );
 }

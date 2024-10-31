@@ -7,8 +7,14 @@
       "email": ["rob.fielding@gmail.com"],
       "age": ["adult","driving"]
     },
+    "ceffffe9fe9fe9fe9fe9ef9fe9e9f9ff9": {
+      "name": ["elsie"],
+      "role": ["user"],
+      "email": ["elsieafielding@yahoo.com"],
+      "age": ["adult","driving"]
+    },
     "a9fef6d3cfad67cd12cfe12eab1248904": {
-      "name": ["dmin"],
+      "name": ["admin"],
       "role": ["admin","user"],
       "email": ["rrr00bb@twitter.com"],
       "age": ["adult","driving"]
