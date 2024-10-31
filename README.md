@@ -16,9 +16,6 @@ Requirements:
 - Docker Compose
 - curl
 - jq
-- npx
-- npm
-- for local build `./startLocalCMS`: ffmpeg, imagemagick, go1.20, sqlite3
 
 This is an experiment in quickly creating a Content Management System (CMS), by which I mean
 
