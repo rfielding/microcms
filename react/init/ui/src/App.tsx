@@ -139,21 +139,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
             placeholder="Enter target URL"
             aria-label="Target URL"
           ></input>
-
-          {targetUrl && (
-            <button
-              onClick={handleDelete}
-              disabled={isDeleting || isUploading}
-              className={`px-4 py-2 text-white rounded-lg ${
-                isDeleting
-                  ? 'bg-red-400 cursor-not-allowed'
-                  : 'bg-red-500 hover:bg-red-600'
-              }`}
-              aria-label="Delete at target URL"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </button>
-          )}
         </div>
       </div>
       {isUploadReady && (
@@ -169,6 +154,20 @@ const FileUpload: React.FC<FileUploadProps> = ({
           {isUploading ? 'Uploading...' : 'Upload File'}
         </button>
       )}
+          {targetUrl && (
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting || isUploading}
+              className={`px-4 py-2 text-white rounded-lg ${
+                isDeleting
+                  ? 'bg-red-400 cursor-not-allowed'
+                  : 'bg-red-500 hover:bg-red-600'
+              }`}
+              aria-label="Delete at target URL"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+          )}
 
       <div
         className={`border-2 border-dashed rounded-lg p-8 text-center ${
