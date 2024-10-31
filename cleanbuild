@@ -7,26 +7,11 @@ export GSGID=1000
   mkdir persistent 2>&1 > /dev/null
   mkdir persistent/prometheus 2>&1 > /dev/null
   (
-    docker build . --platform linux/amd64 -f rproxy/Dockerfile -t rfielding/rproxy
+    docker build . -f rproxy/Dockerfile -t rfielding/rproxy
   )
   (
     cd tika
-    docker build . --platform linux/amd64 -t rfielding/tika
+    docker build . -t rfielding/tika
   )
-  #(
-  #  cd react/init/ui
-  #  npm run build
-  #)
-  go mod tidy
-  go mod vendor
-  #(
-  #  # this can take a long, long time
-  #  # but on a clean checkout, this dir may  not exist
-  #  cd react/init/ui
-  #  if [ -d build ]
-  #  then
-  #	    npm install --force
-  #  fi
-  #)
-  docker build --platform linux/amd64 -t rfielding/microcms:latest .
+  docker build . -t rfielding/microcms:latest .
 )

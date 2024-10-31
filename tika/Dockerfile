@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:24.10
+FROM ubuntu:24.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
 RUN apt-get update
