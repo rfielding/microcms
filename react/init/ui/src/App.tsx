@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import logo from './logo.svg';
 
-import { useState, DragEvent, ChangeEvent } from 'react';
+import { useState, DragEvent, ChangeEvent, useEffect } from 'react';
 import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -57,6 +57,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleFile = (newFile: File): void => {
     setFile(newFile);
+    // Get the current path and append the new filename
+    const currentPath = (document.getElementById('targetUrl') as HTMLInputElement)?.value || '';
+    setTargetUrl(currentPath + newFile.name);
     setUploadProgress(0);
   };
 
@@ -129,12 +132,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
         <div className="flex gap-2">
           <input
             type="text"
+            id="targetUrl"
             value={targetUrl}
             onChange={handleTargetUrlChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="min-w[800px] flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter target URL"
             aria-label="Target URL"
-          />
+          ></input>
+
           {targetUrl && (
             <button
               onClick={handleDelete}
@@ -151,6 +156,19 @@ const FileUpload: React.FC<FileUploadProps> = ({
           )}
         </div>
       </div>
+      {isUploadReady && (
+        <button
+          onClick={handleUpload}
+          disabled={isUploading || isDeleting}
+          className={`mt-4 w-full px-4 py-2 text-white rounded-lg ${
+            isUploading
+              ? 'bg-blue-400 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600'
+          }`}
+        >
+          {isUploading ? 'Uploading...' : 'Upload File'}
+        </button>
+      )}
 
       <div
         className={`border-2 border-dashed rounded-lg p-8 text-center ${
@@ -210,19 +228,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
         )}
       </div>
 
-      {isUploadReady && (
-        <button
-          onClick={handleUpload}
-          disabled={isUploading || isDeleting}
-          className={`mt-4 w-full px-4 py-2 text-white rounded-lg ${
-            isUploading
-              ? 'bg-blue-400 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600'
-          }`}
-        >
-          {isUploading ? 'Uploading...' : 'Upload File'}
-        </button>
-      )}
 
       {file && !targetUrl && (
         <p className="mt-2 text-sm text-red-500">
@@ -587,10 +592,18 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
   const handleIconClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
     loadTreeItem(node);
+    if (node.isDir) {
+      const targetUrlInput = document.getElementById('targetUrl') as HTMLInputElement;
+      if (targetUrlInput) {
+        targetUrlInput.value = node.id;
+        // Trigger change event to update React state
+        targetUrlInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }    
   };
 
   const handleLabelClick = async (e: React.MouseEvent<Element,MouseEvent>,node: Node) => {
-    loadTreeItem(node);
+    handleIconClick(e,node);
   };
   
   const clickHideMismatch = async (e: React.SyntheticEvent<Element,Event>) => {
