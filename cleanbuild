@@ -13,20 +13,20 @@ export GSGID=1000
     cd tika
     docker build . --platform linux/amd64 -t rfielding/tika
   )
-  (
-    cd react/init/ui
-    npm run build
-  )
+  #(
+  #  cd react/init/ui
+  #  npm run build
+  #)
   go mod tidy
   go mod vendor
-  (
-    # this can take a long, long time
-    # but on a clean checkout, this dir may  not exist
-    cd react/init/ui
-    if [ -d build ]
-    then
-	    npm install --force
-    fi
-  )
+  #(
+  #  # this can take a long, long time
+  #  # but on a clean checkout, this dir may  not exist
+  #  cd react/init/ui
+  #  if [ -d build ]
+  #  then
+  #	    npm install --force
+  #  fi
+  #)
   docker build --platform linux/amd64 -t rfielding/microcms:latest .
 )
