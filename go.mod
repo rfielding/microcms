@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/aws/aws-sdk-go v1.34.9
+	github.com/gorilla/websocket v1.4.2
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/open-policy-agent/opa v0.41.0
 )
