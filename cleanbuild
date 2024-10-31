@@ -6,12 +6,7 @@ export GSGID=1000
   cd `dirname $0`
   mkdir persistent 2>&1 > /dev/null
   mkdir persistent/prometheus 2>&1 > /dev/null
-  (
-    docker build . -f rproxy/Dockerfile -t rfielding/rproxy
-  )
-  (
-    cd tika
-    docker build . -t rfielding/tika
-  )
-  docker build . -t rfielding/microcms:latest .
+  docker build . -f rproxy/Dockerfile -t rfielding/rproxy
+  docker build . -f tika/Dockerfile -t rfielding/tika
+  docker build . -f ./Dockerfile -t rfielding/microcms:latest 
 )
