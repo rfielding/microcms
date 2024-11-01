@@ -7,3 +7,4 @@ persistent
 vendor
 react/init/ui/node_modules
 react/init/ui/build
+node_modules
