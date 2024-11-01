@@ -4,8 +4,6 @@ services:
   microcms:
     image: rfielding/microcms:latest
     user: 1000:1000
-    ports:
-      - '9321:9321'
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_REGION
@@ -23,8 +21,6 @@ services:
     image: rfielding/tika
     environment:
       - host=0.0.0.0
-    ports:
-      - 9998:9998
     networks:
       - mesh
  
@@ -39,8 +35,6 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - ./persistent/prometheus:/prometheus/data
-    ports:
-      - 9090:9090  
     networks:
       - mesh
 
@@ -56,8 +50,8 @@ services:
       - RPROXY3=/search@http://microcms:9321/search
       - RPROXY4=/prometheus/@http://prometheus:9090/prometheus/
       - RPROXY5=/metrics@http://microcms:9321/metrics
-      - RPROXY6=/wss@ws://localhost:3000/ws
-      - RPROXY7=/@http://localhost:3000/
+      #- RPROXY6=/ws@ws://localhost:3000/ws
+      - RPROXY6=/@http://localhost:3000/
       - X509_CERT=/root/rproxy/cert.pem
       - X509_KEY=/root/rproxy/key.pem
       - BIND=0.0.0.0:8443
