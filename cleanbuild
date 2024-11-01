@@ -11,5 +11,6 @@ export GSGID=1000
   chown -R 1000:1000 persistent
   docker build . -f rproxy/Dockerfile -t rfielding/rproxy
   docker build . -f tika/Dockerfile -t rfielding/tika
+  docker build . -f prometheus/Dockerfile -t rfielding/prometheus
   docker build . -f ./Dockerfile -t rfielding/microcms:latest 
 )

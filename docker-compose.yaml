@@ -21,7 +21,6 @@ services:
 
   tika:
     image: rfielding/tika
-    user: 0:0
     environment:
       - host=0.0.0.0
     ports:
@@ -30,8 +29,8 @@ services:
       - mesh
  
   prometheus:
-    image: prom/prometheus
-    user: 0:0
+    image: rfielding/prometheus
+    user: 1000:1000 
     command: 
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--log.level=debug'
@@ -39,7 +38,7 @@ services:
       - '--web.route-prefix=/prometheus/'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./persistent/prometheus:/data
+      - ./persistent/prometheus:/prometheus/data
     ports:
       - 9090:9090  
     networks:
