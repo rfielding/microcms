@@ -12,8 +12,9 @@ RUN apt-get install -y golang
 
 COPY . /root
 WORKDIR /root/cmd/rproxy
-RUN chown -R 1000:1000 .
+
 RUN cd /root/cmd/rproxy && go build -o ./rproxy *.go
 WORKDIR /root
+RUN chown -R 1000:1000 .
 USER 1000:1000
 CMD ( ./cmd/rproxy/rproxy & ); sleep 2;( cd ui ; npm install --force; npm run start )

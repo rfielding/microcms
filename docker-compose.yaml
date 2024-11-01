@@ -3,7 +3,7 @@ version: '3.2'
 services:
   microcms:
     image: rfielding/microcms:latest
-    user: 0:0 # oh no. temp hack using user 1000 is not portable, even when it matches user on host in Linux
+    user: 0:0
     ports:
       - '9321:9321'
     environment:
@@ -47,7 +47,7 @@ services:
 
   rproxy:
     image: rfielding/rproxy
-    user: 0:0
+    user: 1000:1000
     ports:
       - 8443:8443
     environment:
