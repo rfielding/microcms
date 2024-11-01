@@ -3,7 +3,7 @@ version: '3.2'
 services:
   microcms:
     image: rfielding/microcms:latest
-    user: ${UID}:${GID}
+    user: 0:0
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_REGION
@@ -19,7 +19,7 @@ services:
 
   tika:
     image: rfielding/tika
-    user: ${UID}:${GID}
+    user: 0:0
     environment:
       - host=0.0.0.0
     networks:
@@ -27,7 +27,7 @@ services:
  
   prometheus:
     image: rfielding/prometheus
-    user: ${UID}:${GID}
+    user: 0:0
     command: 
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--log.level=debug'
@@ -41,7 +41,7 @@ services:
 
   rproxy:
     image: rfielding/rproxy
-    user: ${UID}:${GID}
+    user: 0:0
     ports:
       - 8443:8443
     environment:

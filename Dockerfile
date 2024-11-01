@@ -1,8 +1,6 @@
 FROM ubuntu:24.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
-ARG UID=1000
-ARG GID=1000
 RUN apt-get update
 RUN apt-get install -y coreutils
 RUN apt-get install -y curl
@@ -19,9 +17,6 @@ RUN apt-get install -y golang
 RUN mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.bak
 RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/policy.xml
 COPY . /root
-RUN cd /root/cmd/microcms && go mod tidy
 RUN cd /root/cmd/microcms && CGO_ENABLED=1 go build -tags fts5 -o ./microcms *.go
 WORKDIR /root
-RUN chown -R ${UID}:${GID} .
-USER ${UID}:${GID}
 CMD ["./bin/containerinit"]

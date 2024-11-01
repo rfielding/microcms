@@ -1,18 +1,14 @@
 #!/bin/bash
 
   
-# run as user 1000 and match persistence, so we do not have root owned persistence
-export UID=$(id -u)
-export GID=$(id -g)
 (
   cd `dirname $0`
   if [ -d persistent ]
   then
     echo using existing persistent dir
   else
-    mkdir persistent 2>&1 > /dev/null
-    mkdir persistent/prometheus 2>&1 > /dev/null
-    chmod -R 777 persistent
+    sudo mkdir persistent/prometheus 2>&1 > /dev/null
+    sudo chmod -R 777 persistent
   fi 
   docker build . -f rproxy/Dockerfile -t rfielding/rproxy
   docker build . -f tika/Dockerfile -t rfielding/tika
