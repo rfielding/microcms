@@ -20,5 +20,6 @@ RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/pol
 COPY . /root
 RUN cd /root/cmd/microcms && CGO_ENABLED=1 go build -tags fts5 -o ./microcms *.go
 WORKDIR /root
+RUN chown -R 1000:1000 .
 USER 1000:1000
 CMD ["./bin/containerinit"]
