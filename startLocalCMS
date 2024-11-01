@@ -1,5 +1,0 @@
-#!/bin/bash
-
-mkdir persistent #if it doesnt exist yet
-CGO_ENABLED=1 go build -o ./cmd/microcms/microcms -tags fts5 ./cmd/microcms/main.go
-./bin/containerinit

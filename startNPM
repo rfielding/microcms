@@ -1,7 +1,0 @@
-#!/bin/bash
-
-(
-export BROWSER=none
-export PUBLIC_URL="." 
-cd react/init/ui; npm start
-)
