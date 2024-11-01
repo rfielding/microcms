@@ -18,6 +18,7 @@ RUN apt-get install -y golang
 RUN mv /etc/ImageMagick-6/policy.xml /etc/ImageMagick-6/policy.xml.bak
 RUN cat /etc/ImageMagick-6/policy.xml.bak | grep -v PDF > /etc/ImageMagick-6/policy.xml
 COPY . /root
+RUN cd /root/cmd/microcms && go mod tidy
 RUN cd /root/cmd/microcms && CGO_ENABLED=1 go build -tags fts5 -o ./microcms *.go
 WORKDIR /root
 RUN chown -R 1000:1000 .

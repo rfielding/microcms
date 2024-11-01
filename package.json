@@ -1,9 +1,0 @@
-{
-  "dependencies": {
-    "add": "^2.0.6",
-    "card": "^2.5.4",
-    "lucide": "^0.454.0",
-    "lucide-react": "^0.454.0",
-    "shadcn-ui": "^0.9.2"
-  }
-}

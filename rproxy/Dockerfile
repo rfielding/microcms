@@ -10,9 +10,10 @@ RUN apt-get install -y time
 RUN apt-get install -y npm
 RUN apt-get install -y golang
 
-COPY . /root
+COPY cmd/rproxy/main.go /root/cmd/rproxy/main.go
 WORKDIR /root/cmd/rproxy
 
+RUN cd /root/cmd/rproxy && go mod tidy
 RUN cd /root/cmd/rproxy && go build -o ./rproxy *.go
 WORKDIR /root
 RUN chown -R 1000:1000 .

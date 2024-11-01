@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gorilla/websocket"
+	//"github.com/gorilla/websocket"
 )
 
 type Redirect struct {
@@ -19,21 +19,22 @@ type Redirect struct {
 
 type Handler struct {
 	Redirects []Redirect
-	upgrader  websocket.Upgrader
+	//upgrader  websocket.Upgrader
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%s %s\n", r.Method, r.URL.Path)
-
+/*
 	// Check if this is a websocket upgrade request
 	if websocketRequest := r.Header.Get("Upgrade"); websocketRequest == "websocket" {
 		h.handleWebsocket(w, r)
 		return
 	}
-
+*/
 	h.handleNormalRequest(w, r)
 }
 
+/*
 func (h *Handler) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	for _, redirect := range h.Redirects {
 		if strings.HasPrefix(r.URL.Path, redirect.Prefix) {
@@ -114,6 +115,7 @@ func (h *Handler) handleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Error(w, "Not found by rproxy", http.StatusNotFound)
 }
+*/
 
 func (h *Handler) handleNormalRequest(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%s %s\n", r.Method, r.URL.Path)
