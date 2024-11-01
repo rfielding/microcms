@@ -14,6 +14,7 @@ import (
 // The first one found is used to set them all.
 // fsPath does NOT begin with a slash, and ends with a slash
 func getAttrsPermission(user data.User, fsPath string, fsName string, initial *data.Attrs) *data.Attrs {
+	initial.Date = fs.F.Date(fsPath + fsName)
 	// Try exact file if fName is not blank
 	regoFile := fsPath + "permissions.rego"
 	if fsName != "" {

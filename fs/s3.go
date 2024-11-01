@@ -319,6 +319,19 @@ func (v *S3VFS) Size(fullName string) int64 {
 	return *head.ContentLength
 }
 
+func (v *S3VFS) Date(fullName string) string {
+	fullPath := v.fullPath(fullName)
+	head, err := v.client.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(v.bucket),
+		Key:    aws.String(fullPath),
+	})
+	if err != nil {
+		log.Printf("Date %s problem: %v\n", fullPath, err)
+		return ""
+	}
+	return head.LastModified.String()
+}
+
 func (v *S3VFS) ServeFile(w http.ResponseWriter, r *http.Request, fullName string) {
 	fullPath := v.fullPath(fullName)
 	readSeeker, err := NewS3ReadSeeker(v.client, v.bucket, fullPath)

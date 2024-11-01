@@ -32,6 +32,7 @@ type VFS interface {
 	IsDir(fullName string) bool
 	Create(fullName string) (io.WriteCloser, error)
 	Size(fullName string) int64
+	Date(fullName string) string
 	ServeFile(w http.ResponseWriter, r *http.Request, fullName string)
 	ReadFile(fullName string) ([]byte, error)
 	PdfThumbnail(fullName string) (io.Reader, error)

@@ -79,6 +79,14 @@ func (v *Volume) Size(fullName string) int64 {
 	return s.Size()
 }
 
+func (v *Volume) Date(fullName string) string {
+	s, err := os.Stat(v.at + fullName)
+	if err != nil {
+		return ""
+	}
+	return s.ModTime().Format("2006-01-02 15:04:05")
+}
+
 func (v *Volume) ServeFile(w http.ResponseWriter, r *http.Request, fullName string) {
 	http.ServeFile(w, r, v.at+fullName)
 }

@@ -146,6 +146,7 @@ interface Attributes {
   Write: boolean;
   Moderation?: boolean;
   ModerationLabel?: string;
+  Date?: string;
 }
 
 interface SNode {
@@ -175,6 +176,7 @@ interface Node {
   derived?: boolean;
   moderation?: boolean;
   moderationLabel?: string;
+  date?: string;
   children: string[];
 };
 
@@ -271,6 +273,7 @@ function convertNode(p: SNode) : Node {
   td.moderation = a.Moderation ? true : false;
   td.moderationLabel = a.ModerationLabel ? a.ModerationLabel : "";
   td.matchesQuery = false;
+  td.date = a.Date ? a.Date : "";
   td.children = [];
   return td;
 }
@@ -310,13 +313,13 @@ function convertSearchState(p: SNode, nodes: Hits):Hits {
 
 function asSize(size: number) : string {
   var s = size;
-  var units = ["B","KB","MB","GB","TB","PB","EB","ZB","YB"];
+  var units = ["B","kB","MB","GB","TB","PB","EB","ZB","YB"];
   var i = 0;
   while(s>1024) {
     s = s/1024;
     i++;
   }
-  return s.toFixed(2) + " " + units[i];
+  return s.toFixed(2) + "" + units[i];
 }
 
 function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
@@ -367,7 +370,7 @@ function LabeledNode(nodes: Nodes, node: Node) : JSX.Element {
       {node.label}&nbsp;
       {note}
       &nbsp;
-      ({nodeSize})
+      ({nodeSize}, {node.date})
       &nbsp;
       {theImg}
     </a>

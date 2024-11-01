@@ -55,4 +55,5 @@ type Attrs struct {
 	ModerationLabel string      `json:"ModerationLabel"`
 	Moderation      bool        `json:"Moderation"`
 	Custom          interface{} `json:"custom,omitempty"`
+	Date            string      `json:"Date,omitempty"`
 }
