@@ -1,7 +1,8 @@
 FROM ubuntu:24.10
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/New_York
-
+ARG UID=1000
+ARG GID=1000
 RUN apt-get update
 RUN apt-get install -y coreutils
 RUN apt-get install -y curl
@@ -21,6 +22,6 @@ COPY . /root
 RUN cd /root/cmd/microcms && go mod tidy
 RUN cd /root/cmd/microcms && CGO_ENABLED=1 go build -tags fts5 -o ./microcms *.go
 WORKDIR /root
-RUN chown -R 1000:1000 .
-USER 1000:1000
+RUN chown -R ${UID}:${GID} .
+USER ${UID}:${GID}
 CMD ["./bin/containerinit"]

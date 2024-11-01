@@ -1,16 +1,25 @@
 #!/bin/bash
 
+  
 # run as user 1000 and match persistence, so we do not have root owned persistence
-export GSUID=1000
-export GSGID=1000
+export UID=$(id -u)
+export GID=$(id -g)
 (
   cd `dirname $0`
-  mkdir persistent 2>&1 > /dev/null
-  mkdir persistent/prometheus 2>&1 > /dev/null
-  chmod -R 755 persistent
-  chown -R 1000:1000 persistent
+  if [ -d persistent ]
+  then
+    echo using existing persistent dir
+  else
+    mkdir persistent 2>&1 > /dev/null
+    mkdir persistent/prometheus 2>&1 > /dev/null
+    chmod -R 777 persistent
+  fi 
   docker build . -f rproxy/Dockerfile -t rfielding/rproxy
   docker build . -f tika/Dockerfile -t rfielding/tika
   docker build . -f prometheus/Dockerfile -t rfielding/prometheus
   docker build . -f ./Dockerfile -t rfielding/microcms:latest 
+  if [ "$1" == "up" ]
+  then
+    docker-compose up -d
+  fi
 )
