@@ -68,6 +68,13 @@ sequenceDiagram
 # Running it
 
 ```
+# on linux make sure that root can edit the persistent directory
+sudo rm -rf persistent
+sudo mkdir -p persistent/prometheus
+sudo chmod -R 755 persistent
+```
+
+```
 ./cleanbuild
 docker-compose up -d
 ```
