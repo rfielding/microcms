@@ -571,7 +571,7 @@ const detectKeys = async (e : React.KeyboardEvent<HTMLInputElement>) => {
 
   return (
     <>
-    <a href="/me" style={{fontSize: 14, color: 'gray', textDecoration: 'none'}}>As </a>
+    <a href="/me" target="_blank" style={{fontSize: 14, color: 'gray', textDecoration: 'none'}}>As </a>
     <span id='mespan'></span>
 
     <div style={{padding: 10}}>
